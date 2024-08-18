@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="goq_favicon.png">
+    <title>Main Dashboard</title>
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Helvetica, Arial, sans-serif;
+            transition: all 0.1s;
+        }
+
+        html {
+            background-color: #ffffff;
+            width: 100%;
+            height: auto;
+            overflow-y: scroll;
+        }
+
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 12px;
+            margin: 20px;
+        }
+
+        h3 {
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+            font-size: xx-large;
+            color: #131d20d1;
+        }
+
+        p {
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+            font-size: 12px;
+            color: #131d20d1;
+        }
+
+        input {
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+            font-size: 12px;
+            color: #131d20d1;
+        }
+
+        .small-spacer {
+            width: 100%;
+            height: 15px;
+        }
+
+        #dataGrid {
+            width: 100%;
+            height: 100%;
+            overflow-x: auto;
+            scrollbar-width: thin;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 7px;
+            text-align: left;
+            border-right: .1px solid #0000003d;
+            color: #131d20d1;
+            cursor: pointer;
+            position: relative;
+            /* border-radius: 7px; */
+        }
+
+        th:hover, td:hover {
+            background-color: #0095ff69;
+            color: #131d20;
+        }
+
+        th.selected {
+            background-color: #d3d3d3;
+        }
+
+        .axis-indicator {
+            position: absolute;
+            top: 0;
+            right: 3px;
+            font-size: 10px;
+            color: #131d20d1;
+            background-color: #7dc9ff;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-top: 25px;
+            width: 15px;
+            height: 15px;
+            text-align: center;
+            vertical-align: middle;
+            padding-top: 1px;
+            z-index: 99;
+        }
+
+        .top-panel {
+            display: flex;
+        }
+
+        .goq-logo {
+            display: inline-block;
+            width: 35px;
+            height: 35px;
+            margin-right: 15px;
+            user-select: none;
+        }
+
+        .navigator {
+            display: inline-block;
+            flex-grow: 1;
+            height: 35px;
+            border: dashed .1px #0000003d;
+            border-radius: 7px;
+            user-select: none;
+            overflow-x: visible;
+            scrollbar-width: thin;
+        }
+
+        .navigator:hover {
+            border: dashed .1px #0000003d;
+            border-radius: 7px;
+        }
+
+        .button-text {
+            position: relative;
+            transform: translateY(-10%);
+            text-align: center;
+            font-size: 12px;
+            color: #131d20d1;
+        }
+
+        .dashboards-button {
+            display: inline-block;
+            width: 120px;
+            height: 100%;
+            padding-left: 20px;
+            padding-right: 20px;
+            border-top-left-radius: 7px;
+            border-bottom-left-radius: 7px;
+            user-select: none;
+        }
+
+        .dashboards-button:hover .button-text{
+            /* background-color: #0095ff2a; */
+            color: #0095ff;
+        }
+
+        .queries-button, .data-button, .settings-button {
+            display: inline-block;
+            width: 90px;
+            height: 100%;
+            user-select: none;
+        }
+
+        .queries-button:hover .button-text, .data-button:hover .button-text, .settings-button:hover .button-text{
+            /* background-color: #0095ff2a; */
+            color: #0095ff;
+        }
+
+        /* Hide the buttons and show the dropdown on screens less than 700px wide */
+        @media screen and (max-width: 700px) {
+            .navigator {
+                display: block;
+                position: relative;
+            }
+            .navigator .dashboards-button,
+            .navigator .queries-button,
+            .navigator .data-button,
+            .navigator .settings-button {
+                display: none;
+            }
+            .navigator .dropdown {
+                display: block;
+            }
+        }
+
+        /* Style the dropdown */
+        .dropdown {
+            display: none;
+            color: #131d20d1;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+            user-select: none;
+            border-radius: 7px;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: white;
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            z-index: 1;
+            width: 100%;
+            border-radius: 5px;
+        }
+
+        .dropdown-content a {
+            color: #131d20d1;
+            padding: 8px 16px;
+            text-decoration: none;
+            display: block;
+            border-bottom: 1px dashed #d3d3d3;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #0095ff69;
+        }
+
+        /* Show dropdown content when clicked */
+        .dropdown.active .dropdown-content {
+            display: block;
+        }
+
+
+        .drop-area {
+            border: .1px dashed #0000003d;
+            border-radius: 7px;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #131d20d1;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .drop-area.hover {
+            border: dashed .1px #0000003d;
+            background-color: #0095ff2a;
+            color: #131d20d1;
+        }
+
+        /* th {
+            position: relative;
+        } */
+
+        .sort-asc::after {
+            content: '▲'; 
+            position: absolute;
+            right: 10px;
+            font-size: 0.8em;
+            color: #131d20d1;
+        }
+
+        .sort-desc::after {
+            content: '▼';
+            position: absolute;
+            right: 10px;
+            font-size: 0.8em;
+            color: #131d20d1;
+        }
+        
+        .tile-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .tile {
+            width: 200px;
+            height: 150px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+        }
+        .tile img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+        }
+        .tile p {
+            margin: 5px;
+            text-align: center;
+        }
+        .tile button {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 5px 10px;
+            background-color: #0095ff2a;
+            color: #131d20d1;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .tile button:hover {
+            background-color: #0095ff2a;
+            color: #131d20d1;
+        }
+        .data-page {
+            display: none;
+        }
+        .data-page.active {
+            display: block;
+        }
+
+        #chartContainer {
+            width: 800px;
+            height: auto;
+            max-width: 100%;
+            max-height: 100%;
+            min-width: 310px;
+            margin: 20px auto;
+            resize: both; /* Allow both horizontal and vertical resizing */
+            overflow: auto; /* Allow content to overflow */
+            /* padding: 10px; */
+            /* border: 1px solid #ccc; */
+            scrollbar-width: none;   /* Hide scrollbar for Firefox */
+            transition: all 0s;
+        }
+
+        #myChart {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            min-width: 310px;
+            transition: all 0s;
+        }
+
+        /* Add a class to disable text selection */
+        .no-select {
+            user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Style for date view button */
+        .date-view-button {
+            background-color: #ffffff00;
+            display: inline-block;
+            padding: 5px 15px;
+            color: #131d20d1;
+            border-radius: 5px;
+            border: dashed .1px #0000003d;
+            cursor: pointer;
+            margin-bottom: 10px;
+            margin-top: -10px;
+            visibility: hidden; /* Hide the buttons initially */
+        }
+
+        .date-view-button.visible {
+            visibility: visible; /* Make the buttons visible when needed */
+        }
+
+
+        /* Disabled state style for the date view button */
+        .date-view-button.disabled {
+            color: rgba(255, 255, 255, 0.3); /* Barely visible text color */
+            cursor: not-allowed;
+            border: dashed .1px rgba(255, 255, 255, 0.3); /* Barely visible border */
+            background-color: rgba(0, 0, 0, 0.1); /* Slightly visible background */
+            opacity: 0.5; /* Reduce the overall visibility */
+        }
+
+        .highlighted {
+            background-color: #0095ff2a;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-panel">
+        <img class="goq-logo" src="250x250_goq.png" draggable="false">
+        <div class="navigator">
+            <div class="dropdown" onclick="toggleDropdown()">Menu ▼
+                <div class="dropdown-content">
+                    <a href="#" onclick="showDashboards()">Dashboards</a>
+                    <a href="#" onclick="showQueries()">Queries</a>
+                    <a href="#" onclick="toggleDataPage()">Data</a>
+                    <a href="#" onclick="showSettings()">Settings</a>
+                </div>
+            </div>
+            <div class="dashboards-button">
+                <p class="button-text">Dashboards</p>
+            </div>
+            <div class="queries-button">
+                <p class="button-text">Queries</p>
+            </div>
+            <div class="data-button" onclick="toggleDataPage()">
+                <p class="button-text">Data</p>
+            </div>
+            <div class="settings-button">
+                <p class="button-text">Settings</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="drop-area" id="dropArea" onclick="document.getElementById('fileInput').click()">
+        <p>Click or drag and drop a file here (.xml, .csv)</p>
+    </div>
+
+    <center>
+        <div id="chartContainer">
+            <canvas id="myChart"></canvas>
+        </div>
+    </center>
+
+    <div class="date-view-selector" style="display: flex; justify-content: center; width: 100%; align-items: center; gap: 10px; margin-bottom: 10px;">
+        <button id="dateViewButton" class="date-view-button disabled" onclick="cycleDateView()">Day</button>
+        <button id="selectXAxisButton" class="date-view-button" onclick="startXAxisSelection()">Add/Remove X Axis</button>
+        <button id="selectYAxisButton" class="date-view-button" onclick="startYAxisSelection()">Add/Remove Y Axis</button>
+    </div>
+    
+
+    <input style="display: none;" type="file" id="fileInput" accept=".csv, .xml" />
+
+    <div id="dataGrid"></div>
+    <div id="dataPage" class="data-page"></div>
+
+    <script src="chart.js"></script>
+    <script src="PapaParse-5.0.2/papaparse.js"></script>
+
+    <script>
+        const dropArea = document.getElementById('dropArea');
+        const fileInput = document.getElementById('fileInput');
+        const dataPage = document.getElementById('dataPage');
+        const dataGrid = document.getElementById('dataGrid');
+        let sortDirection = {};
+
+        let xAxisColumns = new Set();
+        let yAxisColumns = new Set();
+        let chartInstance = null;
+
+        let isCtrlOrCmdPressed = false;
+        let isShiftPressed = false;
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Control' || event.key === 'Meta') {
+                isCtrlOrCmdPressed = true;
+            }
+            if (event.key === 'Shift') {
+                isShiftPressed = true;
+                document.body.classList.add('no-select'); // Disable text selection
+            }
+        });
+
+        document.addEventListener('keyup', (event) => {
+            if (event.key === 'Control' || event.key === 'Meta') {
+                isCtrlOrCmdPressed = false;
+            }
+            if (event.key === 'Shift') {
+                isShiftPressed = false;
+                document.body.classList.remove('no-select'); // Re-enable text selection
+            }
+        });
+
+        dropArea.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dropArea.classList.add('hover');
+        });
+
+        dropArea.addEventListener('dragleave', () => {
+            dropArea.classList.remove('hover');
+        });
+
+        dropArea.addEventListener('drop', (event) => {
+            event.preventDefault();
+            dropArea.classList.remove('hover');
+            const file = event.dataTransfer.files[0];
+            if (file) handleFile(file);
+        });
+
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0];
+            if (file) handleFile(file);
+        });
+
+        function handleFile(file) {
+            const fileType = file.type;
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                const text = event.target.result;
+                if (fileType.includes('csv')) {
+                    parseCSV(text, file.name);
+                } else if (fileType.includes('xml')) {
+                    parseXML(text, file.name);
+                } else {
+                    alert('Unsupported file type');
+                }
+            };
+
+            reader.readAsText(file);
+        }
+
+        function parseCSV(text, fileName) {
+            Papa.parse(text, {
+                header: true,
+                dynamicTyping: true,
+                complete: function(results) {
+                    saveFile(fileName, results.data);
+                    displayData(results.data);
+                }
+            });
+        }
+
+        function parseXML(text, fileName) {
+            try {
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(text, "text/xml");
+                const parseError = xmlDoc.getElementsByTagName('parsererror');
+                if (parseError.length) {
+                    alert('Error parsing file, unsupported file format');
+                    return;
+                }
+
+                const root = xmlDoc.documentElement;
+                const rows = Array.from(root.children);
+                if (rows.length === 0) {
+                    alert('No data available');
+                    return;
+                }
+
+                const data = [];
+                const headers = new Set();
+
+                rows.forEach(rowNode => {
+                    const row = {};
+                    const cells = rowNode.children;
+
+                    Array.from(cells).forEach(cell => {
+                        const header = cell.tagName;
+                        headers.add(header);
+                        row[header] = cell.textContent;
+                    });
+
+                    data.push(row);
+                });
+
+                saveFile(fileName, data);
+                displayData(data);
+            } catch (error) {
+                console.error('Error parsing XML:', error);
+                alert('Error parsing XML, check console for details');
+            }
+        }
+
+        function saveFile(fileName, data) {
+            const fileData = {
+                name: fileName,
+                content: data
+            };
+
+            let files = JSON.parse(localStorage.getItem('files')) || [];
+            files.push(fileData);
+            localStorage.setItem('files', JSON.stringify(files));
+        }
+
+        function toggleDataPage() {
+            const files = JSON.parse(localStorage.getItem('files')) || [];
+            const chartContainer = document.getElementById('chartContainer');
+            const dateViewButton = document.getElementById('dateViewButton');
+            const selectXAxisButton = document.getElementById('selectXAxisButton');
+            const selectYAxisButton = document.getElementById('selectYAxisButton');
+            dataPage.innerHTML = '';
+            dataGrid.style.display = 'none';
+
+            if (dataPage.classList.contains('active')) {
+                dataPage.classList.remove('active');
+                dataGrid.style.display = 'block';
+                chartContainer.style.display = 'block';  // Show the chart when "Data" page is not active
+
+                // Show buttons if there's data being displayed
+                if (dataGrid.innerHTML.trim() !== '') {
+                    dateViewButton.classList.add('visible');
+                    selectXAxisButton.classList.add('visible');
+                    selectYAxisButton.classList.add('visible');
+                }
+
+                return;
+            }
+
+            // Hide the buttons when switching to the data page
+            dateViewButton.classList.remove('visible');
+            selectXAxisButton.classList.remove('visible');
+            selectYAxisButton.classList.remove('visible');
+
+            if (files.length === 0) {
+                dataPage.innerHTML = '<p>No files available</p>';
+            } else {
+                const table = document.createElement('table');
+                table.style.width = '100%';
+                table.style.borderCollapse = 'collapse';
+
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+
+                const headers = ['File Name', 'Description', 'Date Uploaded', 'Row Count', 'Actions'];
+                headers.forEach(headerText => {
+                    const th = document.createElement('th');
+                    th.textContent = headerText;
+                    th.style.padding = '5px';  // Adjusted padding to fit within 28px row height
+                    th.style.textAlign = 'left';
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+
+                const tbody = document.createElement('tbody');
+
+                files.forEach((file, index) => {
+                    const row = document.createElement('tr');
+                    row.style.height = '28px';  // Set row height to 28px
+
+                    const nameCell = document.createElement('td');
+                    const nameInput = document.createElement('input');
+                    nameInput.type = 'text';
+                    nameInput.value = file.name;
+                    nameInput.style.width = '100%';
+                    nameInput.style.border = 'none';
+                    nameInput.style.padding = '5px';
+                    nameInput.style.height = '100%';
+                    nameInput.style.background = 'transparent';  // Transparent background
+                    nameInput.style.outline = 'none';  // No outline on focus
+                    nameInput.style.boxShadow = 'none';  // No shadow on focus
+                    nameInput.addEventListener('blur', () => updateFileName(index, nameInput.value));
+                    nameCell.appendChild(nameInput);
+                    nameCell.style.padding = '5px';
+                    row.appendChild(nameCell);
+
+                    const descriptionCell = document.createElement('td');
+                    const descriptionInput = document.createElement('input');
+                    descriptionInput.type = 'text';
+                    descriptionInput.value = file.description || 'No description available';
+                    descriptionInput.style.width = '100%';
+                    descriptionInput.style.border = 'none';
+                    descriptionInput.style.padding = '5px';
+                    descriptionInput.style.height = '100%';
+                    descriptionInput.style.background = 'transparent';  // Transparent background
+                    descriptionInput.style.outline = 'none';  // No outline on focus
+                    descriptionInput.style.boxShadow = 'none';  // No shadow on focus
+                    descriptionInput.addEventListener('blur', () => updateFileDescription(index, descriptionInput.value));
+                    descriptionCell.appendChild(descriptionInput);
+                    descriptionCell.style.padding = '5px';
+                    row.appendChild(descriptionCell);
+
+                    const dateCell = document.createElement('td');
+                    const dateUploaded = new Date(file.dateUploaded || Date.now()).toLocaleString();
+                    dateCell.textContent = dateUploaded;
+                    dateCell.style.padding = '5px';
+                    row.appendChild(dateCell);
+
+                    const rowCountCell = document.createElement('td');
+                    rowCountCell.textContent = file.content.length;
+                    rowCountCell.style.padding = '5px';
+                    row.appendChild(rowCountCell);
+
+                    const actionCell = document.createElement('td');
+                    actionCell.textContent = 'View';
+                    actionCell.style.padding = '7px';
+                    actionCell.style.cursor = 'pointer';
+                    actionCell.style.textAlign = 'center';
+                    actionCell.style.backgroundColor = '#00000000';
+                    actionCell.style.color = '#131d20d1';
+                    actionCell.addEventListener('click', () => viewFile(index));
+                    actionCell.addEventListener('mouseover', () => {
+                        actionCell.style.backgroundColor = '#0095ff69';
+                        actionCell.style.color = '#131d20';
+                    });
+                    actionCell.addEventListener('mouseout', () => {
+                        actionCell.style.backgroundColor = '#00000000';
+                        actionCell.style.color = '#131d20d1';
+                    });
+                    row.appendChild(actionCell);
+
+                    // Add hover effect to highlight the entire row
+                    row.addEventListener('mouseover', () => {
+                        row.classList.add('highlighted');
+                    });
+                    row.addEventListener('mouseout', () => {
+                        row.classList.remove('highlighted');
+                    });
+
+                    tbody.appendChild(row);
+                });
+
+                table.appendChild(tbody);
+                dataPage.appendChild(table);
+            }
+
+            dataPage.classList.add('active');
+            chartContainer.style.display = 'none';  // Hide the chart when "Data" page is active
+        }
+
+
+
+        function updateFileName(index, newName) {
+            let files = JSON.parse(localStorage.getItem('files')) || [];
+            if (files[index]) {
+                files[index].name = newName;
+                localStorage.setItem('files', JSON.stringify(files));
+            }
+        }
+
+        function updateFileDescription(index, newDescription) {
+            let files = JSON.parse(localStorage.getItem('files')) || [];
+            if (files[index]) {
+                files[index].description = newDescription;
+                localStorage.setItem('files', JSON.stringify(files));
+            }
+        }
+
+
+
+        function viewFile(index) {
+            const files = JSON.parse(localStorage.getItem('files')) || [];
+            const file = files[index];
+            if (!file) return;
+
+            // Reset any previous column selections
+            xAxisColumns.clear();
+            yAxisColumns.clear();
+
+            // Update the header colors (this will remove any previous axis indicators)
+            updateHeaderColors();
+
+            // Reset the dateViewButton to its disabled state
+            const dateViewButton = document.getElementById('dateViewButton');
+            dateViewButton.classList.add('disabled');
+            dateViewButton.disabled = true;
+
+            // Hide the buttons initially
+            dateViewButton.classList.remove('visible');
+            document.getElementById('selectXAxisButton').classList.remove('visible');
+            document.getElementById('selectYAxisButton').classList.remove('visible');
+
+            dataPage.classList.remove('active');
+            dataGrid.style.display = 'block';
+            document.getElementById('chartContainer').style.display = 'block';  // Ensure chart container is visible
+
+            displayData(file.content);
+
+            // Delay to ensure the chart is properly generated after displaying data
+            setTimeout(generateChart, 100);
+        }
+
+
+
+        function displayData(data) {
+            const dateViewButton = document.getElementById('dateViewButton');
+            const selectXAxisButton = document.getElementById('selectXAxisButton');
+            const selectYAxisButton = document.getElementById('selectYAxisButton');
+            
+            if (data.length === 0) {
+                dataGrid.innerHTML = '<p>No data available</p>';
+                // Hide the buttons if no data is available
+                dateViewButton.classList.remove('visible');
+                selectXAxisButton.classList.remove('visible');
+                selectYAxisButton.classList.remove('visible');
+                return;
+            }
+            
+            // Show the buttons since data is available
+            dateViewButton.classList.add('visible');
+            selectXAxisButton.classList.add('visible');
+            selectYAxisButton.classList.add('visible');
+
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+            
+            const headerRow = document.createElement('tr');
+            Object.keys(data[0]).forEach((header, index) => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                th.dataset.index = index; 
+                
+                th.addEventListener('click', (event) => {
+                    if (isSelectingXAxis) {
+                        toggleXAxisSelection(index, th);
+                        resetSelectionMode();
+                    } else if (isSelectingYAxis) {
+                        toggleYAxisSelection(index, th);
+                        resetSelectionMode();
+                    } else {
+                        sortTable(header, index);
+                    }
+                });
+
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            
+            data.forEach((row, rowIndex) => {
+                const tr = document.createElement('tr');
+                tr.dataset.index = rowIndex; 
+                Object.keys(row).forEach(header => {
+                    const td = document.createElement('td');
+                    td.textContent = row[header] === 0 ? '0' : row[header] || '';
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            dataGrid.innerHTML = '';
+            dataGrid.appendChild(table);
+
+            document.querySelectorAll('table').forEach(table => {
+                table.addEventListener('mouseover', event => {
+                    if (event.target.tagName === 'TD' && event.target.cellIndex !== -1) {
+                        const row = event.target.parentElement;
+                        row.classList.add('highlighted');
+                    }
+                });
+
+                table.addEventListener('mouseout', event => {
+                    if (event.target.tagName === 'TD' && event.target.cellIndex !== -1) {
+                        const row = event.target.parentElement;
+                        row.classList.remove('highlighted');
+                    }
+                });
+            });
+        }
+
+
+        function toggleXAxisSelection(index, thElement) {
+            if (yAxisColumns.has(index)) {
+                alert("This column is already assigned to the Y Axis. Please unassign it from the Y Axis before assigning it to the X Axis.");
+                return;
+            }
+
+            if (xAxisColumns.has(index)) {
+                xAxisColumns.delete(index);
+            } else {
+                xAxisColumns.add(index);
+            }
+            updateHeaderColors();
+            checkForDateColumn(); // Check for date columns after selection
+            generateChart();
+        }
+
+        function toggleYAxisSelection(index, thElement) {
+            if (xAxisColumns.has(index)) {
+                alert("This column is already assigned to the X Axis. Please unassign it from the X Axis before assigning it to the Y Axis.");
+                return;
+            }
+
+            if (yAxisColumns.has(index)) {
+                yAxisColumns.delete(index);
+            } else {
+                yAxisColumns.add(index);
+            }
+            updateHeaderColors();
+            checkForDateColumn(); // Check for date columns after selection
+            generateChart();
+        }
+
+
+
+        function updateHeaderColors() {
+            const tableHeaders = document.querySelectorAll('th');
+            tableHeaders.forEach((th) => {
+                const index = parseInt(th.dataset.index, 10);
+                th.classList.remove('selected');
+
+                th.textContent = th.textContent.replace(/\s*\x|\s*\y/g, '').trim();
+
+                if (xAxisColumns.has(index)) {
+                    th.classList.add('selected');
+                    th.innerHTML = `${th.textContent} <span class="axis-indicator">x</span>`;
+                } else if (yAxisColumns.has(index)) {
+                    th.classList.add('selected');
+                    th.innerHTML = `${th.textContent} <span class="axis-indicator">y</span>`;
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize the chart with default data
+            initializeDefaultChart();
+
+            // Make the chart responsive to resizing
+            const chartContainer = document.getElementById('chartContainer');
+            const resizeObserver = new ResizeObserver(() => {
+                if (chartInstance) {
+                    chartInstance.resize();
+                }
+            });
+            resizeObserver.observe(chartContainer);
+
+            // Hide the dateViewButton initially
+            document.getElementById('dateViewButton').style.display = 'none';
+        });
+
+        function initializeDefaultChart() {
+            const ctx = document.getElementById('myChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [], // No labels when initializing with blank chart
+                    datasets: [] // No datasets for blank chart
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'X Axis'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Y Axis'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Ensure the buttons are hidden initially
+            document.getElementById('dateViewButton').classList.remove('visible');
+            document.getElementById('selectXAxisButton').classList.remove('visible');
+            document.getElementById('selectYAxisButton').classList.remove('visible');
+        }
+
+        function generateChart() {
+            const table = document.querySelector('#dataGrid table');
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+
+            let xAxisData = [];
+            let datasets = [];
+            let existingColors = [];
+
+            if (xAxisColumns.size > 0) {
+                xAxisData = Array.from(xAxisColumns).map(colIndex =>
+                    rows.map(row => row.querySelector(`td:nth-child(${colIndex + 1})`).textContent.trim())
+                ).flat();
+            } else {
+                xAxisData = []; // No labels if no x-axis is selected
+            }
+
+            if (yAxisColumns.size > 0) {
+                datasets = Array.from(yAxisColumns).map(colIndex => {
+                    const data = rows.map(row =>
+                        parseFloat(row.querySelector(`td:nth-child(${colIndex + 1})`).textContent.trim())
+                    );
+
+                    const borderColor = getRandomColor(existingColors);
+                    existingColors.push(borderColor);
+
+                    return {
+                        label: table.querySelector(`th[data-index="${colIndex}"]`).textContent,
+                        data: data,
+                        fill: false,
+                        borderColor: borderColor,
+                        borderWidth: 1, // Set the line width to 1 pixel (smallest possible)
+                        tension: 0.1,
+                        pointRadius: 1, // Set the point radius to 1 (smallest possible)
+                        pointHoverRadius: 2, // Slightly larger when hovering to improve visibility
+                    };
+                });
+            } else {
+                datasets = []; // No datasets if no y-axis is selected
+            }
+
+            // Check if the x-axis data contains dates
+            const isXDate = xAxisData.every(date => !isNaN(Date.parse(date)));
+            let xAxisLabels = xAxisData;
+
+            const dateViewButton = document.getElementById('dateViewButton');
+
+            if (isXDate) {
+                const dateView = dateViewButton.textContent.toLowerCase(); // Get the selected date view (day, week, month)
+                const dateOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+                const aggregatedData = {};
+                const uniqueLabels = new Set();
+
+                xAxisLabels = xAxisData.map((date, index) => {
+                    const currentDate = new Date(date);
+                    let key;
+
+                    switch (dateView) {
+                        case 'week':
+                            const weekStart = new Date(currentDate.setDate(currentDate.getDate() - currentDate.getDay()));
+                            key = `${weekStart.toLocaleDateString(undefined, dateOptions)} (Week)`;
+                            break;
+                        case 'month':
+                            key = currentDate.toLocaleDateString(undefined, { year: 'numeric', month: 'long' });
+                            break;
+                        default:
+                            key = currentDate.toLocaleDateString(undefined, dateOptions);
+                            break;
+                    }
+
+                    if (!aggregatedData[key]) {
+                        aggregatedData[key] = datasets.map(() => ({ sum: 0, count: 0 }));
+                    }
+
+                    datasets.forEach((dataset, datasetIndex) => {
+                        aggregatedData[key][datasetIndex].sum += dataset.data[index];
+                        aggregatedData[key][datasetIndex].count += 1;
+                    });
+
+                    uniqueLabels.add(key);
+                    return { key, originalDate: currentDate };
+                });
+
+                xAxisLabels.sort((a, b) => a.originalDate - b.originalDate);
+
+                const sortedKeys = Array.from(uniqueLabels);
+                datasets.forEach((dataset, datasetIndex) => {
+                    dataset.data = sortedKeys.map(key => {
+                        const aggregation = aggregatedData[key][datasetIndex];
+                        return aggregation.sum / aggregation.count;
+                    });
+                });
+
+                xAxisLabels = sortedKeys;
+
+                // Show the dateViewButton if the chart is visible and dates are present
+                dateViewButton.style.display = 'block';
+            } else {
+                // Hide the dateViewButton if no dates are present
+                dateViewButton.style.display = 'none';
+            }
+
+            const xAxisType = isXDate ? 'category' : 'category';
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const ctx = document.getElementById('myChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: xAxisLabels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            type: xAxisType,
+                            beginAtZero: !isXDate,
+                            title: {
+                                display: true,
+                                text: xAxisLabels.length > 0 ? 'X Axis' : 'No Data Selected'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: datasets.length > 0 ? 'Y Axis' : 'No Data Selected'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function getRandomColor(existingColors) {
+            const defaultBlue = '#0095ff'; // The blue color used for hover effects
+
+            const colors = [
+                defaultBlue,  // Set the default blue as the first color
+                '#FF6347',    // Tomato (a softer red)
+                '#4682B4',    // SteelBlue
+                '#32CD32',    // LimeGreen
+                '#8A2BE2',    // BlueViolet
+                '#5F9EA0',    // CadetBlue
+                '#A52A2A',    // Brown
+                '#2E8B57',    // SeaGreen
+                '#6A5ACD',    // SlateBlue
+                '#708090',    // SlateGray
+                '#FF4500',    // OrangeRed
+                '#B22222',    // FireBrick
+            ];
+
+            // Function to calculate color difference
+            function colorDifference(color1, color2) {
+                const rgb1 = hexToRgb(color1);
+                const rgb2 = hexToRgb(color2);
+                return Math.sqrt(
+                    Math.pow(rgb2.r - rgb1.r, 2) +
+                    Math.pow(rgb2.g - rgb1.g, 2) +
+                    Math.pow(rgb2.b - rgb1.b, 2)
+                );
+            }
+
+            // Function to convert hex color to RGB
+            function hexToRgb(hex) {
+                const bigint = parseInt(hex.slice(1), 16);
+                return {
+                    r: (bigint >> 16) & 255,
+                    g: (bigint >> 8) & 255,
+                    b: bigint & 255
+                };
+            }
+
+            // Ensure the default blue color is chosen first
+            let chosenColor = colors[0];
+
+            // If the default blue is already used, select another color
+            if (existingColors.includes(chosenColor)) {
+                for (let i = 1; i < colors.length; i++) {
+                    const candidateColor = colors[i];
+
+                    if (!existingColors.some(existingColor => colorDifference(existingColor, candidateColor) < 100)) {
+                        chosenColor = candidateColor;
+                        break;
+                    }
+                }
+            }
+
+            // Fallback to any random color if no sufficient difference is found
+            return chosenColor;
+        }
+
+        function cycleDateView() {
+            const dateViewButton = document.getElementById('dateViewButton');
+            const views = ['Day', 'Week', 'Month'];
+            let currentIndex = views.indexOf(dateViewButton.textContent);
+            currentIndex = (currentIndex + 1) % views.length;
+            dateViewButton.textContent = views[currentIndex];
+            generateChart();
+        }
+
+        function checkForDateColumn() {
+            const dateViewButton = document.getElementById('dateViewButton');
+            const table = document.querySelector('#dataGrid table');
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+
+            // Check if the x-axis data contains dates
+            const isXDate = Array.from(xAxisColumns).some(colIndex =>
+                rows.every(row => !isNaN(Date.parse(row.querySelector(`td:nth-child(${colIndex + 1})`).textContent.trim())))
+            );
+
+            if (isXDate) {
+                dateViewButton.classList.remove('disabled');
+                dateViewButton.disabled = false;
+            } else {
+                dateViewButton.classList.add('disabled');
+                dateViewButton.disabled = true;
+            }
+
+            // Ensure the button is always displayed
+            dateViewButton.style.display = 'block';
+        }
+
+
+
+        function sortTable(columnName, columnIndex) {
+
+            if (isSelectingXAxis || isSelectingYAxis) return;
+
+            const table = document.querySelector('#dataGrid table');
+            if (!table) return;
+
+            const thead = table.querySelector('thead');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            thead.querySelectorAll('th').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+            });
+
+            const direction = sortDirection[columnName] === 'asc' ? 'desc' : 'asc';
+            sortDirection[columnName] = direction;
+
+            const header = thead.querySelector(`th[data-index="${columnIndex}"]`);
+            header.classList.add(direction === 'asc' ? 'sort-asc' : 'sort-desc');
+
+            rows.sort((a, b) => {
+                const aText = a.querySelector(`td:nth-child(${columnIndex + 1})`).textContent.trim();
+                const bText = b.querySelector(`td:nth-child(${columnIndex + 1})`).textContent.trim();
+
+                const aDate = Date.parse(aText);
+                const bDate = Date.parse(bText);
+
+                if (!isNaN(aDate) && !isNaN(bDate)) {
+                    // Both are valid dates, sort by date
+                    return direction === 'asc' ? aDate - bDate : bDate - aDate;
+                } else if (!isNaN(aText) && !isNaN(bText)) {
+                    // Both are numbers, sort numerically
+                    return direction === 'asc' ? aText - bText : bText - aText;
+                } else {
+                    // Fallback to string comparison
+                    return direction === 'asc' ? aText.localeCompare(bText) : bText.localeCompare(aText);
+                }
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+
+            // If the sorted column is on the x-axis, update the chart as well
+            if (xAxisColumns.has(columnIndex)) {
+                generateChart();
+            }
+        }
+
+        function toggleDropdown() {
+            const dropdown = document.querySelector('.dropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        function showDashboards() {
+            alert('Dashboards selected');
+            // Implement the logic to show dashboards
+        }
+
+        function showQueries() {
+            alert('Queries selected');
+            // Implement the logic to show queries
+        }
+
+        function showSettings() {
+            alert('Settings selected');
+            // Implement the logic to show settings
+        }
+
+        let isSelectingXAxis = false;
+        let isSelectingYAxis = false;
+
+        function startXAxisSelection() {
+            isSelectingXAxis = true;
+            isSelectingYAxis = false;
+            highlightSelectionButton('selectXAxisButton');
+        }
+
+        function startYAxisSelection() {
+            isSelectingXAxis = false;
+            isSelectingYAxis = true;
+            highlightSelectionButton('selectYAxisButton');
+        }
+
+        function highlightSelectionButton(buttonId) {
+            document.getElementById('selectXAxisButton').classList.remove('highlighted');
+            document.getElementById('selectYAxisButton').classList.remove('highlighted');
+            document.getElementById(buttonId).classList.add('highlighted');
+        }
+
+        function resetSelectionMode() {
+            isSelectingXAxis = false;
+            isSelectingYAxis = false;
+            document.getElementById('selectXAxisButton').classList.remove('highlighted');
+            document.getElementById('selectYAxisButton').classList.remove('highlighted');
+        }
+
+
+    </script>
+</body>
+</html>
