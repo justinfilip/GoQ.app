@@ -72,7 +72,7 @@
         }
 
         th:hover, td:hover {
-            background-color: #0095ff69;
+            background-color: #0095ff31;
             color: #131d20;
         }
 
@@ -85,8 +85,8 @@
             top: 0;
             right: 3px;
             font-size: 10px;
-            color: #131d20d1;
-            background-color: #7dc9ff;
+            color: #ffffff;
+            background-color: #0095ff;
             border-radius: 3px;
             font-weight: bold;
             margin-top: 25px;
@@ -307,26 +307,29 @@
 
         #chartContainer {
             width: 800px;
-            height: auto;
             max-width: 100%;
-            max-height: 100%;
             min-width: 310px;
             margin: 20px auto;
-            resize: both; /* Allow both horizontal and vertical resizing */
-            overflow: auto; /* Allow content to overflow */
-            /* padding: 10px; */
-            /* border: 1px solid #ccc; */
-            scrollbar-width: none;   /* Hide scrollbar for Firefox */
+            resize: horizontal; /* Allow only horizontal resizing */
+            overflow: hidden; /* Hide overflow to prevent scrollbars */
             transition: all 0s;
+            aspect-ratio: 16 / 9; /* Set a 16:9 aspect ratio */
+            position: relative; /* Necessary for positioning the resize icon */
         }
 
-        #myChart {
-            width: 100%;
-            height: 100%;
-            max-width: 100%;
-            max-height: 100%;
-            min-width: 310px;
-            transition: all 0s;
+        #chartContainer::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-left: 6px dashed transparent;
+            border-top: 0px dashed transparent;
+            border-bottom: 6px dashed #131d20d1; /* The triangle color */
+            cursor: se-resize; /* The resize cursor */
+            pointer-events: none; /* Allows clicking and resizing to pass through */
+
         }
 
         /* Add a class to disable text selection */
@@ -366,7 +369,7 @@
         }
 
         .highlighted {
-            background-color: #0095ff2a;
+            background-color: #0095ff22;
         }
     </style>
 </head>
@@ -405,12 +408,13 @@
         <div id="chartContainer">
             <canvas id="myChart"></canvas>
         </div>
+        <p style="padding-bottom: 10px;">Hold SHIFT for Hotkeys (ex: SHIFT+D , SHIFT+CTRL/CMD+CLICK)</p>
     </center>
 
     <div class="date-view-selector" style="display: flex; justify-content: center; width: 100%; align-items: center; gap: 10px; margin-bottom: 10px;">
-        <button id="dateViewButton" class="date-view-button disabled" onclick="cycleDateView()">Day</button>
-        <button id="selectXAxisButton" class="date-view-button" onclick="startXAxisSelection()">Add/Remove X Axis</button>
-        <button id="selectYAxisButton" class="date-view-button" onclick="startYAxisSelection()">Add/Remove Y Axis</button>
+        <button id="dateViewButton" class="date-view-button disabled" onclick="cycleDateView()">(T) Day</button>
+        <button id="selectXAxisButton" class="date-view-button" onclick="startXAxisSelection()">(CMD/CTRL+CLICK) Add/Rem X Axis</button>
+        <button id="selectYAxisButton" class="date-view-button" onclick="startYAxisSelection()">(CLICK) Add/Rem Y Axis</button>
     </div>
     
 
@@ -437,6 +441,15 @@
         let isShiftPressed = false;
 
         document.addEventListener('keydown', (event) => {
+
+            if (event.shiftKey && event.key === 'D') {
+                toggleDataPage();
+            }
+
+            if (event.shiftKey && event.key === 'T') {
+                document.getElementById('dateViewButton').click();
+            }
+
             if (event.key === 'Control' || event.key === 'Meta') {
                 isCtrlOrCmdPressed = true;
             }
@@ -478,22 +491,26 @@
         });
 
         function handleFile(file) {
-            const fileType = file.type;
-            const reader = new FileReader();
+        const fileType = file.type;
+        const reader = new FileReader();
 
-            reader.onload = function(event) {
-                const text = event.target.result;
-                if (fileType.includes('csv')) {
-                    parseCSV(text, file.name);
-                } else if (fileType.includes('xml')) {
-                    parseXML(text, file.name);
-                } else {
-                    alert('Unsupported file type');
-                }
-            };
+        reader.onload = function(event) {
+            const text = event.target.result;
+            if (fileType.includes('csv')) {
+                parseCSV(text, file.name);
+            } else if (fileType.includes('xml')) {
+                parseXML(text, file.name);
+            } else {
+                alert('Unsupported file type');
+            }
 
-            reader.readAsText(file);
-        }
+            // Close any open pages when a new file is handled
+            closeOpenPages();
+        };
+
+        reader.readAsText(file);
+    }
+
 
         function parseCSV(text, fileName) {
             Papa.parse(text, {
@@ -712,6 +729,24 @@
             }
         }
 
+        function closeOpenPages() {
+            // Hide the data page if it's open
+            if (dataPage.classList.contains('active')) {
+                dataPage.classList.remove('active');
+            }
+
+            // Hide other potential open sections if needed
+            // For example:
+            // if (document.getElementById('someOtherPage').classList.contains('active')) {
+            //     document.getElementById('someOtherPage').classList.remove('active');
+            // }
+
+            // Optionally, hide or reset any other elements as needed
+            document.getElementById('chartContainer').style.display = 'block';
+            dataGrid.style.display = 'block';
+        }
+
+
 
 
         function viewFile(index) {
@@ -736,15 +771,21 @@
             document.getElementById('selectXAxisButton').classList.remove('visible');
             document.getElementById('selectYAxisButton').classList.remove('visible');
 
+            // Close any open pages
+            closeOpenPages();
+
+            // Ensure data page is hidden and data grid is shown
             dataPage.classList.remove('active');
             dataGrid.style.display = 'block';
             document.getElementById('chartContainer').style.display = 'block';  // Ensure chart container is visible
 
+            // Display the dataset
             displayData(file.content);
 
             // Delay to ensure the chart is properly generated after displaying data
             setTimeout(generateChart, 100);
         }
+
 
 
 
@@ -780,11 +821,18 @@
                 th.addEventListener('click', (event) => {
                     if (isSelectingXAxis) {
                         toggleXAxisSelection(index, th);
-                        resetSelectionMode();
+                        resetSelectionMode(); // Reset mode after selection
                     } else if (isSelectingYAxis) {
                         toggleYAxisSelection(index, th);
-                        resetSelectionMode();
+                        resetSelectionMode(); // Reset mode after selection
+                    } else if (event.shiftKey && (event.metaKey || event.ctrlKey)) {
+                        // Command (macOS) or Ctrl (Windows) plus the shift key is pressed, add to X-axis
+                        toggleXAxisSelection(index, th);
+                    } else if (event.shiftKey) {
+                        // Shift is pressed, add to Y-axis
+                        toggleYAxisSelection(index, th);
                     } else {
+                        // Regular sort if no modifier key is pressed
                         sortTable(header, index);
                     }
                 });
@@ -880,21 +928,25 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Initialize the chart with default data
             initializeDefaultChart();
 
-            // Make the chart responsive to resizing
             const chartContainer = document.getElementById('chartContainer');
+            const aspectRatio = 16 / 9; // Adjust this to your desired aspect ratio
+
             const resizeObserver = new ResizeObserver(() => {
+                const width = chartContainer.clientWidth;
+                const height = width / aspectRatio; // Calculate height based on the aspect ratio
+                chartContainer.style.height = height + 'px';
+
                 if (chartInstance) {
                     chartInstance.resize();
                 }
             });
             resizeObserver.observe(chartContainer);
 
-            // Hide the dateViewButton initially
             document.getElementById('dateViewButton').style.display = 'none';
         });
+
 
         function initializeDefaultChart() {
             const ctx = document.getElementById('myChart').getContext('2d');
@@ -978,7 +1030,7 @@
             const dateViewButton = document.getElementById('dateViewButton');
 
             if (isXDate) {
-                const dateView = dateViewButton.textContent.toLowerCase(); // Get the selected date view (day, week, month)
+                const dateView = dateViewButton.textContent.toLowerCase().split(" ")[1]; // Get the selected date view (day, week, month)
                 const dateOptions = { day: 'numeric', month: 'short', year: 'numeric' };
                 const aggregatedData = {};
                 const uniqueLabels = new Set();
@@ -1128,7 +1180,7 @@
 
         function cycleDateView() {
             const dateViewButton = document.getElementById('dateViewButton');
-            const views = ['Day', 'Week', 'Month'];
+            const views = ['(T) Day', '(T) Week', '(T) Month'];
             let currentIndex = views.indexOf(dateViewButton.textContent);
             currentIndex = (currentIndex + 1) % views.length;
             dateViewButton.textContent = views[currentIndex];
@@ -1231,29 +1283,43 @@
         let isSelectingYAxis = false;
 
         function startXAxisSelection() {
-            isSelectingXAxis = true;
-            isSelectingYAxis = false;
-            highlightSelectionButton('selectXAxisButton');
+            if (isSelectingXAxis) {
+                resetSelectionMode();
+            } else {
+                isSelectingXAxis = true;
+                isSelectingYAxis = false;
+                highlightSelectionButton('selectXAxisButton');
+            }
         }
 
         function startYAxisSelection() {
-            isSelectingXAxis = false;
-            isSelectingYAxis = true;
-            highlightSelectionButton('selectYAxisButton');
+            if (isSelectingYAxis) {
+                resetSelectionMode();
+            } else {
+                isSelectingXAxis = false;
+                isSelectingYAxis = true;
+                highlightSelectionButton('selectYAxisButton');
+            }
         }
 
         function highlightSelectionButton(buttonId) {
-            document.getElementById('selectXAxisButton').classList.remove('highlighted');
-            document.getElementById('selectYAxisButton').classList.remove('highlighted');
+            const xAxisButton = document.getElementById('selectXAxisButton');
+            const yAxisButton = document.getElementById('selectYAxisButton');
+
+            xAxisButton.classList.remove('highlighted');
+            yAxisButton.classList.remove('highlighted');
+
             document.getElementById(buttonId).classList.add('highlighted');
         }
 
         function resetSelectionMode() {
             isSelectingXAxis = false;
             isSelectingYAxis = false;
+
             document.getElementById('selectXAxisButton').classList.remove('highlighted');
             document.getElementById('selectYAxisButton').classList.remove('highlighted');
         }
+
 
 
     </script>
