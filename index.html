@@ -10,7 +10,6 @@
         * {
             box-sizing: border-box;
             font-family: Helvetica, Arial, sans-serif;
-            transition: all 0.1s;
         }
 
         html {
@@ -220,7 +219,6 @@
             display: block;
         }
 
-
         .drop-area {
             border: .1px dashed #0000003d;
             border-radius: 7px;
@@ -358,7 +356,6 @@
             visibility: visible; /* Make the buttons visible when needed */
         }
 
-
         /* Disabled state style for the date view button */
         .date-view-button.disabled {
             color: rgba(255, 255, 255, 0.3); /* Barely visible text color */
@@ -412,9 +409,9 @@
     </center>
 
     <div class="date-view-selector" style="display: flex; justify-content: center; width: 100%; align-items: center; gap: 10px; margin-bottom: 10px;">
-        <button id="dateViewButton" class="date-view-button disabled" onclick="cycleDateView()">(T) Day</button>
-        <button id="selectXAxisButton" class="date-view-button" onclick="startXAxisSelection()">(CMD/CTRL+CLICK) Add/Rem X Axis</button>
-        <button id="selectYAxisButton" class="date-view-button" onclick="startYAxisSelection()">(CLICK) Add/Rem Y Axis</button>
+        <button id="dateViewButton" class="date-view-button disabled" onclick="cycleDateView()">Day (T)</button>
+        <button id="selectXAxisButton" class="date-view-button" onclick="startXAxisSelection()">Add/Rem X Axis (CMD/CTRL+CLICK)</button>
+        <button id="selectYAxisButton" class="date-view-button" onclick="startYAxisSelection()">Add/Rem Y Axis (CLICK)</button>
     </div>
     
 
@@ -510,7 +507,6 @@
 
         reader.readAsText(file);
     }
-
 
         function parseCSV(text, fileName) {
             Papa.parse(text, {
@@ -711,8 +707,6 @@
             chartContainer.style.display = 'none';  // Hide the chart when "Data" page is active
         }
 
-
-
         function updateFileName(index, newName) {
             let files = JSON.parse(localStorage.getItem('files')) || [];
             if (files[index]) {
@@ -745,9 +739,6 @@
             document.getElementById('chartContainer').style.display = 'block';
             dataGrid.style.display = 'block';
         }
-
-
-
 
         function viewFile(index) {
             const files = JSON.parse(localStorage.getItem('files')) || [];
@@ -785,9 +776,6 @@
             // Delay to ensure the chart is properly generated after displaying data
             setTimeout(generateChart, 100);
         }
-
-
-
 
         function displayData(data) {
             const dateViewButton = document.getElementById('dateViewButton');
@@ -874,7 +862,6 @@
             });
         }
 
-
         function toggleXAxisSelection(index, thElement) {
             if (yAxisColumns.has(index)) {
                 alert("This column is already assigned to the Y Axis. Please unassign it from the Y Axis before assigning it to the X Axis.");
@@ -906,8 +893,6 @@
             checkForDateColumn(); // Check for date columns after selection
             generateChart();
         }
-
-
 
         function updateHeaderColors() {
             const tableHeaders = document.querySelectorAll('th');
@@ -946,7 +931,6 @@
 
             document.getElementById('dateViewButton').style.display = 'none';
         });
-
 
         function initializeDefaultChart() {
             const ctx = document.getElementById('myChart').getContext('2d');
@@ -1030,7 +1014,7 @@
             const dateViewButton = document.getElementById('dateViewButton');
 
             if (isXDate) {
-                const dateView = dateViewButton.textContent.toLowerCase().split(" ")[1]; // Get the selected date view (day, week, month)
+                const dateView = dateViewButton.textContent.toLowerCase().split(" ")[0]; // Get the selected date view (day, week, month)
                 const dateOptions = { day: 'numeric', month: 'short', year: 'numeric' };
                 const aggregatedData = {};
                 const uniqueLabels = new Set();
@@ -1180,7 +1164,7 @@
 
         function cycleDateView() {
             const dateViewButton = document.getElementById('dateViewButton');
-            const views = ['(T) Day', '(T) Week', '(T) Month'];
+            const views = ['Day (T)', 'Week (T)', 'Month (T)'];
             let currentIndex = views.indexOf(dateViewButton.textContent);
             currentIndex = (currentIndex + 1) % views.length;
             dateViewButton.textContent = views[currentIndex];
@@ -1208,8 +1192,6 @@
             // Ensure the button is always displayed
             dateViewButton.style.display = 'block';
         }
-
-
 
         function sortTable(columnName, columnIndex) {
 
@@ -1319,8 +1301,6 @@
             document.getElementById('selectXAxisButton').classList.remove('highlighted');
             document.getElementById('selectYAxisButton').classList.remove('highlighted');
         }
-
-
 
     </script>
 </body>
