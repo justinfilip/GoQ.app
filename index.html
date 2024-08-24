@@ -437,6 +437,8 @@
         let isCtrlOrCmdPressed = false;
         let isShiftPressed = false;
 
+        const columnColorMap = {};
+
         document.addEventListener('keydown', (event) => {
 
             if (event.shiftKey && event.key === 'D') {
@@ -896,6 +898,10 @@
 
         function updateHeaderColors() {
             const tableHeaders = document.querySelectorAll('th');
+            const datasets = chartInstance?.data?.datasets || [];
+
+            let yAxisCounter = 0;
+
             tableHeaders.forEach((th) => {
                 const index = parseInt(th.dataset.index, 10);
                 th.classList.remove('selected');
@@ -904,13 +910,20 @@
 
                 if (xAxisColumns.has(index)) {
                     th.classList.add('selected');
-                    th.innerHTML = `${th.textContent} <span class="axis-indicator">x</span>`;
+                    // Set x-axis to always have black background and white text
+                    th.innerHTML = `${th.textContent} <span class="axis-indicator" style="background-color: #000000; color: #ffffff;">x</span>`;
                 } else if (yAxisColumns.has(index)) {
                     th.classList.add('selected');
-                    th.innerHTML = `${th.textContent} <span class="axis-indicator">y</span>`;
+
+                    // Each y-axis column gets its corresponding color from the columnColorMap
+                    const color = columnColorMap[index];
+                    th.innerHTML = `${th.textContent} <span class="axis-indicator" style="background-color: ${color}; color: #ffffff;">y</span>`;
+                    yAxisCounter++;
                 }
             });
         }
+
+
 
         document.addEventListener('DOMContentLoaded', () => {
             initializeDefaultChart();
@@ -973,7 +986,7 @@
 
             let xAxisData = [];
             let datasets = [];
-            let existingColors = [];
+            let existingColors = Object.values(columnColorMap);
 
             if (xAxisColumns.size > 0) {
                 xAxisData = Array.from(xAxisColumns).map(colIndex =>
@@ -989,7 +1002,8 @@
                         parseFloat(row.querySelector(`td:nth-child(${colIndex + 1})`).textContent.trim())
                     );
 
-                    const borderColor = getRandomColor(existingColors);
+                    // Get or assign a color for the current column
+                    const borderColor = columnColorMap[colIndex] || getRandomColor(existingColors, colIndex);
                     existingColors.push(borderColor);
 
                     return {
@@ -1102,13 +1116,21 @@
                     }
                 }
             });
+
+            // Update header colors to reflect the changes
+            updateHeaderColors();
         }
 
-        function getRandomColor(existingColors) {
+        function getRandomColor(existingColors, columnIndex) {
+            if (columnColorMap[columnIndex]) {
+                // Return the existing color for this column if already assigned
+                return columnColorMap[columnIndex];
+            }
+
             const defaultBlue = '#0095ff'; // The blue color used for hover effects
 
             const colors = [
-                defaultBlue,  // Set the default blue as the first color
+                '#0095ff',    // Blue
                 '#FF6347',    // Tomato (a softer red)
                 '#4682B4',    // SteelBlue
                 '#32CD32',    // LimeGreen
@@ -1122,43 +1144,14 @@
                 '#B22222',    // FireBrick
             ];
 
-            // Function to calculate color difference
-            function colorDifference(color1, color2) {
-                const rgb1 = hexToRgb(color1);
-                const rgb2 = hexToRgb(color2);
-                return Math.sqrt(
-                    Math.pow(rgb2.r - rgb1.r, 2) +
-                    Math.pow(rgb2.g - rgb1.g, 2) +
-                    Math.pow(rgb2.b - rgb1.b, 2)
-                );
-            }
+            // Filter out colors that are already in use
+            const availableColors = colors.filter(color => !existingColors.includes(color));
 
-            // Function to convert hex color to RGB
-            function hexToRgb(hex) {
-                const bigint = parseInt(hex.slice(1), 16);
-                return {
-                    r: (bigint >> 16) & 255,
-                    g: (bigint >> 8) & 255,
-                    b: bigint & 255
-                };
-            }
+            // Select the first available color
+            const chosenColor = availableColors.length > 0 ? availableColors[0] : defaultBlue;
 
-            // Ensure the default blue color is chosen first
-            let chosenColor = colors[0];
-
-            // If the default blue is already used, select another color
-            if (existingColors.includes(chosenColor)) {
-                for (let i = 1; i < colors.length; i++) {
-                    const candidateColor = colors[i];
-
-                    if (!existingColors.some(existingColor => colorDifference(existingColor, candidateColor) < 100)) {
-                        chosenColor = candidateColor;
-                        break;
-                    }
-                }
-            }
-
-            // Fallback to any random color if no sufficient difference is found
+            // Store the color in the map for this column index
+            columnColorMap[columnIndex] = chosenColor;
             return chosenColor;
         }
 
