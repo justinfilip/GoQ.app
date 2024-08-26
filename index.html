@@ -911,8 +911,6 @@
             const isXDate = xAxisData.every(date => !isNaN(Date.parse(date)));
             let xAxisLabels = xAxisData;
 
-            const dateViewButton = document.getElementById('dateViewButton');
-
             if (isXDate) {
                 const parsedDates = xAxisData.map((date, index) => ({
                     originalIndex: index,
@@ -921,17 +919,27 @@
 
                 parsedDates.sort((a, b) => a.date - b.date);
 
+                // Sorting xAxisLabels based on sorted parsedDates
+                xAxisLabels = parsedDates.map(item => item.date.toISOString().split('T')[0]);
+
+                // Sorting datasets to align with the sorted xAxisLabels
+                datasets.forEach((dataset) => {
+                    dataset.data = parsedDates.map(item => dataset.data[item.originalIndex]);
+                });
+
+                const dateViewButton = document.getElementById('dateViewButton');
                 const dateView = dateViewButton.textContent.toLowerCase();
 
-                const { aggregatedLabels, aggregatedDatasets } = aggregateDataByDateView(parsedDates, datasets, dateView);
-
-                xAxisLabels = aggregatedLabels;
-
-                datasets = aggregatedDatasets;
+                if (dateView !== 'day') {
+                    const { aggregatedLabels, aggregatedDatasets } = aggregateDataByDateView(parsedDates, datasets, dateView);
+                    xAxisLabels = aggregatedLabels;
+                    datasets = aggregatedDatasets;
+                }
 
                 dateViewButton.classList.remove('disabled');
                 dateViewButton.classList.add('visible');
             } else {
+                const dateViewButton = document.getElementById('dateViewButton');
                 dateViewButton.classList.add('disabled');
                 dateViewButton.classList.remove('visible');
             }
@@ -974,6 +982,7 @@
 
             updateHeaderColors();
         }
+
 
         function getRandomColor(existingColors, columnIndex) {
             if (columnColorMap[columnIndex]) {
