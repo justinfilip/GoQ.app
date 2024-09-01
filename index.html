@@ -568,7 +568,7 @@
         const columnColorMap = {};
 
         // Virtualization settings
-        const visibleRowsCount = 500; // Number of rows to render at a time for virtualization
+        const visibleRowsCount = 100; // Number of rows to render at a time for virtualization
 
         document.addEventListener('keydown', (event) => {
             if (event.shiftKey && event.key === 'D') {
@@ -736,7 +736,7 @@
             const cancelSearchButton = document.getElementById('cancelSearchButton');
 
             if (data.length === 0) {
-                dataGrid.innerHTML = '<p>No data available</p>';
+                document.querySelector('#dataGrid').innerHTML = '<p>No data available</p>';
                 dateViewButton.classList.remove('visible');
                 selectXAxisButton.classList.remove('visible');
                 selectYAxisButton.classList.remove('visible');
@@ -757,6 +757,9 @@
         }
 
         function renderVirtualizedTable(data) {
+            const tableContainer = document.querySelector('#dataGrid');
+            tableContainer.innerHTML = ''; // Clear previous content
+
             const table = document.createElement('table');
             const thead = document.createElement('thead');
             const tbody = document.createElement('tbody');
@@ -792,8 +795,7 @@
             thead.appendChild(headerRow);
             table.appendChild(thead);
             table.appendChild(tbody);
-            dataGrid.innerHTML = '';
-            dataGrid.appendChild(table);
+            tableContainer.appendChild(table);
 
             let loadedRowCount = 0;
 
@@ -814,12 +816,15 @@
 
             renderRows(); // Initial render
 
-            dataGrid.addEventListener('scroll', () => {
-                // Check if scrolled to the bottom
-                if (dataGrid.scrollTop + dataGrid.clientHeight >= dataGrid.scrollHeight - 10) {
+            window.addEventListener('scroll', () => {
+                // Check if the user is close to the bottom of the page (within 100px)
+                if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 100) {
                     renderRows();
                 }
             });
+
+            // Ensure headers and functionalities are in place
+            updateHeaderColors();  // Add any necessary styles or indicators for headers
         }
 
         // Throttle chart update to reduce UI thread blocking
@@ -887,7 +892,7 @@
 
             if (yAxisColumns.size > 0) {
                 datasets = Array.from(yAxisColumns).map(colIndex => {
-                    const columnData = data.map(row => parseFloat(Object.values(row)[colIndex]));
+                    const columnData = data.map(row => parseFloat(Object.values(row)[colIndex]) || 0);
 
                     const borderColor = columnColorMap[colIndex] || getRandomColor(existingColors, colIndex);
                     existingColors.push(borderColor);
@@ -903,48 +908,55 @@
                         pointHoverRadius: 2,
                     };
                 });
-
             } else {
                 datasets = [];
             }
 
-            const isXDate = xAxisData.every(date => !isNaN(Date.parse(date)));
+            const isXDate = xAxisData.every(date => !isNaN(Date.parse(date)) || isValidDateFormat(date));
+            const isNumericY = datasets.every(dataset => dataset.data.every(value => !isNaN(value)));
             let xAxisLabels = xAxisData;
 
             if (isXDate) {
-                const parsedDates = xAxisData.map((date, index) => ({
-                    originalIndex: index,
-                    date: new Date(date)
-                }));
-
-                parsedDates.sort((a, b) => a.date - b.date);
-
-                // Sorting xAxisLabels based on sorted parsedDates
-                xAxisLabels = parsedDates.map(item => item.date.toISOString().split('T')[0]);
-
-                // Sorting datasets to align with the sorted xAxisLabels
-                datasets.forEach((dataset) => {
-                    dataset.data = parsedDates.map(item => dataset.data[item.originalIndex]);
+                const parsedDates = xAxisData.map(dateStr => {
+                    const date = new Date(dateStr);
+                    return {
+                        date,
+                        original: dateStr
+                    };
                 });
 
+                const dateView = document.getElementById('dateViewButton').textContent.toLowerCase();
+                const aggregatedData = aggregateDataByDateView(parsedDates, datasets, dateView);
+
+                xAxisLabels = aggregatedData.aggregatedLabels;
+                datasets = aggregatedData.aggregatedDatasets;
+
                 const dateViewButton = document.getElementById('dateViewButton');
-                const dateView = dateViewButton.textContent.toLowerCase();
+                const minDate = new Date(Math.min(...parsedDates.map(d => d.date)));
+                const maxDate = new Date(Math.max(...parsedDates.map(d => d.date)));
+                const diffInMonths = maxDate.getMonth() - minDate.getMonth() + (12 * (maxDate.getFullYear() - minDate.getFullYear()));
 
-                if (dateView !== 'day') {
-                    const { aggregatedLabels, aggregatedDatasets } = aggregateDataByDateView(parsedDates, datasets, dateView);
-                    xAxisLabels = aggregatedLabels;
-                    datasets = aggregatedDatasets;
+                if (diffInMonths >= 1) {
+                    dateViewButton.classList.remove('disabled');
+                    dateViewButton.classList.add('visible');
+                } else {
+                    dateViewButton.classList.add('disabled');
+                    dateViewButton.classList.remove('visible');
                 }
-
-                dateViewButton.classList.remove('disabled');
-                dateViewButton.classList.add('visible');
             } else {
                 const dateViewButton = document.getElementById('dateViewButton');
                 dateViewButton.classList.add('disabled');
                 dateViewButton.classList.remove('visible');
             }
 
-            const xAxisType = isXDate ? 'category' : 'category';
+            let chartType = 'line';
+            if (isXDate && isNumericY) {
+                chartType = 'line';
+            } else if (!isXDate && isNumericY) {
+                chartType = 'bar';
+            } else if (!isNumericY) {
+                chartType = 'pie'; 
+            }
 
             if (chartInstance) {
                 chartInstance.destroy();
@@ -952,17 +964,17 @@
 
             const ctx = document.getElementById('myChart').getContext('2d');
             chartInstance = new Chart(ctx, {
-                type: 'line',
+                type: chartType,
                 data: {
                     labels: xAxisLabels,
                     datasets: datasets
                 },
                 options: {
                     responsive: true,
-                    animation: false, 
+                    animation: false,
                     scales: {
                         x: {
-                            type: xAxisType,
+                            type: isXDate ? 'category' : 'category',
                             beginAtZero: !isXDate,
                             title: {
                                 display: true,
@@ -981,6 +993,27 @@
             });
 
             updateHeaderColors();
+        }
+
+        function isValidDateFormat(dateString) {
+            const formats = [
+                /^\d{4}-\d{2}-\d{2}$/,  // YYYY-MM-DD
+                /^\d{2}\/\d{2}\/\d{4}$/,  // MM/DD/YYYY
+                /^\d{2}-\d{2}-\d{4}$/,  // DD-MM-YYYY
+                /^\d{2}\/\d{2}\/\d{2}$/,  // MM/DD/YY
+                /^\d{2}-\d{2}-\d{2}$/,  // DD-MM-YY
+                /^\d{2}\.\d{2}\.\d{4}$/  // DD.MM.YYYY
+            ];
+            return formats.some(regex => regex.test(dateString));
+        }
+
+        function cycleDateView() {
+            const dateViewButton = document.getElementById('dateViewButton');
+            const views = ['Day', 'Week', 'Month'];
+            let currentIndex = views.indexOf(dateViewButton.textContent);
+            currentIndex = (currentIndex + 1) % views.length;
+            dateViewButton.textContent = views[currentIndex];
+            generateChart();
         }
 
 
@@ -1014,15 +1047,6 @@
             return chosenColor;
         }
 
-        function cycleDateView() {
-            const dateViewButton = document.getElementById('dateViewButton');
-            const views = ['Day', 'Week', 'Month'];
-            let currentIndex = views.indexOf(dateViewButton.textContent);
-            currentIndex = (currentIndex + 1) % views.length;
-            dateViewButton.textContent = views[currentIndex];
-            generateChart();
-        }
-
         function checkForDateColumn() {
             const dateViewButton = document.getElementById('dateViewButton');
             const table = document.querySelector('#dataGrid table');
@@ -1042,34 +1066,19 @@
         }
 
         function sortTable(columnName, columnIndex) {
-            if (isSelectingXAxis || isSelectingYAxis || isSelectingColumns) return;
+            const data = window.csvData || window.xmlData;
+            if (!data || data.length === 0) return;
 
-            const table = document.querySelector('#dataGrid table');
-            if (!table) return;
-
-            const thead = table.querySelector('thead');
-            const tbody = table.querySelector('tbody');
-            const rows = Array.from(tbody.querySelectorAll('tr'));
-
-            thead.querySelectorAll('th').forEach(th => {
-                if (parseInt(th.dataset.index) !== columnIndex) {
-                    th.classList.remove('sort-asc', 'sort-desc');
-                }
-            });
-
-            const isNumeric = rows.every(row => !isNaN(parseFloat(row.querySelector(`td:nth-child(${columnIndex + 1})`).textContent.trim())));
+            const isNumeric = data.every(row => !isNaN(parseFloat(Object.values(row)[columnIndex])));
             const currentDirection = sortDirection[columnName] || 'asc';
             const newDirection = currentDirection === 'asc' ? 'desc' : 'asc';
-            sortDirection = {}; 
+            sortDirection = {};
             sortDirection[columnName] = newDirection;
 
-            const header = thead.querySelector(`th[data-index="${columnIndex}"]`);
-            header.classList.remove('sort-asc', 'sort-desc');
-            header.classList.add(newDirection === 'asc' ? 'sort-asc' : 'sort-desc');
-
-            rows.sort((a, b) => {
-                const aText = a.querySelector(`td:nth-child(${columnIndex + 1})`).textContent.trim();
-                const bText = b.querySelector(`td:nth-child(${columnIndex + 1})`).textContent.trim();
+            // Sort the internal dataset
+            data.sort((a, b) => {
+                const aText = Object.values(a)[columnIndex];
+                const bText = Object.values(b)[columnIndex];
 
                 if (isNumeric) {
                     const aNum = parseFloat(aText);
@@ -1080,8 +1089,16 @@
                 }
             });
 
-            rows.forEach(row => tbody.appendChild(row));
+            // After sorting, reset loadedRowCount and re-render the table
+            loadedRowCount = 0;
+            renderVirtualizedTable(data);
 
+            // Update the sorting indicator on the header
+            const header = document.querySelector(`th[data-index="${columnIndex}"]`);
+            header.classList.remove('sort-asc', 'sort-desc');
+            header.classList.add(newDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+            
+            // Regenerate the chart with the sorted data
             if (xAxisColumns.has(columnIndex)) {
                 generateChart();
             }
