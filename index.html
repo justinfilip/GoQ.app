@@ -6,6 +6,7 @@
     <link rel="icon" type="image/png" href="goq_favicon.png">
     <title>Main Dashboard</title>
     <style>
+        /* All previous styles remain unchanged */
         * {
             box-sizing: border-box;
             font-family: Helvetica, Arial, sans-serif;
@@ -280,35 +281,18 @@
             display: block;
         }
         #chartContainer {
-            width: 800px;
+            width: 100%;
+            height: 100%;
+            resize: both;
+            overflow: auto;
             max-width: 100%;
-            min-width: 310px;
+            max-height: 100%;
             margin: 20px auto;
-            resize: horizontal;
-            overflow: hidden;
-            transition: all 0s;
-            aspect-ratio: 16 / 9;
             position: relative;
-            border-top-left-radius: 7px;
-            border-top-right-radius: 7px;
-            border-top: .1px dashed #0000003d;
-            border-left: .1px dashed #0000003d;
-            border-right: .1px dashed #0000003d;
-            border-bottom: none;
-            padding-top: 20px
-        }
-        #chartContainer::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 0;
-            height: 0;
-            border-left: 6px dashed transparent;
-            border-top: 0px dashed transparent;
-            border-bottom: 6px dashed #131d20d1;
-            cursor: se-resize;
-            pointer-events: none;
+            padding-top: 20px;
+            border-radius: 7px;
+            border: .1px dashed #0000003d;
+            padding-bottom: 20px;
         }
         .no-select {
             user-select: none;
@@ -519,6 +503,18 @@
     <center>
         <div id="chartContainer">
             <canvas id="myChart"></canvas>
+        </div>
+
+        <div style="display: flex; justify-content: center; align-items: center; margin-top: 10px;">
+            <label for="chartTypeSelector">Chart Type:</label>
+            <select id="chartTypeSelector" onchange="generateChart()">
+                <option value="line">Line</option>
+                <option value="bar">Bar</option>
+                <option value="pie">Pie</option>
+                <option value="doughnut">Doughnut</option>
+                <option value="radar">Radar</option>
+                <option value="polarArea">Polar Area</option>
+            </select>
         </div>
 
         <input type="text" id="searchInput" placeholder="Enter search criteria" class="search-input" />
@@ -900,7 +896,7 @@
                     return {
                         label: Object.keys(data[0])[colIndex],
                         data: columnData,
-                        fill: false,
+                        backgroundColor: borderColor,
                         borderColor: borderColor,
                         borderWidth: 1,
                         tension: 0.1,
@@ -912,51 +908,52 @@
                 datasets = [];
             }
 
-            const isXDate = xAxisData.every(date => !isNaN(Date.parse(date)) || isValidDateFormat(date));
-            const isNumericY = datasets.every(dataset => dataset.data.every(value => !isNaN(value)));
+            const chartType = document.getElementById('chartTypeSelector').value;
             let xAxisLabels = xAxisData;
 
-            if (isXDate) {
-                const parsedDates = xAxisData.map(dateStr => {
-                    const date = new Date(dateStr);
-                    return {
-                        date,
-                        original: dateStr
-                    };
-                });
+            if (['bar', 'pie', 'doughnut', 'polarArea'].includes(chartType)) {
+                // Aggregate data by categories for applicable chart types
+                const aggregatedData = aggregateDataByCategory(xAxisData, datasets, existingColors);
+                xAxisLabels = aggregatedData.labels;
+                datasets = aggregatedData.datasets;
+            } else {
+                const isXDate = xAxisData.every(date => !isNaN(Date.parse(date)) || isValidDateFormat(date));
+                if (isXDate) {
+                    const parsedDates = xAxisData.map(dateStr => {
+                        const date = new Date(dateStr);
+                        return {
+                            date,
+                            original: dateStr
+                        };
+                    });
 
-                const dateView = document.getElementById('dateViewButton').textContent.toLowerCase();
-                const aggregatedData = aggregateDataByDateView(parsedDates, datasets, dateView);
+                    const dateView = document.getElementById('dateViewButton').textContent.toLowerCase();
+                    const aggregatedData = aggregateDataByDateView(parsedDates, datasets, dateView);
 
-                xAxisLabels = aggregatedData.aggregatedLabels;
-                datasets = aggregatedData.aggregatedDatasets;
+                    xAxisLabels = aggregatedData.aggregatedLabels;
+                    datasets = aggregatedData.aggregatedDatasets;
 
-                const dateViewButton = document.getElementById('dateViewButton');
-                const minDate = new Date(Math.min(...parsedDates.map(d => d.date)));
-                const maxDate = new Date(Math.max(...parsedDates.map(d => d.date)));
-                const diffInMonths = maxDate.getMonth() - minDate.getMonth() + (12 * (maxDate.getFullYear() - minDate.getFullYear()));
+                    const dateViewButton = document.getElementById('dateViewButton');
+                    const minDate = new Date(Math.min(...parsedDates.map(d => d.date)));
+                    const maxDate = new Date(Math.max(...parsedDates.map(d => d.date)));
+                    const diffInMonths = maxDate.getMonth() - minDate.getMonth() + (12 * (maxDate.getFullYear() - minDate.getFullYear()));
 
-                if (diffInMonths >= 1) {
-                    dateViewButton.classList.remove('disabled');
-                    dateViewButton.classList.add('visible');
+                    if (diffInMonths >= 1) {
+                        dateViewButton.classList.remove('disabled');
+                        dateViewButton.classList.add('visible');
+                    } else {
+                        dateViewButton.classList.add('disabled');
+                        dateViewButton.classList.remove('visible');
+                    }
                 } else {
+                    const dateViewButton = document.getElementById('dateViewButton');
                     dateViewButton.classList.add('disabled');
                     dateViewButton.classList.remove('visible');
                 }
-            } else {
-                const dateViewButton = document.getElementById('dateViewButton');
-                dateViewButton.classList.add('disabled');
-                dateViewButton.classList.remove('visible');
             }
 
-            let chartType = 'line';
-            if (isXDate && isNumericY) {
-                chartType = 'line';
-            } else if (!isXDate && isNumericY) {
-                chartType = 'bar';
-            } else if (!isNumericY) {
-                chartType = 'pie'; 
-            }
+            // Adjust chart aspect ratio based on chart type
+            adjustChartAspectRatio(chartType);
 
             if (chartInstance) {
                 chartInstance.destroy();
@@ -972,10 +969,10 @@
                 options: {
                     responsive: true,
                     animation: false,
-                    scales: {
+                    scales: chartType === 'bar' ? {
                         x: {
-                            type: isXDate ? 'category' : 'category',
-                            beginAtZero: !isXDate,
+                            type: 'category',
+                            beginAtZero: true,
                             title: {
                                 display: true,
                                 text: xAxisLabels.length > 0 ? 'X Axis' : 'No Data Selected'
@@ -988,11 +985,65 @@
                                 text: datasets.length > 0 ? 'Y Axis' : 'No Data Selected'
                             }
                         }
-                    }
+                    } : {} // Other chart types like pie, doughnut, etc. don't need specific axis settings
                 }
             });
 
             updateHeaderColors();
+        }
+
+        
+        function aggregateDataByCategory(xAxisData, datasets, existingColors) {
+            const categoryData = {};
+            const categoryColors = {};
+
+            xAxisData.forEach((label, index) => {
+                if (!categoryData[label]) {
+                    categoryData[label] = datasets.map(() => 0);
+                    categoryColors[label] = getRandomColor(existingColors);
+                }
+                datasets.forEach((dataset, i) => {
+                    categoryData[label][i] += dataset.data[index];
+                });
+            });
+
+            const labels = Object.keys(categoryData);
+            const aggregatedDatasets = datasets.map((dataset, i) => ({
+                ...dataset,
+                data: labels.map(label => categoryData[label][i]),
+                backgroundColor: labels.map(label => categoryColors[label]),
+                borderColor: labels.map(label => categoryColors[label])
+            }));
+
+            return { labels, datasets: aggregatedDatasets };
+        }
+
+        function adjustChartAspectRatio(chartType) {
+            const chartContainer = document.getElementById('chartContainer');
+            let aspectRatio;
+
+            switch (chartType) {
+                case 'pie':
+                case 'doughnut':
+                case 'polarArea':
+                    aspectRatio = 1; // 1:1 aspect ratio for circular charts
+                    break;
+                case 'radar':
+                    aspectRatio = 1.2; // Adjust for radar charts
+                    break;
+                default:
+                    aspectRatio = 16 / 9; // Default aspect ratio for other charts
+                    break;
+            }
+
+            // Update chart container dimensions based on the aspect ratio
+            const containerWidth = chartContainer.clientWidth;
+            // const containerHeight = containerWidth / aspectRatio;
+
+            // chartContainer.style.height = `${containerHeight}px`;
+            if (chartInstance) {
+                chartInstance.resize();
+            }
         }
 
         function isValidDateFormat(dateString) {
@@ -1017,11 +1068,7 @@
         }
 
 
-        function getRandomColor(existingColors, columnIndex) {
-            if (columnColorMap[columnIndex]) {
-                return columnColorMap[columnIndex];
-            }
-
+        function getRandomColor(existingColors) {
             const defaultBlue = '#0095ff';
 
             const colors = [
@@ -1043,7 +1090,7 @@
 
             const chosenColor = availableColors.length > 0 ? availableColors[0] : defaultBlue;
 
-            columnColorMap[columnIndex] = chosenColor;
+            existingColors.push(chosenColor); // Keep track of used colors to avoid duplicates
             return chosenColor;
         }
 
@@ -1319,21 +1366,15 @@
             initializeDefaultChart();
 
             const chartContainer = document.getElementById('chartContainer');
-            const aspectRatio = 16 / 9;
 
             const resizeObserver = new ResizeObserver(() => {
-                const width = chartContainer.clientWidth;
-                const height = width / aspectRatio;
-                chartContainer.style.height = height + 'px';
-
                 if (chartInstance) {
                     chartInstance.resize();
                 }
             });
             resizeObserver.observe(chartContainer);
-
-            // document.getElementById('dateViewButton').style.display = 'none';
         });
+
 
         function initializeDefaultChart() {
             const ctx = document.getElementById('myChart').getContext('2d');
@@ -1566,7 +1607,6 @@
 
             setTimeout(generateChart, 100);
         }
-
     </script>
 </body>
 </html>
