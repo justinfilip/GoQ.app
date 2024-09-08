@@ -6,7 +6,6 @@
     <link rel="icon" type="image/png" href="goq_favicon.png">
     <title>Main Dashboard</title>
     <style>
-        /* All previous styles remain unchanged */
         * {
             box-sizing: border-box;
             font-family: Helvetica, Arial, sans-serif;
@@ -171,6 +170,11 @@
             color: #0095ff;
         }
         @media screen and (max-width: 700px) {
+            #chartContainer {
+                width: 100%;
+                min-width: unset;
+                max-width: 100%;
+            }
             .tooltip-container .tooltip {
                 display: none;
             }
@@ -304,10 +308,24 @@
             -ms-user-select: none;
             -webkit-user-select: none;
         }
+        .chart-type-dd {
+            background-color: #ffffff00;
+            display: inline-block;
+            /* padding: 5px 15px; */
+            color: #131d20d1;
+            border-radius: 5px;
+            border: dashed .1px #0000003d;
+            cursor: pointer;
+            margin-bottom: 10px;
+            margin-top: -10px;
+            /* pointer-events: none; */
+            height: 25px;
+            width: 69px;
+        }
         .date-view-button {
             background-color: #ffffff00;
             display: inline-block;
-            padding: 5px 15px;
+            /* padding: 5px 15px; */
             color: #131d20d1;
             border-radius: 5px;
             border: dashed .1px #0000003d;
@@ -317,6 +335,8 @@
             visibility: hidden;
             opacity: 0.5;
             pointer-events: none;
+            height: 50px;
+            width: 69px;
         }
         .date-view-button.visible {
             visibility: visible;
@@ -392,7 +412,7 @@
         .cancel-search-button {
             background-color: #ff4c4c;
             display: inline-block;
-            padding: 5px 15px;
+            /* padding: 5px 15px; */
             color: white;
             border-radius: 5px;
             border: dashed .1px #0000003d;
@@ -400,6 +420,8 @@
             margin-bottom: 10px;
             margin-top: -10px;
             visibility: hidden;
+            height: 50px;
+            width: 69px;
         }
         .cancel-search-button.visible {
             visibility: visible;
@@ -451,6 +473,10 @@
             from {bottom: 30px; opacity: 1;}
             to {bottom: 0; opacity: 0;}
         }
+
+        #chartTypeContainer {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -498,9 +524,9 @@
         <div id="chartContainer">
             <canvas id="myChart"></canvas>
         </div>
-        <div style="display: flex; justify-content: center; align-items: center; margin-top: 10px;">
-            <label for="chartTypeSelector">Chart Type:</label>
-            <select id="chartTypeSelector" onchange="generateChart()">
+        <div id="chartTypeContainer" style="display: none; justify-content: center; align-items: center;">
+            <!-- <label for="chartTypeSelector">Chart Type:</label> -->
+            <select id="chartTypeSelector" class="chart-type-dd" onchange="generateChart()">
                 <option value="line">Line</option>
                 <option value="bar">Bar</option>
                 <option value="pie">Pie</option>
@@ -695,6 +721,7 @@
                 selectColumnsButton.classList.remove('visible');
                 cancelSearchButton.classList.remove('visible');
                 searchInput.style.display = 'none'; // Hide search bar
+                document.getElementById('chartTypeContainer').style.display = 'none';
                 return;
             }
             dateViewButton.classList.add('visible');
@@ -703,6 +730,7 @@
             selectColumnsButton.classList.add('visible');
             cancelSearchButton.classList.remove('visible');
             searchInput.style.display = 'block'; // Show search bar
+            document.getElementById('chartTypeContainer').style.display = 'block';
             renderVirtualizedTable(data);
         }
         function renderVirtualizedTable(data) {
@@ -874,8 +902,7 @@
                     dateViewButton.classList.remove('visible');
                 }
             }
-            // Adjust chart aspect ratio based on chart type
-            adjustChartAspectRatio(chartType);
+            
             if (chartInstance) {
                 chartInstance.destroy();
             }
@@ -931,30 +958,6 @@
                 borderColor: labels.map(label => categoryColors[label])
             }));
             return { labels, datasets: aggregatedDatasets };
-        }
-        function adjustChartAspectRatio(chartType) {
-            const chartContainer = document.getElementById('chartContainer');
-            let aspectRatio;
-            switch (chartType) {
-                case 'pie':
-                case 'doughnut':
-                case 'polarArea':
-                    aspectRatio = 1; // 1:1 aspect ratio for circular charts
-                    break;
-                case 'radar':
-                    aspectRatio = 1.2; // Adjust for radar charts
-                    break;
-                default:
-                    aspectRatio = 16 / 9; // Default aspect ratio for other charts
-                    break;
-            }
-            // Update chart container dimensions based on the aspect ratio
-            const containerWidth = chartContainer.clientWidth;
-            // const containerHeight = containerWidth / aspectRatio;
-            // chartContainer.style.height = `${containerHeight}px`;
-            if (chartInstance) {
-                chartInstance.resize();
-            }
         }
         function isValidDateFormat(dateString) {
             const formats = [
@@ -1167,20 +1170,29 @@
         function updateHeaderColors() {
             const tableHeaders = document.querySelectorAll('th');
             const datasets = chartInstance?.data?.datasets || [];
-            let yAxisCounter = 0;
+
             tableHeaders.forEach((th) => {
                 const index = parseInt(th.dataset.index, 10);
                 th.classList.remove('selected', 'axis-selected');
                 th.textContent = th.textContent.replace(/\s*\x|\s*\y/g, '').trim();
+
+                // X-axis indicator
                 if (xAxisColumns.has(index)) {
                     th.classList.add('axis-selected');
                     th.innerHTML = `${th.textContent} <span class="axis-indicator" style="background-color: #000000; color: #ffffff;">x</span>`;
-                } else if (yAxisColumns.has(index)) {
-                    th.classList.add('axis-selected');
-                    const color = columnColorMap[index];
-                    th.innerHTML = `${th.textContent} <span class="axis-indicator" style="background-color: ${color}; color: #ffffff;">y</span>`;
-                    yAxisCounter++;
                 } 
+                // Y-axis indicator
+                else if (yAxisColumns.has(index)) {
+                    th.classList.add('axis-selected');
+
+                    // Find the corresponding dataset for this column index
+                    const dataset = datasets.find(ds => ds.label === th.textContent);
+                    const color = dataset ? dataset.backgroundColor : '#000000'; // Default color fallback
+
+                    th.innerHTML = `${th.textContent} <span class="axis-indicator" style="background-color: ${color}; color: #ffffff;">y</span>`;
+                }
+
+                // Selected search columns handling
                 if (selectedSearchColumns.has(index)) {
                     if (xAxisColumns.has(index) || yAxisColumns.has(index)) {
                         th.classList.add('selected', 'axis-selected');
@@ -1190,6 +1202,7 @@
                 }
             });
         }
+
         function runSearch() {
             const data = window.csvData || window.xmlData;
             if (!data || data.length === 0) return;
@@ -1292,6 +1305,7 @@
                     selectYAxisButton.classList.add('visible');
                     selectColumnsButton.classList.add('visible');
                     searchInput.style.display = 'block'; // Show search bar
+                    document.getElementById('chartTypeContainer').style.display = 'block';
                 }
                 return;
             }
@@ -1300,6 +1314,7 @@
             selectYAxisButton.classList.remove('visible');
             selectColumnsButton.classList.remove('visible');
             searchInput.style.display = 'none'; // Hide search bar when data page is open
+            document.getElementById('chartTypeContainer').style.display = 'none';
             if (files.length === 0) {
                 dataPage.innerHTML = '<p>No files available</p>';
             } else {
