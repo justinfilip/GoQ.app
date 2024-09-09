@@ -570,6 +570,7 @@
         let isCtrlOrCmdPressed = false;
         let isShiftPressed = false;
         const columnColorMap = {};
+        
         // Virtualization settings
         const visibleRowsCount = 100; // Number of rows to render at a time for virtualization
         document.addEventListener('keydown', (event) => {
@@ -837,14 +838,17 @@
         function generateChartInternal() {
             const data = window.csvData || window.xmlData;
             if (!data || data.length === 0) return;
-            let xAxisData = [];
+
             let datasets = [];
+            let xAxisData = [];
             let existingColors = Object.values(columnColorMap);
+            
             if (xAxisColumns.size > 0) {
                 xAxisData = Array.from(xAxisColumns).map(colIndex =>
                     data.map(row => Object.values(row)[colIndex])
                 ).flat();
             }
+
             if (yAxisColumns.size > 0) {
                 datasets = Array.from(yAxisColumns).map(colIndex => {
                     const columnData = data.map(row => parseFloat(Object.values(row)[colIndex]) || 0);
@@ -859,13 +863,16 @@
                         tension: 0.1,
                         pointRadius: 1,
                         pointHoverRadius: 2,
+                        fill: false  // Ensure line charts are not filled
                     };
                 });
             } else {
                 datasets = [];
             }
+
             const chartType = document.getElementById('chartTypeSelector').value;
             let xAxisLabels = xAxisData;
+            
             if (['bar', 'pie', 'doughnut', 'polarArea'].includes(chartType)) {
                 // Aggregate data by categories for applicable chart types
                 const aggregatedData = aggregateDataByCategory(xAxisData, datasets, existingColors);
@@ -902,10 +909,39 @@
                     dateViewButton.classList.remove('visible');
                 }
             }
-            
+
             if (chartInstance) {
                 chartInstance.destroy();
             }
+
+            // Debouncing the resize to prevent excessive chart resizing
+            const debounceResize = (func, wait) => {
+                let timeout;
+                return function(...args) {
+                    const context = this;
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(context, args), wait);
+                };
+            };
+
+            const resizeObserver = new ResizeObserver(debounceResize(() => {
+                if (chartInstance) {
+                    chartInstance.resize();
+                }
+            }, 200));
+
+            resizeObserver.observe(document.getElementById('chartContainer'));
+
+            // Throttle chart update to reduce UI thread blocking
+            let requestId;
+            function generateChart() {
+                if (requestId) {
+                    cancelAnimationFrame(requestId);
+                }
+                requestId = requestAnimationFrame(generateChartInternal);
+            }
+
+
             const ctx = document.getElementById('myChart').getContext('2d');
             chartInstance = new Chart(ctx, {
                 type: chartType,
@@ -935,9 +971,10 @@
                     } : {} // Other chart types like pie, doughnut, etc. don't need specific axis settings
                 }
             });
+
             updateHeaderColors();
         }
-        
+
         function aggregateDataByCategory(xAxisData, datasets, existingColors) {
             const categoryData = {};
             const categoryColors = {};
@@ -979,26 +1016,57 @@
             generateChart();
         }
         function getRandomColor(existingColors) {
-            const defaultBlue = '#0095ff';
             const colors = [
-                '#0095ff',
-                '#FF6347',
-                '#4682B4',
-                '#32CD32',
-                '#8A2BE2',
-                '#5F9EA0',
-                '#A52A2A',
-                '#2E8B57',
-                '#6A5ACD',
-                '#708090',
-                '#FF4500',
-                '#B22222',
+                '#0095ff',  // Default blue
+                '#FF6347',  // Tomato red
+                '#32CD32',  // Lime green
+                '#8A2BE2',  // Blue violet
+                '#FF4500',  // Orange red
+                '#FFD700',  // Gold
+                '#5F9EA0',  // Cadet blue
+                '#FF1493',  // Deep pink
+                '#2E8B57',  // Sea green
+                '#DC143C',  // Crimson
+                '#00FA9A',  // Medium spring green
+                '#7B68EE',  // Medium slate blue
+                '#FF8C00',  // Dark orange
+                '#4682B4',  // Steel blue
+                '#DA70D6',  // Orchid
+                '#A52A2A',  // Brown
+                '#6A5ACD',  // Slate blue
+                '#20B2AA',  // Light sea green
+                '#B22222',  // Firebrick red
+                '#708090',  // Slate gray
+                '#40E0D0',  // Turquoise
+                '#FF69B4',  // Hot pink
+                '#9ACD32',  // Yellow green
+                '#F08080',  // Light coral
+                '#556B2F',  // Dark olive green
+                '#00CED1',  // Dark turquoise
+                '#FFB6C1',  // Light pink
+                '#00FF7F',  // Spring green
+                '#9400D3',  // Dark violet
+                '#D2691E',  // Chocolate
+                '#DC143C',  // Crimson
+                '#FF7F50',  // Coral
             ];
-            const availableColors = colors.filter(color => !existingColors.includes(color));
-            const chosenColor = availableColors.length > 0 ? availableColors[0] : defaultBlue;
-            existingColors.push(chosenColor); // Keep track of used colors to avoid duplicates
-            return chosenColor;
+
+            // Shuffle the color array to introduce randomness
+            const shuffledColors = colors.sort(() => Math.random() - 0.5);
+
+            // Filter out any colors already used
+            const availableColors = shuffledColors.filter(color => !existingColors.includes(color));
+
+            // If all colors are used, fall back to the first available one
+            if (availableColors.length === 0) {
+                return shuffledColors[existingColors.length % shuffledColors.length];
+            }
+
+            // Return the first available color
+            return availableColors[0];
         }
+
+
         function checkForDateColumn() {
             const dateViewButton = document.getElementById('dateViewButton');
             const table = document.querySelector('#dataGrid table');
@@ -1152,11 +1220,18 @@
                 yAxisColumns.delete(index);
             } else {
                 yAxisColumns.add(index);
+
+                // Assign a color if not already assigned
+                if (!columnColorMap[index]) {
+                    const newColor = getRandomColor(Object.values(columnColorMap));
+                    columnColorMap[index] = newColor;
+                }
             }
             updateHeaderColors();
             checkForDateColumn();
             generateChart();
         }
+
         function toggleSearchColumnSelection(index, thElement) {
             if (selectedSearchColumns.has(index)) {
                 selectedSearchColumns.delete(index);
@@ -1189,6 +1264,7 @@
                     const dataset = datasets.find(ds => ds.label === th.textContent);
                     const color = dataset ? dataset.backgroundColor : '#000000'; // Default color fallback
 
+                    // Update the Y-axis indicator background color with the dataset color
                     th.innerHTML = `${th.textContent} <span class="axis-indicator" style="background-color: ${color}; color: #ffffff;">y</span>`;
                 }
 
