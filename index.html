@@ -86,15 +86,15 @@
             color: #131d20;
         }
         th.selected {
-            background-color: #0095ff69; /* Blue for search selection */
+            background-color: #0095ff69;
             color: #131d20d1;
         }
         th.axis-selected {
-            background-color: #a9a9a9; /* Grey for axis selection */
+            background-color: #a9a9a9;
             color: #131d20d1;
         }
         th.selected.axis-selected {
-            background-color: #007acc; /* Darker blue for both axis and search selection */
+            background-color: #007acc;
             color: #131d20d1;
         }
         .axis-indicator {
@@ -311,21 +311,18 @@
         .chart-type-dd {
             background-color: #ffffff00;
             display: inline-block;
-            /* padding: 5px 15px; */
             color: #131d20d1;
             border-radius: 5px;
             border: dashed .1px #0000003d;
             cursor: pointer;
             margin-bottom: 10px;
             margin-top: -10px;
-            /* pointer-events: none; */
             height: 25px;
             width: 69px;
         }
         .date-view-button {
             background-color: #ffffff00;
             display: inline-block;
-            /* padding: 5px 15px; */
             color: #131d20d1;
             border-radius: 5px;
             border: dashed .1px #0000003d;
@@ -412,7 +409,6 @@
         .cancel-search-button {
             background-color: #ff4c4c;
             display: inline-block;
-            /* padding: 5px 15px; */
             color: white;
             border-radius: 5px;
             border: dashed .1px #0000003d;
@@ -436,7 +432,6 @@
             margin-bottom: 30px;
             margin-top: 30px;
         }
-        /* Toast styles */
         .toast {
             visibility: hidden;
             min-width: 250px;
@@ -473,7 +468,6 @@
             from {bottom: 30px; opacity: 1;}
             to {bottom: 0; opacity: 0;}
         }
-
         #chartTypeContainer {
             display: none;
         }
@@ -503,7 +497,6 @@
             <div class="settings-button">
                 <p class="button-text">Settings</p>
             </div>
-            <!-- Tooltip container -->
             <div class="tooltip-container">
                 <div class="tooltip">
                     <p class="button-text">Hotkeys</p>
@@ -525,7 +518,6 @@
             <canvas id="myChart"></canvas>
         </div>
         <div id="chartTypeContainer" style="display: none; justify-content: center; align-items: center;">
-            <!-- <label for="chartTypeSelector">Chart Type:</label> -->
             <select id="chartTypeSelector" class="chart-type-dd" onchange="generateChart()">
                 <option value="line">Line</option>
                 <option value="bar">Bar</option>
@@ -566,13 +558,12 @@
         let yAxisColumns = new Set();
         let selectedSearchColumns = new Set();
         let chartInstance = null;
-        let originalData = null; // To store the original data
+        let originalData = null;
         let isCtrlOrCmdPressed = false;
         let isShiftPressed = false;
         const columnColorMap = {};
         
-        // Virtualization settings
-        const visibleRowsCount = 100; // Number of rows to render at a time for virtualization
+        const visibleRowsCount = 100;
         document.addEventListener('keydown', (event) => {
             if (event.shiftKey && event.key === 'D') {
                 toggleDataPage();
@@ -580,7 +571,7 @@
             if (event.shiftKey && event.key === 'T') {
                 const dateViewButton = document.getElementById('dateViewButton');
                 if (!dateViewButton.classList.contains('disabled')) {
-                    dateViewButton.click();  // Simulate click on the button
+                    dateViewButton.click();
                 }
             }
             if (event.key === 'Control' || event.key === 'Meta') {
@@ -621,7 +612,7 @@
             if (file) handleFile(file);
         });
         function handleFile(file) {
-            const chunkSize = 5 * 1024 * 1024; // 5MB chunk size
+            const chunkSize = 5 * 1024 * 1024;
             let offset = 0;
             const fileType = file.type;
             const reader = new FileReader();
@@ -655,13 +646,13 @@
                 chunk: function(results) {
                     if (isFirstChunk || !window.csvData) {
                         window.csvData = results.data;
-                        originalData = window.csvData.slice(); // Store a copy of the original data
+                        originalData = window.csvData.slice();
                     } else {
                         window.csvData = window.csvData.concat(results.data);
                     }
                     if (isFirstChunk) {
                         displayData(window.csvData);
-                        setTimeout(generateChart, 100); // generate chart after loading first chunk
+                        setTimeout(generateChart, 100);
                     }
                 }
             });
@@ -695,13 +686,13 @@
                 });
                 if (isFirstChunk || !window.xmlData) {
                     window.xmlData = data;
-                    originalData = window.xmlData.slice(); // Store a copy of the original data
+                    originalData = window.xmlData.slice();
                 } else {
                     window.xmlData = window.xmlData.concat(data);
                 }
                 if (isFirstChunk) {
                     displayData(window.xmlData);
-                    setTimeout(generateChart, 100); // generate chart after loading first chunk
+                    setTimeout(generateChart, 100);
                 }
             } catch (error) {
                 console.error('Error parsing XML:', error);
@@ -721,7 +712,7 @@
                 selectYAxisButton.classList.remove('visible');
                 selectColumnsButton.classList.remove('visible');
                 cancelSearchButton.classList.remove('visible');
-                searchInput.style.display = 'none'; // Hide search bar
+                searchInput.style.display = 'none';
                 document.getElementById('chartTypeContainer').style.display = 'none';
                 return;
             }
@@ -730,17 +721,16 @@
             selectYAxisButton.classList.add('visible');
             selectColumnsButton.classList.add('visible');
             cancelSearchButton.classList.remove('visible');
-            searchInput.style.display = 'block'; // Show search bar
+            searchInput.style.display = 'block';
             document.getElementById('chartTypeContainer').style.display = 'block';
             renderVirtualizedTable(data);
         }
         function renderVirtualizedTable(data) {
             const tableContainer = document.querySelector('#dataGrid');
-            tableContainer.innerHTML = ''; // Clear previous content
+            tableContainer.innerHTML = '';
             const table = document.createElement('table');
             const thead = document.createElement('thead');
             const tbody = document.createElement('tbody');
-            // Create header row
             const headerRow = document.createElement('tr');
             Object.keys(data[0]).forEach((header, index) => {
                 const th = document.createElement('th');
@@ -785,17 +775,14 @@
                 }
                 loadedRowCount = endRow;
             }
-            renderRows(); // Initial render
+            renderRows();
             window.addEventListener('scroll', () => {
-                // Check if the user is close to the bottom of the page (within 100px)
                 if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 100) {
                     renderRows();
                 }
             });
-            // Ensure headers and functionalities are in place
-            updateHeaderColors();  // Add any necessary styles or indicators for headers
+            updateHeaderColors();
         }
-        // Throttle chart update to reduce UI thread blocking
         let requestId;
         function generateChart() {
             if (requestId) {
@@ -814,10 +801,10 @@
                         key = weekStart.toISOString().split('T')[0];
                         break;
                     case 'month':
-                        key = date.toISOString().split('T')[0].substring(0, 7); // "YYYY-MM"
+                        key = date.toISOString().split('T')[0].substring(0, 7);
                         break;
                     default:
-                        key = date.toISOString().split('T')[0]; // "YYYY-MM-DD"
+                        key = date.toISOString().split('T')[0];
                         break;
                 }
                 if (!groupedData[key]) {
@@ -863,7 +850,7 @@
                         tension: 0.1,
                         pointRadius: 1,
                         pointHoverRadius: 2,
-                        fill: false  // Ensure line charts are not filled
+                        fill: false
                     };
                 });
             } else {
@@ -874,7 +861,6 @@
             let xAxisLabels = xAxisData;
             
             if (['bar', 'pie', 'doughnut', 'polarArea'].includes(chartType)) {
-                // Aggregate data by categories for applicable chart types
                 const aggregatedData = aggregateDataByCategory(xAxisData, datasets, existingColors);
                 xAxisLabels = aggregatedData.labels;
                 datasets = aggregatedData.datasets;
@@ -914,7 +900,6 @@
                 chartInstance.destroy();
             }
 
-            // Debouncing the resize to prevent excessive chart resizing
             const debounceResize = (func, wait) => {
                 let timeout;
                 return function(...args) {
@@ -932,7 +917,6 @@
 
             resizeObserver.observe(document.getElementById('chartContainer'));
 
-            // Throttle chart update to reduce UI thread blocking
             let requestId;
             function generateChart() {
                 if (requestId) {
@@ -968,7 +952,7 @@
                                 text: datasets.length > 0 ? 'Y Axis' : 'No Data Selected'
                             }
                         }
-                    } : {} // Other chart types like pie, doughnut, etc. don't need specific axis settings
+                    } : {}
                 }
             });
 
@@ -998,12 +982,12 @@
         }
         function isValidDateFormat(dateString) {
             const formats = [
-                /^\d{4}-\d{2}-\d{2}$/,  // YYYY-MM-DD
-                /^\d{2}\/\d{2}\/\d{4}$/,  // MM/DD/YYYY
-                /^\d{2}-\d{2}-\d{4}$/,  // DD-MM-YYYY
-                /^\d{2}\/\d{2}\/\d{2}$/,  // MM/DD/YY
-                /^\d{2}-\d{2}-\d{2}$/,  // DD-MM-YY
-                /^\d{2}\.\d{2}\.\d{4}$/  // DD.MM.YYYY
+                /^\d{4}-\d{2}-\d{2}$/,
+                /^\d{2}\/\d{2}\/\d{4}$/,
+                /^\d{2}-\d{2}-\d{4}$/,
+                /^\d{2}\/\d{2}\/\d{2}$/,
+                /^\d{2}-\d{2}-\d{2}$/,
+                /^\d{2}\.\d{2}\.\d{4}$/
             ];
             return formats.some(regex => regex.test(dateString));
         }
@@ -1017,52 +1001,48 @@
         }
         function getRandomColor(existingColors) {
             const colors = [
-                '#0095ff',  // Default blue
-                '#FF6347',  // Tomato red
-                '#32CD32',  // Lime green
-                '#8A2BE2',  // Blue violet
-                '#FF4500',  // Orange red
-                '#FFD700',  // Gold
-                '#5F9EA0',  // Cadet blue
-                '#FF1493',  // Deep pink
-                '#2E8B57',  // Sea green
-                '#DC143C',  // Crimson
-                '#00FA9A',  // Medium spring green
-                '#7B68EE',  // Medium slate blue
-                '#FF8C00',  // Dark orange
-                '#4682B4',  // Steel blue
-                '#DA70D6',  // Orchid
-                '#A52A2A',  // Brown
-                '#6A5ACD',  // Slate blue
-                '#20B2AA',  // Light sea green
-                '#B22222',  // Firebrick red
-                '#708090',  // Slate gray
-                '#40E0D0',  // Turquoise
-                '#FF69B4',  // Hot pink
-                '#9ACD32',  // Yellow green
-                '#F08080',  // Light coral
-                '#556B2F',  // Dark olive green
-                '#00CED1',  // Dark turquoise
-                '#FFB6C1',  // Light pink
-                '#00FF7F',  // Spring green
-                '#9400D3',  // Dark violet
-                '#D2691E',  // Chocolate
-                '#DC143C',  // Crimson
-                '#FF7F50',  // Coral
+                '#0095ff',
+                '#FF6347',
+                '#32CD32',
+                '#8A2BE2',
+                '#FF4500',
+                '#FFD700',
+                '#5F9EA0',
+                '#FF1493',
+                '#2E8B57',
+                '#DC143C',
+                '#00FA9A',
+                '#7B68EE',
+                '#FF8C00',
+                '#4682B4',
+                '#DA70D6',
+                '#A52A2A',
+                '#6A5ACD',
+                '#20B2AA',
+                '#B22222',
+                '#708090',
+                '#40E0D0',
+                '#FF69B4',
+                '#9ACD32',
+                '#F08080',
+                '#556B2F',
+                '#00CED1',
+                '#FFB6C1',
+                '#00FF7F',
+                '#9400D3',
+                '#D2691E',
+                '#DC143C',
+                '#FF7F50',
             ];
 
-            // Shuffle the color array to introduce randomness
             const shuffledColors = colors.sort(() => Math.random() - 0.5);
 
-            // Filter out any colors already used
             const availableColors = shuffledColors.filter(color => !existingColors.includes(color));
 
-            // If all colors are used, fall back to the first available one
             if (availableColors.length === 0) {
                 return shuffledColors[existingColors.length % shuffledColors.length];
             }
 
-            // Return the first available color
             return availableColors[0];
         }
 
@@ -1085,36 +1065,51 @@
         function sortTable(columnName, columnIndex) {
             const data = window.csvData || window.xmlData;
             if (!data || data.length === 0) return;
-            const isNumeric = data.every(row => !isNaN(parseFloat(Object.values(row)[columnIndex])));
+            
             const currentDirection = sortDirection[columnName] || 'asc';
             const newDirection = currentDirection === 'asc' ? 'desc' : 'asc';
             sortDirection = {};
             sortDirection[columnName] = newDirection;
+
+            // Determine if the column contains numeric values
+            const isNumeric = data.every(row => {
+                const value = Object.values(row)[columnIndex];
+                return !isNaN(parseFloat(value)) && isFinite(value);
+            });
+
             // Sort the internal dataset
             data.sort((a, b) => {
-                const aText = Object.values(a)[columnIndex];
-                const bText = Object.values(b)[columnIndex];
+                let aValue = Object.values(a)[columnIndex] || ''; // Fallback to empty string if null/undefined
+                let bValue = Object.values(b)[columnIndex] || ''; // Fallback to empty string if null/undefined
+
+                // Handle numeric sorting
                 if (isNumeric) {
-                    const aNum = parseFloat(aText);
-                    const bNum = parseFloat(bText);
-                    return newDirection === 'asc' ? aNum - bNum : bNum - aNum;
-                } else {
-                    return newDirection === 'asc' ? aText.localeCompare(bText) : bText.localeCompare(aText);
+                    aValue = parseFloat(aValue);
+                    bValue = parseFloat(bValue);
+                    return newDirection === 'asc' ? aValue - bValue : bValue - aValue;
                 }
+
+                // Handle text/alphanumeric sorting
+                aValue = aValue.toString();
+                bValue = bValue.toString();
+                return newDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
             });
+
             // After sorting, reset loadedRowCount and re-render the table
             loadedRowCount = 0;
             renderVirtualizedTable(data);
+
             // Update the sorting indicator on the header
             const header = document.querySelector(`th[data-index="${columnIndex}"]`);
             header.classList.remove('sort-asc', 'sort-desc');
             header.classList.add(newDirection === 'asc' ? 'sort-asc' : 'sort-desc');
-            
+
             // Regenerate the chart with the sorted data
             if (xAxisColumns.has(columnIndex)) {
                 generateChart();
             }
         }
+
         function toggleDropdown() {
             const dropdown = document.querySelector('.dropdown');
             dropdown.classList.toggle('active');
@@ -1191,10 +1186,10 @@
             selectedSearchColumns.clear();
             resetSelectionMode();
             searchInput.value = '';
-            window.csvData = originalData.slice(); // Restore original data
+            window.csvData = originalData.slice();
             displayData(window.csvData || window.xmlData);
-            updateHeaderColors();  // Ensure axis indicators and colors are updated
-            generateChart(); // Regenerate the chart with the original data
+            updateHeaderColors();
+            generateChart();
         }
         function toggleXAxisSelection(index, thElement) {
             if (yAxisColumns.has(index)) {
@@ -1221,7 +1216,6 @@
             } else {
                 yAxisColumns.add(index);
 
-                // Assign a color if not already assigned
                 if (!columnColorMap[index]) {
                     const newColor = getRandomColor(Object.values(columnColorMap));
                     columnColorMap[index] = newColor;
@@ -1251,24 +1245,19 @@
                 th.classList.remove('selected', 'axis-selected');
                 th.textContent = th.textContent.replace(/\s*\x|\s*\y/g, '').trim();
 
-                // X-axis indicator
                 if (xAxisColumns.has(index)) {
                     th.classList.add('axis-selected');
                     th.innerHTML = `${th.textContent} <span class="axis-indicator" style="background-color: #000000; color: #ffffff;">x</span>`;
                 } 
-                // Y-axis indicator
                 else if (yAxisColumns.has(index)) {
                     th.classList.add('axis-selected');
 
-                    // Find the corresponding dataset for this column index
                     const dataset = datasets.find(ds => ds.label === th.textContent);
-                    const color = dataset ? dataset.backgroundColor : '#000000'; // Default color fallback
+                    const color = dataset ? dataset.backgroundColor : '#000000';
 
-                    // Update the Y-axis indicator background color with the dataset color
                     th.innerHTML = `${th.textContent} <span class="axis-indicator" style="background-color: ${color}; color: #ffffff;">y</span>`;
                 }
 
-                // Selected search columns handling
                 if (selectedSearchColumns.has(index)) {
                     if (xAxisColumns.has(index) || yAxisColumns.has(index)) {
                         th.classList.add('selected', 'axis-selected');
@@ -1293,21 +1282,21 @@
                 const filteredData = data.filter(row => {
                     return searchColumns.some(index => {
                         const cellValue = Object.values(row)[index];
-                        if (cellValue === undefined || cellValue === null) return false; // Skip undefined or null values
+                        if (cellValue === undefined || cellValue === null) return false;
                         if (searchTerm.startsWith('"') && searchTerm.endsWith('"')) {
                             return cellValue === searchTerm.slice(1, -1);
                         }
                         return cellValue.toString().toLowerCase().includes(searchTerm.toLowerCase());
                     });
                 });
-                window.csvData = filteredData; // Update the global data reference to filtered data
+                window.csvData = filteredData;
                 displayData(filteredData);
-                updateHeaderColors();  // Ensure axis indicators and colors are updated
-                resetSelectionMode();  // Reset the selection mode after search is complete
+                updateHeaderColors();
+                resetSelectionMode();
                 loadingIcon.style.display = 'none';
-                cancelSearchButton.textContent = 'Clear Search';  // Change button text to "Clear Search"
+                cancelSearchButton.textContent = 'Clear Search';
                 cancelSearchButton.classList.add('visible');
-                generateChart(); // Regenerate the chart with the filtered data
+                generateChart();
             }, 100);
         }
         document.addEventListener('DOMContentLoaded', () => {
@@ -1359,7 +1348,7 @@
             document.getElementById('chartContainer').style.display = 'block';
             dataGrid.style.display = 'block';
             if (dataGrid.innerHTML.trim() !== '') {
-                searchInput.style.display = 'block'; // Show search bar when dataset is visible
+                searchInput.style.display = 'block';
             }
         }
         function toggleDataPage() {
@@ -1380,7 +1369,7 @@
                     selectXAxisButton.classList.add('visible');
                     selectYAxisButton.classList.add('visible');
                     selectColumnsButton.classList.add('visible');
-                    searchInput.style.display = 'block'; // Show search bar
+                    searchInput.style.display = 'block';
                     document.getElementById('chartTypeContainer').style.display = 'block';
                 }
                 return;
@@ -1389,7 +1378,7 @@
             selectXAxisButton.classList.remove('visible');
             selectYAxisButton.classList.remove('visible');
             selectColumnsButton.classList.remove('visible');
-            searchInput.style.display = 'none'; // Hide search bar when data page is open
+            searchInput.style.display = 'none';
             document.getElementById('chartTypeContainer').style.display = 'none';
             if (files.length === 0) {
                 dataPage.innerHTML = '<p>No files available</p>';
