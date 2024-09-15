@@ -713,10 +713,9 @@
             let files = JSON.parse(localStorage.getItem('files')) || [];
 
             if (files[fileIndex]) {
-                const headers = getCurrentHeaders();  // Get current headers
                 const chartState = {
-                    xAxis: Array.from(xAxisColumns).map(index => headers[index]),  // Save column names
-                    yAxis: Array.from(yAxisColumns).map(index => headers[index]),  // Save column names
+                    xAxis: Array.from(xAxisColumns).map(i => parseInt(i, 10)),  // Ensure indices are numbers
+                    yAxis: Array.from(yAxisColumns).map(i => parseInt(i, 10)),  // Ensure indices are numbers
                     chartType: document.getElementById('chartTypeSelector').value  // Save chart type
                 };
 
@@ -726,26 +725,14 @@
             }
         }
 
-
         // Function to gather the current chart state (axis selections, chart type, etc.)
         function getChartState() {
-            const headers = getCurrentHeaders();  // Get current headers
             return {
-                xAxis: Array.from(xAxisColumns).map(index => headers[index]),
-                yAxis: Array.from(yAxisColumns).map(index => headers[index]),
+                xAxis: Array.from(xAxisColumns).map(i => parseInt(i, 10)),
+                yAxis: Array.from(yAxisColumns).map(i => parseInt(i, 10)),
                 chartType: document.getElementById('chartTypeSelector').value
             };
         }
-
-        function getCurrentHeaders() {
-            const data = window.csvData || window.xmlData;
-            if (data && data.length > 0) {
-                return Object.keys(data[0]);
-            }
-            return [];
-        }
-
-
 
         function applyChartState(fileIndex) {
             let files = JSON.parse(localStorage.getItem('files')) || [];
@@ -759,23 +746,17 @@
                 xAxisColumns.clear();
                 yAxisColumns.clear();
 
-                const headers = getCurrentHeaders();  // Get current headers
-                // Create a mapping of header names to indices
-                const headerIndexMap = {};
-                headers.forEach((header, index) => {
-                    headerIndexMap[header] = index;
-                });
-
                 // Reapply the X-axis column selections
                 if (file.chartState.xAxis && file.chartState.xAxis.length > 0) {
                     console.log("Reapplying X-axis columns:", file.chartState.xAxis);
-                    file.chartState.xAxis.forEach(headerName => {
-                        const index = headerIndexMap[headerName];
-                        if (index !== undefined) {
-                            const thElement = document.querySelector(`th[data-index="${index}"]`);
-                            if (thElement) {
-                                toggleXAxisSelection(index, thElement, true);  // Pass skipSave = true
-                            }
+                    file.chartState.xAxis.forEach(index => {
+                        index = parseInt(index, 10);
+                        const header = document.querySelector(`th[data-index="${index}"]`);
+                        if (header) {
+                            console.log("Header found for X-axis index:", index);
+                            toggleXAxisSelection(index, header, true);  // Pass skipSave = true
+                        } else {
+                            console.log("Header not found for X-axis index:", index);
                         }
                     });
                 }
@@ -783,13 +764,14 @@
                 // Reapply the Y-axis column selections
                 if (file.chartState.yAxis && file.chartState.yAxis.length > 0) {
                     console.log("Reapplying Y-axis columns:", file.chartState.yAxis);
-                    file.chartState.yAxis.forEach(headerName => {
-                        const index = headerIndexMap[headerName];
-                        if (index !== undefined) {
-                            const thElement = document.querySelector(`th[data-index="${index}"]`);
-                            if (thElement) {
-                                toggleYAxisSelection(index, thElement, true);  // Pass skipSave = true
-                            }
+                    file.chartState.yAxis.forEach(index => {
+                        index = parseInt(index, 10);
+                        const header = document.querySelector(`th[data-index="${index}"]`);
+                        if (header) {
+                            console.log("Header found for Y-axis index:", index);
+                            toggleYAxisSelection(index, header, true);  // Pass skipSave = true
+                        } else {
+                            console.log("Header not found for Y-axis index:", index);
                         }
                     });
                 }
@@ -808,7 +790,6 @@
                 console.error(`No chart state found for file index ${fileIndex}`);
             }
         }
-
 
         // Handle CSV chunk parsing and save to local storage if it's a new dataset
         function parseCSVChunk(text, isFirstChunk, fileName, isUpdatedFile = false, fileIndex = null) {
