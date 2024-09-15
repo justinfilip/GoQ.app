@@ -311,18 +311,21 @@
         .chart-type-dd {
             background-color: #ffffff00;
             display: inline-block;
+            /* padding: 5px 15px; */
             color: #131d20d1;
             border-radius: 5px;
             border: dashed .1px #0000003d;
             cursor: pointer;
             margin-bottom: 10px;
             margin-top: -10px;
+            /* pointer-events: none; */
             height: 25px;
             width: 69px;
         }
         .date-view-button {
             background-color: #ffffff00;
             display: inline-block;
+            /* padding: 5px 15px; */
             color: #131d20d1;
             border-radius: 5px;
             border: dashed .1px #0000003d;
@@ -409,6 +412,7 @@
         .cancel-search-button {
             background-color: #ff4c4c;
             display: inline-block;
+            /* padding: 5px 15px; */
             color: white;
             border-radius: 5px;
             border: dashed .1px #0000003d;
@@ -432,6 +436,7 @@
             margin-bottom: 30px;
             margin-top: 30px;
         }
+        /* Toast styles */
         .toast {
             visibility: hidden;
             min-width: 250px;
@@ -468,6 +473,7 @@
             from {bottom: 30px; opacity: 1;}
             to {bottom: 0; opacity: 0;}
         }
+
         #chartTypeContainer {
             display: none;
         }
@@ -497,6 +503,7 @@
             <div class="settings-button">
                 <p class="button-text">Settings</p>
             </div>
+            <!-- Tooltip container -->
             <div class="tooltip-container">
                 <div class="tooltip">
                     <p class="button-text">Hotkeys</p>
@@ -518,6 +525,7 @@
             <canvas id="myChart"></canvas>
         </div>
         <div id="chartTypeContainer" style="display: none; justify-content: center; align-items: center;">
+            <!-- <label for="chartTypeSelector">Chart Type:</label> -->
             <select id="chartTypeSelector" class="chart-type-dd" onchange="generateChart()">
                 <option value="line">Line</option>
                 <option value="bar">Bar</option>
@@ -558,12 +566,13 @@
         let yAxisColumns = new Set();
         let selectedSearchColumns = new Set();
         let chartInstance = null;
-        let originalData = null;
+        let originalData = null; // To store the original data
         let isCtrlOrCmdPressed = false;
         let isShiftPressed = false;
         const columnColorMap = {};
         
-        const visibleRowsCount = 100;
+        // Virtualization settings
+        const visibleRowsCount = 100; // Number of rows to render at a time for virtualization
         document.addEventListener('keydown', (event) => {
             if (event.shiftKey && event.key === 'D') {
                 toggleDataPage();
@@ -571,7 +580,7 @@
             if (event.shiftKey && event.key === 'T') {
                 const dateViewButton = document.getElementById('dateViewButton');
                 if (!dateViewButton.classList.contains('disabled')) {
-                    dateViewButton.click();
+                    dateViewButton.click();  // Simulate click on the button
                 }
             }
             if (event.key === 'Control' || event.key === 'Meta') {
@@ -611,17 +620,25 @@
             const file = fileInput.files[0];
             if (file) handleFile(file);
         });
-        function handleFile(file) {
-            const chunkSize = 5 * 1024 * 1024;
+        
+        // Check for existing file by name
+        function fileExists(fileName) {
+            let files = JSON.parse(localStorage.getItem('files')) || [];
+            return files.findIndex(file => file.name === fileName);
+        }
+        function handleFile(file, isUpdatedFile = false, fileIndex = null) {
+            const chunkSize = 5 * 1024 * 1024; // 5MB chunk size
             let offset = 0;
             const fileType = file.type;
             const reader = new FileReader();
+            const fileName = file.name;
+
             reader.onload = function(event) {
                 const text = event.target.result;
                 if (fileType.includes('csv')) {
-                    parseCSVChunk(text, offset === 0, file.name);
+                    parseCSVChunk(text, offset === 0, fileName, isUpdatedFile, fileIndex);
                 } else if (fileType.includes('xml')) {
-                    parseXMLChunk(text, offset === 0, file.name);
+                    parseXMLChunk(text, offset === 0, fileName, isUpdatedFile, fileIndex);
                 } else {
                     alert('Unsupported file type');
                 }
@@ -632,13 +649,179 @@
                     closeOpenPages();
                 }
             };
+
             function readNextChunk() {
                 const blob = file.slice(offset, offset + chunkSize);
                 reader.readAsText(blob);
             }
+
             readNextChunk();
+
+            // If it's an update, reapply the chart state after updating the content
+            if (isUpdatedFile && fileIndex !== null) {
+                console.log("File updated. Reapplying chart state for fileIndex:", fileIndex);  // Debugging log
+                setTimeout(() => {
+                    viewFile(fileIndex);  // Use viewFile to apply the chart state after the update
+                }, 500);  // Reapply last saved state after delay
+            } else {
+                // For new file uploads, save the current file index
+                saveNewFile(fileName);
+            }
         }
-        function parseCSVChunk(text, isFirstChunk, fileName) {
+        // Save the new file and set currentFileIndex to the latest file
+        // Save the new file and set currentFileIndex to the latest file
+        function saveNewFile(fileName) {
+            let files = JSON.parse(localStorage.getItem('files')) || [];
+            const currentFileIndex = files.length - 1;  // Get the index of the latest file (newly added)
+
+            // After saving the file, set the current file index to the new one and call viewFile
+            localStorage.setItem('currentFileIndex', currentFileIndex);
+            viewFile(currentFileIndex);  // Immediately view the newly uploaded file
+        }
+        // Save dataset and state after upload
+        function saveFile(fileName, fileContent, chartState, isUpdatedFile = false, fileIndex = null) {
+            let files = JSON.parse(localStorage.getItem('files')) || [];
+
+            // Check if the file already exists
+            const existingFileIndex = fileExists(fileName);
+
+            if (existingFileIndex >= 0) {
+                // If file exists, update the content and metadata
+                files[existingFileIndex].content = fileContent;
+                files[existingFileIndex].dateUploaded = Date.now(); // Update upload date
+                files[existingFileIndex].chartState = chartState; // Update the chart state
+            } else {
+                // Otherwise, add it as a new file
+                const newFile = {
+                    name: fileName,
+                    description: "Dataset uploaded",
+                    dateUploaded: Date.now(),
+                    content: fileContent,
+                    chartState: chartState, // Save the current chart state (axis, chart type, etc.)
+                };
+                files.push(newFile);
+            }
+
+            localStorage.setItem('files', JSON.stringify(files));
+            
+            // Update current file index to the new file
+            const newIndex = files.length - 1;
+            localStorage.setItem('currentFileIndex', newIndex);
+            viewFile(newIndex);  // Immediately view the newly saved file
+        }
+
+        // Update file content when updating dataset
+        function updateFileContent(fileIndex, updatedContent) {
+            let files = JSON.parse(localStorage.getItem('files')) || [];
+            if (files[fileIndex]) {
+                files[fileIndex].content = updatedContent;
+                files[fileIndex].dateUploaded = Date.now(); // Update upload date
+                localStorage.setItem('files', JSON.stringify(files)); // Update localStorage
+            }
+        }
+        // Function to determine the currently selected file index
+        function getCurrentFileIndex() {
+            return parseInt(localStorage.getItem('currentFileIndex'), 10);
+        }
+        // Save chart state whenever chart type or axis selections change
+        function setupChartStateListeners() {
+            // Listen for changes in chart type selection
+            document.getElementById('chartTypeSelector').addEventListener('change', () => {
+                const currentFileIndex = getCurrentFileIndex(); // Get the index of the currently viewed file
+                console.log("Saving chart state.... \n\nSaving chart state index ", currentFileIndex)
+                saveChartState(currentFileIndex); // Save chart state when chart type changes
+            });
+
+            // Listen for changes in axis column selection (X-axis and Y-axis)
+            document.querySelectorAll('th.sortable-header').forEach((header, index) => {
+                header.addEventListener('click', () => {
+                    const currentFileIndex = getCurrentFileIndex(); // Get the index of the currently viewed file
+                    console.log("Saving chart state.... \n\nSaving chart state index ", currentFileIndex)
+                    saveChartState(currentFileIndex); // Save chart state when axis selections change
+                });
+            });
+        }
+        // Save chart state and set it to the current file
+        function saveChartState(fileIndex) {
+            let files = JSON.parse(localStorage.getItem('files')) || [];
+
+            if (files[fileIndex]) {
+                const chartState = {
+                    xAxis: Array.from(xAxisColumns),  // Convert the set to an array for storage
+                    yAxis: Array.from(yAxisColumns),  // Convert the set to an array for storage
+                    chartType: document.getElementById('chartTypeSelector').value  // Save chart type
+                };
+
+                files[fileIndex].chartState = chartState;  // Store the chart state in the file object
+
+                localStorage.setItem('files', JSON.stringify(files));  // Save the updated state to localStorage
+            }
+        }
+        // Function to gather the current chart state (axis selections, chart type, etc.)
+        function getChartState() {
+            // Log the current x and y axis states correctly
+            console.log("This is the x state: ", Array.from(xAxisColumns));
+            console.log("This is the y state: ", Array.from(yAxisColumns));
+            
+            return {
+                xAxis: Array.from(xAxisColumns),
+                yAxis: Array.from(yAxisColumns),
+                chartType: document.getElementById('chartTypeSelector').value
+            };
+        }
+        function applyChartState(fileIndex) {
+            let files = JSON.parse(localStorage.getItem('files')) || [];
+            const file = files[fileIndex];
+
+            // Debugging: Log the file index and check if chart state exists
+            console.log("Applying chart state for fileIndex:", fileIndex);
+            if (file && file.chartState) {
+                console.log("Chart state found for fileIndex:", fileIndex, file.chartState);
+
+                // Clear existing selections before applying the saved state
+                xAxisColumns.clear();
+                yAxisColumns.clear();
+
+                // Reapply the X-axis column selections
+                if (file.chartState.xAxis && file.chartState.xAxis.length > 0) {
+                    console.log("Reapplying X-axis columns:", file.chartState.xAxis);
+                    file.chartState.xAxis.forEach(index => {
+                        const header = document.querySelector(`th[data-index="${index}"]`);
+                        if (header) {
+                            toggleXAxisSelection(index, header);  // Re-select X-axis columns based on the saved state
+                        }
+                    });
+                }
+
+                // Reapply the Y-axis column selections
+                if (file.chartState.yAxis && file.chartState.yAxis.length > 0) {
+                    console.log("Reapplying Y-axis columns:", file.chartState.yAxis);
+                    file.chartState.yAxis.forEach(index => {
+                        const header = document.querySelector(`th[data-index="${index}"]`);
+                        if (header) {
+                            toggleYAxisSelection(index, header);  // Re-select Y-axis columns based on the saved state
+                        }
+                    });
+                }
+
+                // Apply the saved chart type
+                document.getElementById('chartTypeSelector').value = file.chartState.chartType;
+
+                // Debugging: Log the chart type being applied
+                console.log("Reapplying chart type:", file.chartState.chartType);
+
+                // Ensure the UI reflects the current state
+                updateHeaderColors();
+
+                // Add a delay to regenerate the chart after applying the state
+                setTimeout(generateChart, 100);
+            } else {
+                console.error(`No chart state found for file index ${fileIndex}`);
+            }
+        }
+
+        // Handle CSV chunk parsing and save to local storage if it's a new dataset
+        function parseCSVChunk(text, isFirstChunk, fileName, isUpdatedFile = false, fileIndex = null) {
             Papa.parse(text, {
                 header: isFirstChunk,
                 dynamicTyping: true,
@@ -646,18 +829,26 @@
                 chunk: function(results) {
                     if (isFirstChunk || !window.csvData) {
                         window.csvData = results.data;
-                        originalData = window.csvData.slice();
+                        originalData = window.csvData.slice(); // Store a copy of the original data
                     } else {
                         window.csvData = window.csvData.concat(results.data);
                     }
-                    if (isFirstChunk) {
+
+                    if (isFirstChunk && !isUpdatedFile) {
+                        // New dataset, display and save it
                         displayData(window.csvData);
-                        setTimeout(generateChart, 100);
+                        setTimeout(() => generateChart(), 100);
+                        const chartState = getChartState();
+                        saveFile(fileName, window.csvData, chartState);
+                    } else if (isFirstChunk && isUpdatedFile) {
+                        // Updating existing dataset
+                        updateFileContent(fileIndex, window.csvData);
+                        applyChartState(fileIndex); // Reapply the last known state
                     }
                 }
             });
         }
-        function parseXMLChunk(text, isFirstChunk, fileName) {
+        function parseXMLChunk(text, isFirstChunk, fileName, isUpdatedFile = false, fileIndex = null) {
             try {
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(text, "text/xml");
@@ -666,33 +857,46 @@
                     alert('Error parsing file, unsupported file format');
                     return;
                 }
-                const root = xmlDoc.documentElement;
-                const rows = Array.from(root.children);
-                if (rows.length === 0) {
-                    alert('No data available');
-                    return;
-                }
-                const data = [];
+
+                const rows = [];
                 const headers = new Set();
-                rows.forEach(rowNode => {
-                    const row = {};
-                    const cells = rowNode.children;
-                    Array.from(cells).forEach(cell => {
-                        const header = cell.tagName;
+
+                // Recursive function to handle any depth of XML structure
+                function traverseNode(node, row = {}) {
+                    Array.from(node.children).forEach((childNode) => {
+                        const header = childNode.tagName || 'Unnamed';
                         headers.add(header);
-                        row[header] = cell.textContent;
+                        if (childNode.children.length) {
+                            // Recursively handle nested XML
+                            traverseNode(childNode, row);
+                        } else {
+                            row[header] = childNode.textContent || '';
+                        }
                     });
-                    data.push(row);
-                });
-                if (isFirstChunk || !window.xmlData) {
-                    window.xmlData = data;
-                    originalData = window.xmlData.slice();
-                } else {
-                    window.xmlData = window.xmlData.concat(data);
+                    return row;
                 }
-                if (isFirstChunk) {
+
+                // Process XML rows
+                Array.from(xmlDoc.documentElement.children).forEach((rowNode) => {
+                    const row = traverseNode(rowNode);
+                    rows.push(row);
+                });
+
+                if (isFirstChunk || !window.xmlData) {
+                    window.xmlData = rows;
+                    originalData = window.xmlData.slice(); // Store a copy of the original data
+                } else {
+                    window.xmlData = window.xmlData.concat(rows);
+                }
+
+                if (isFirstChunk && !isUpdatedFile) {
                     displayData(window.xmlData);
-                    setTimeout(generateChart, 100);
+                    setTimeout(() => generateChart(), 100); // Generate chart after loading first chunk
+                    const chartState = getChartState();
+                    saveFile(fileName, window.xmlData, chartState); // Save XML data to localStorage
+                } else if (isFirstChunk && isUpdatedFile) {
+                    updateFileContent(fileIndex, window.xmlData);
+                    applyChartState(fileIndex);
                 }
             } catch (error) {
                 console.error('Error parsing XML:', error);
@@ -700,11 +904,14 @@
             }
         }
         function displayData(data) {
+            console.log("Displaying data:", data.length, "rows");
+
             const dateViewButton = document.getElementById('dateViewButton');
             const selectXAxisButton = document.getElementById('selectXAxisButton');
             const selectYAxisButton = document.getElementById('selectYAxisButton');
             const selectColumnsButton = document.getElementById('selectColumnsButton');
             const cancelSearchButton = document.getElementById('cancelSearchButton');
+
             if (data.length === 0) {
                 document.querySelector('#dataGrid').innerHTML = '<p>No data available</p>';
                 dateViewButton.classList.remove('visible');
@@ -712,25 +919,85 @@
                 selectYAxisButton.classList.remove('visible');
                 selectColumnsButton.classList.remove('visible');
                 cancelSearchButton.classList.remove('visible');
-                searchInput.style.display = 'none';
+                searchInput.style.display = 'none'; // Hide search bar
                 document.getElementById('chartTypeContainer').style.display = 'none';
                 return;
             }
+
+            // Display buttons and input fields when there is data
             dateViewButton.classList.add('visible');
             selectXAxisButton.classList.add('visible');
             selectYAxisButton.classList.add('visible');
             selectColumnsButton.classList.add('visible');
             cancelSearchButton.classList.remove('visible');
-            searchInput.style.display = 'block';
+            searchInput.style.display = 'block'; // Show search bar
             document.getElementById('chartTypeContainer').style.display = 'block';
-            renderVirtualizedTable(data);
-        }
-        function renderVirtualizedTable(data) {
-            const tableContainer = document.querySelector('#dataGrid');
-            tableContainer.innerHTML = '';
+
+            // Clear the existing data
+            const dataGrid = document.getElementById('dataGrid');
+            dataGrid.innerHTML = ''; // Clear previous content
             const table = document.createElement('table');
             const thead = document.createElement('thead');
             const tbody = document.createElement('tbody');
+
+            // Create header row
+            const headerRow = document.createElement('tr');
+            Object.keys(data[0]).forEach((header, index) => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                th.dataset.index = index;
+                th.classList.add('sortable-header');
+                
+                th.addEventListener('click', (event) => {
+                    if (isSelectingXAxis) {
+                        toggleXAxisSelection(index, th);
+                        resetSelectionMode();
+                    } else if (isSelectingYAxis) {
+                        toggleYAxisSelection(index, th);
+                        resetSelectionMode();
+                    } else if (isSelectingColumns) {
+                        toggleSearchColumnSelection(index, th);
+                    } else if (event.shiftKey && (event.metaKey || event.ctrlKey)) {
+                        toggleXAxisSelection(index, th);
+                    } else if (event.shiftKey) {
+                        toggleYAxisSelection(index, th);
+                    } else {
+                        sortTable(header, index);
+                    }
+                });
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // Create body rows
+            data.forEach((row, rowIndex) => {
+                const tr = document.createElement('tr');
+                Object.values(row).forEach(value => {
+                    const td = document.createElement('td');
+                    td.textContent = value !== undefined && value !== null ? value : ''; // Avoid undefined or null values
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+
+            table.appendChild(tbody);
+            dataGrid.appendChild(table);
+
+            // Update header colors based on axis selections
+            updateHeaderColors();
+
+            // Render the virtualized table for large datasets
+            renderVirtualizedTable(data);
+        }
+
+        function renderVirtualizedTable(data) {
+            const tableContainer = document.querySelector('#dataGrid');
+            tableContainer.innerHTML = ''; // Clear previous content
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+            // Create header row
             const headerRow = document.createElement('tr');
             Object.keys(data[0]).forEach((header, index) => {
                 const th = document.createElement('th');
@@ -775,14 +1042,17 @@
                 }
                 loadedRowCount = endRow;
             }
-            renderRows();
+            renderRows(); // Initial render
             window.addEventListener('scroll', () => {
+                // Check if the user is close to the bottom of the page (within 100px)
                 if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 100) {
                     renderRows();
                 }
             });
-            updateHeaderColors();
+            // Ensure headers and functionalities are in place
+            updateHeaderColors();  // Add any necessary styles or indicators for headers
         }
+        // Throttle chart update to reduce UI thread blocking
         let requestId;
         function generateChart() {
             if (requestId) {
@@ -801,10 +1071,10 @@
                         key = weekStart.toISOString().split('T')[0];
                         break;
                     case 'month':
-                        key = date.toISOString().split('T')[0].substring(0, 7);
+                        key = date.toISOString().split('T')[0].substring(0, 7); // "YYYY-MM"
                         break;
                     default:
-                        key = date.toISOString().split('T')[0];
+                        key = date.toISOString().split('T')[0]; // "YYYY-MM-DD"
                         break;
                 }
                 if (!groupedData[key]) {
@@ -850,7 +1120,7 @@
                         tension: 0.1,
                         pointRadius: 1,
                         pointHoverRadius: 2,
-                        fill: false
+                        fill: false  // Ensure line charts are not filled
                     };
                 });
             } else {
@@ -861,6 +1131,7 @@
             let xAxisLabels = xAxisData;
             
             if (['bar', 'pie', 'doughnut', 'polarArea'].includes(chartType)) {
+                // Aggregate data by categories for applicable chart types
                 const aggregatedData = aggregateDataByCategory(xAxisData, datasets, existingColors);
                 xAxisLabels = aggregatedData.labels;
                 datasets = aggregatedData.datasets;
@@ -900,6 +1171,7 @@
                 chartInstance.destroy();
             }
 
+            // Debouncing the resize to prevent excessive chart resizing
             const debounceResize = (func, wait) => {
                 let timeout;
                 return function(...args) {
@@ -917,6 +1189,7 @@
 
             resizeObserver.observe(document.getElementById('chartContainer'));
 
+            // Throttle chart update to reduce UI thread blocking
             let requestId;
             function generateChart() {
                 if (requestId) {
@@ -952,7 +1225,7 @@
                                 text: datasets.length > 0 ? 'Y Axis' : 'No Data Selected'
                             }
                         }
-                    } : {}
+                    } : {} // Other chart types like pie, doughnut, etc. don't need specific axis settings
                 }
             });
 
@@ -982,12 +1255,12 @@
         }
         function isValidDateFormat(dateString) {
             const formats = [
-                /^\d{4}-\d{2}-\d{2}$/,
-                /^\d{2}\/\d{2}\/\d{4}$/,
-                /^\d{2}-\d{2}-\d{4}$/,
-                /^\d{2}\/\d{2}\/\d{2}$/,
-                /^\d{2}-\d{2}-\d{2}$/,
-                /^\d{2}\.\d{2}\.\d{4}$/
+                /^\d{4}-\d{2}-\d{2}$/,  // YYYY-MM-DD
+                /^\d{2}\/\d{2}\/\d{4}$/,  // MM/DD/YYYY
+                /^\d{2}-\d{2}-\d{4}$/,  // DD-MM-YYYY
+                /^\d{2}\/\d{2}\/\d{2}$/,  // MM/DD/YY
+                /^\d{2}-\d{2}-\d{2}$/,  // DD-MM-YY
+                /^\d{2}\.\d{2}\.\d{4}$/  // DD.MM.YYYY
             ];
             return formats.some(regex => regex.test(dateString));
         }
@@ -1000,50 +1273,22 @@
             generateChart();
         }
         function getRandomColor(existingColors) {
-            const colors = [
-                '#0095ff',
-                '#FF6347',
-                '#32CD32',
-                '#8A2BE2',
-                '#FF4500',
-                '#FFD700',
-                '#5F9EA0',
-                '#FF1493',
-                '#2E8B57',
-                '#DC143C',
-                '#00FA9A',
-                '#7B68EE',
-                '#FF8C00',
-                '#4682B4',
-                '#DA70D6',
-                '#A52A2A',
-                '#6A5ACD',
-                '#20B2AA',
-                '#B22222',
-                '#708090',
-                '#40E0D0',
-                '#FF69B4',
-                '#9ACD32',
-                '#F08080',
-                '#556B2F',
-                '#00CED1',
-                '#FFB6C1',
-                '#00FF7F',
-                '#9400D3',
-                '#D2691E',
-                '#DC143C',
-                '#FF7F50',
+            const distinctColors = [
+                '#0095ff', '#FF6347', '#32CD32', '#8A2BE2', '#FF4500', '#FFD700',
+                '#5F9EA0', '#FF1493', '#2E8B57', '#DC143C', '#00FA9A', '#7B68EE',
+                '#FF8C00', '#4682B4', '#DA70D6', '#A52A2A', '#6A5ACD', '#20B2AA',
+                '#B22222', '#708090', '#40E0D0', '#FF69B4', '#9ACD32', '#F08080',
+                '#556B2F', '#00CED1', '#FFB6C1', '#00FF7F', '#9400D3', '#D2691E',
+                '#DC143C', '#FF7F50',
             ];
 
-            const shuffledColors = colors.sort(() => Math.random() - 0.5);
+            // Find distinct colors by filtering out those already in use
+            const availableColors = distinctColors.filter(color => !existingColors.includes(color));
 
-            const availableColors = shuffledColors.filter(color => !existingColors.includes(color));
-
-            if (availableColors.length === 0) {
-                return shuffledColors[existingColors.length % shuffledColors.length];
-            }
-
-            return availableColors[0];
+            // Return the first available color or cycle through if all are used
+            return availableColors.length > 0
+                ? availableColors[0]
+                : distinctColors[existingColors.length % distinctColors.length];
         }
 
 
@@ -1065,51 +1310,36 @@
         function sortTable(columnName, columnIndex) {
             const data = window.csvData || window.xmlData;
             if (!data || data.length === 0) return;
-            
+            const isNumeric = data.every(row => !isNaN(parseFloat(Object.values(row)[columnIndex])));
             const currentDirection = sortDirection[columnName] || 'asc';
             const newDirection = currentDirection === 'asc' ? 'desc' : 'asc';
             sortDirection = {};
             sortDirection[columnName] = newDirection;
-
-            // Determine if the column contains numeric values
-            const isNumeric = data.every(row => {
-                const value = Object.values(row)[columnIndex];
-                return !isNaN(parseFloat(value)) && isFinite(value);
-            });
-
             // Sort the internal dataset
             data.sort((a, b) => {
-                let aValue = Object.values(a)[columnIndex] || ''; // Fallback to empty string if null/undefined
-                let bValue = Object.values(b)[columnIndex] || ''; // Fallback to empty string if null/undefined
-
-                // Handle numeric sorting
+                const aText = Object.values(a)[columnIndex];
+                const bText = Object.values(b)[columnIndex];
                 if (isNumeric) {
-                    aValue = parseFloat(aValue);
-                    bValue = parseFloat(bValue);
-                    return newDirection === 'asc' ? aValue - bValue : bValue - aValue;
+                    const aNum = parseFloat(aText);
+                    const bNum = parseFloat(bText);
+                    return newDirection === 'asc' ? aNum - bNum : bNum - aNum;
+                } else {
+                    return newDirection === 'asc' ? aText.localeCompare(bText) : bText.localeCompare(aText);
                 }
-
-                // Handle text/alphanumeric sorting
-                aValue = aValue.toString();
-                bValue = bValue.toString();
-                return newDirection === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
             });
-
             // After sorting, reset loadedRowCount and re-render the table
             loadedRowCount = 0;
             renderVirtualizedTable(data);
-
             // Update the sorting indicator on the header
             const header = document.querySelector(`th[data-index="${columnIndex}"]`);
             header.classList.remove('sort-asc', 'sort-desc');
             header.classList.add(newDirection === 'asc' ? 'sort-asc' : 'sort-desc');
-
+            
             // Regenerate the chart with the sorted data
             if (xAxisColumns.has(columnIndex)) {
                 generateChart();
             }
         }
-
         function toggleDropdown() {
             const dropdown = document.querySelector('.dropdown');
             dropdown.classList.toggle('active');
@@ -1186,44 +1416,52 @@
             selectedSearchColumns.clear();
             resetSelectionMode();
             searchInput.value = '';
-            window.csvData = originalData.slice();
+            window.csvData = originalData.slice(); // Restore original data
             displayData(window.csvData || window.xmlData);
-            updateHeaderColors();
-            generateChart();
+            updateHeaderColors();  // Ensure axis indicators and colors are updated
+            generateChart(); // Regenerate the chart with the original data
         }
         function toggleXAxisSelection(index, thElement) {
             if (yAxisColumns.has(index)) {
-                alert("This column is already assigned to the Y Axis. Please unassign it from the Y Axis before assigning it to the X Axis.");
+                alert("This column is already assigned to the Y Axis. Unassign it from Y Axis first.");
                 return;
             }
             if (xAxisColumns.has(index)) {
-                xAxisColumns.delete(index);
+                xAxisColumns.delete(index);  // Deselect the column if already selected
             } else {
-                xAxisColumns.clear(); 
-                xAxisColumns.add(index);
+                xAxisColumns.clear();  // Only one X-axis column is allowed, so clear previous selection
+                xAxisColumns.add(index);  // Select the new column
             }
-            updateHeaderColors();
+
+            // Save the updated chart state to localStorage
+            const currentFileIndex = getCurrentFileIndex();
+            console.log("Saving chart state.... \n\nSaving chart state index ", currentFileIndex)
+            saveChartState(currentFileIndex);
+
+            updateHeaderColors();  // Update header colors to reflect changes
             checkForDateColumn();
-            generateChart();
+            generateChart();  // Update the chart to reflect new axis selection
         }
+
         function toggleYAxisSelection(index, thElement) {
             if (xAxisColumns.has(index)) {
-                alert("This column is already assigned to the X Axis. Please unassign it from the X Axis before assigning it to the Y Axis.");
+                alert("This column is already assigned to the X Axis. Unassign it from X Axis first.");
                 return;
             }
             if (yAxisColumns.has(index)) {
-                yAxisColumns.delete(index);
+                yAxisColumns.delete(index);  // Deselect the column if already selected
             } else {
-                yAxisColumns.add(index);
-
-                if (!columnColorMap[index]) {
-                    const newColor = getRandomColor(Object.values(columnColorMap));
-                    columnColorMap[index] = newColor;
-                }
+                yAxisColumns.add(index);  // Select the new column
             }
-            updateHeaderColors();
+
+            // Save the updated chart state to localStorage
+            const currentFileIndex = getCurrentFileIndex();
+            console.log("Saving chart state.... \n\nSaving chart state index ", currentFileIndex)
+            saveChartState(currentFileIndex);
+
+            updateHeaderColors();  // Update header colors to reflect changes
             checkForDateColumn();
-            generateChart();
+            generateChart();  // Update the chart to reflect new axis selection
         }
 
         function toggleSearchColumnSelection(index, thElement) {
@@ -1245,19 +1483,24 @@
                 th.classList.remove('selected', 'axis-selected');
                 th.textContent = th.textContent.replace(/\s*\x|\s*\y/g, '').trim();
 
+                // X-axis indicator
                 if (xAxisColumns.has(index)) {
                     th.classList.add('axis-selected');
                     th.innerHTML = `${th.textContent} <span class="axis-indicator" style="background-color: #000000; color: #ffffff;">x</span>`;
                 } 
+                // Y-axis indicator
                 else if (yAxisColumns.has(index)) {
                     th.classList.add('axis-selected');
 
+                    // Find the corresponding dataset for this column index
                     const dataset = datasets.find(ds => ds.label === th.textContent);
-                    const color = dataset ? dataset.backgroundColor : '#000000';
+                    const color = dataset ? dataset.backgroundColor : '#000000'; // Default color fallback
 
+                    // Update the Y-axis indicator background color with the dataset color
                     th.innerHTML = `${th.textContent} <span class="axis-indicator" style="background-color: ${color}; color: #ffffff;">y</span>`;
                 }
 
+                // Selected search columns handling
                 if (selectedSearchColumns.has(index)) {
                     if (xAxisColumns.has(index) || yAxisColumns.has(index)) {
                         th.classList.add('selected', 'axis-selected');
@@ -1282,21 +1525,21 @@
                 const filteredData = data.filter(row => {
                     return searchColumns.some(index => {
                         const cellValue = Object.values(row)[index];
-                        if (cellValue === undefined || cellValue === null) return false;
+                        if (cellValue === undefined || cellValue === null) return false; // Skip undefined or null values
                         if (searchTerm.startsWith('"') && searchTerm.endsWith('"')) {
                             return cellValue === searchTerm.slice(1, -1);
                         }
                         return cellValue.toString().toLowerCase().includes(searchTerm.toLowerCase());
                     });
                 });
-                window.csvData = filteredData;
+                window.csvData = filteredData; // Update the global data reference to filtered data
                 displayData(filteredData);
-                updateHeaderColors();
-                resetSelectionMode();
+                updateHeaderColors();  // Ensure axis indicators and colors are updated
+                resetSelectionMode();  // Reset the selection mode after search is complete
                 loadingIcon.style.display = 'none';
-                cancelSearchButton.textContent = 'Clear Search';
+                cancelSearchButton.textContent = 'Clear Search';  // Change button text to "Clear Search"
                 cancelSearchButton.classList.add('visible');
-                generateChart();
+                generateChart(); // Regenerate the chart with the filtered data
             }, 100);
         }
         document.addEventListener('DOMContentLoaded', () => {
@@ -1308,6 +1551,7 @@
                 }
             });
             resizeObserver.observe(chartContainer);
+            setupChartStateListeners();
         });
         function initializeDefaultChart() {
             const ctx = document.getElementById('myChart').getContext('2d');
@@ -1348,47 +1592,37 @@
             document.getElementById('chartContainer').style.display = 'block';
             dataGrid.style.display = 'block';
             if (dataGrid.innerHTML.trim() !== '') {
-                searchInput.style.display = 'block';
+                searchInput.style.display = 'block'; // Show search bar when dataset is visible
             }
         }
+        // Modify the toggleDataPage function to handle selecting and updating files
         function toggleDataPage() {
             const files = JSON.parse(localStorage.getItem('files')) || [];
             const chartContainer = document.getElementById('chartContainer');
-            const dateViewButton = document.getElementById('dateViewButton');
-            const selectXAxisButton = document.getElementById('selectXAxisButton');
-            const selectYAxisButton = document.getElementById('selectYAxisButton');
-            const selectColumnsButton = document.getElementById('selectColumnsButton');
+            const dataPage = document.getElementById('dataPage');
+            const dataGrid = document.getElementById('dataGrid');
+
             dataPage.innerHTML = '';
             dataGrid.style.display = 'none';
+
             if (dataPage.classList.contains('active')) {
                 dataPage.classList.remove('active');
                 dataGrid.style.display = 'block';
                 chartContainer.style.display = 'block';
-                if (dataGrid.innerHTML.trim() !== '') {
-                    dateViewButton.classList.add('visible');
-                    selectXAxisButton.classList.add('visible');
-                    selectYAxisButton.classList.add('visible');
-                    selectColumnsButton.classList.add('visible');
-                    searchInput.style.display = 'block';
-                    document.getElementById('chartTypeContainer').style.display = 'block';
-                }
                 return;
             }
-            dateViewButton.classList.remove('visible');
-            selectXAxisButton.classList.remove('visible');
-            selectYAxisButton.classList.remove('visible');
-            selectColumnsButton.classList.remove('visible');
-            searchInput.style.display = 'none';
-            document.getElementById('chartTypeContainer').style.display = 'none';
+
             if (files.length === 0) {
                 dataPage.innerHTML = '<p>No files available</p>';
             } else {
                 const table = document.createElement('table');
                 table.style.width = '100%';
                 table.style.borderCollapse = 'collapse';
+
                 const thead = document.createElement('thead');
                 const headerRow = document.createElement('tr');
-                const headers = ['File Name', 'Description', 'Date Uploaded', 'Row Count', 'Actions'];
+                const headers = ['File Name', 'Description', 'Date Uploaded', 'Actions'];
+
                 headers.forEach(headerText => {
                     const th = document.createElement('th');
                     th.textContent = headerText;
@@ -1398,80 +1632,56 @@
                 });
                 thead.appendChild(headerRow);
                 table.appendChild(thead);
+
                 const tbody = document.createElement('tbody');
                 files.forEach((file, index) => {
                     const row = document.createElement('tr');
                     row.style.height = '28px';
+
                     const nameCell = document.createElement('td');
-                    const nameInput = document.createElement('input');
-                    nameInput.type = 'text';
-                    nameInput.value = file.name;
-                    nameInput.style.width = '100%';
-                    nameInput.style.border = 'none';
-                    nameInput.style.padding = '5px';
-                    nameInput.style.height = '100%';
-                    nameInput.style.background = 'transparent';
-                    nameInput.style.outline = 'none';
-                    nameInput.style.boxShadow = 'none';
-                    nameInput.addEventListener('blur', () => updateFileName(index, nameInput.value));
-                    nameCell.appendChild(nameInput);
+                    nameCell.textContent = file.name;
                     nameCell.style.padding = '5px';
                     row.appendChild(nameCell);
+
                     const descriptionCell = document.createElement('td');
-                    const descriptionInput = document.createElement('input');
-                    descriptionInput.type = 'text';
-                    descriptionInput.value = file.description || 'No description available';
-                    descriptionInput.style.width = '100%';
-                    descriptionInput.style.border = 'none';
-                    descriptionInput.style.padding = '5px';
-                    descriptionInput.style.height = '100%';
-                    descriptionInput.style.background = 'transparent';
-                    descriptionInput.style.outline = 'none';
-                    descriptionInput.style.boxShadow = 'none';
-                    descriptionInput.addEventListener('blur', () => updateFileDescription(index, descriptionInput.value));
-                    descriptionCell.appendChild(descriptionInput);
+                    descriptionCell.textContent = file.description || 'No description available';
                     descriptionCell.style.padding = '5px';
                     row.appendChild(descriptionCell);
+
                     const dateCell = document.createElement('td');
-                    const dateUploaded = new Date(file.dateUploaded || Date.now()).toLocaleString();
-                    dateCell.textContent = dateUploaded;
+                    dateCell.textContent = new Date(file.dateUploaded).toLocaleString();
                     dateCell.style.padding = '5px';
                     row.appendChild(dateCell);
-                    const rowCountCell = document.createElement('td');
-                    rowCountCell.textContent = file.content.length;
-                    rowCountCell.style.padding = '5px';
-                    row.appendChild(rowCountCell);
+
                     const actionCell = document.createElement('td');
-                    actionCell.textContent = 'View';
-                    actionCell.style.padding = '7px';
+                    actionCell.textContent = 'Update & View';
                     actionCell.style.cursor = 'pointer';
                     actionCell.style.textAlign = 'center';
                     actionCell.style.backgroundColor = '#00000000';
                     actionCell.style.color = '#131d20d1';
-                    actionCell.addEventListener('click', () => viewFile(index));
-                    actionCell.addEventListener('mouseover', () => {
-                        actionCell.style.backgroundColor = '#0095ff69';
-                        actionCell.style.color = '#131d20';
-                    });
-                    actionCell.addEventListener('mouseout', () => {
-                        actionCell.style.backgroundColor = '#00000000';
-                        actionCell.style.color = '#131d20d1';
+                    actionCell.style.padding = '7px';
+                    actionCell.addEventListener('click', () => {
+                        document.getElementById('fileInput').onchange = (e) => {
+                            const updatedFile = e.target.files[0];
+                            if (updatedFile) {
+                                handleFile(updatedFile, true, index); // Handle updated file
+                            }
+                        };
+                        document.getElementById('fileInput').click(); // Trigger file input
                     });
                     row.appendChild(actionCell);
-                    row.addEventListener('mouseover', () => {
-                        row.classList.add('highlighted');
-                    });
-                    row.addEventListener('mouseout', () => {
-                        row.classList.remove('highlighted');
-                    });
+
                     tbody.appendChild(row);
                 });
+
                 table.appendChild(tbody);
                 dataPage.appendChild(table);
             }
+
             dataPage.classList.add('active');
             chartContainer.style.display = 'none';
         }
+
         function updateFileName(index, newName) {
             let files = JSON.parse(localStorage.getItem('files')) || [];
             if (files[index]) {
@@ -1486,27 +1696,25 @@
                 localStorage.setItem('files', JSON.stringify(files));
             }
         }
+        // Function to display the file and apply chart state
+        // Function to display the file and apply chart state
         function viewFile(index) {
+            console.log("SETTING FILE INDEX TO: ", index);
+            localStorage.setItem('currentFileIndex', index);  // Store the index of the currently viewed file
             const files = JSON.parse(localStorage.getItem('files')) || [];
             const file = files[index];
             if (!file) return;
+
+            // Reset selections
             xAxisColumns.clear();
             yAxisColumns.clear();
             selectedSearchColumns.clear();
             updateHeaderColors();
-            const dateViewButton = document.getElementById('dateViewButton');
-            dateViewButton.classList.add('disabled');
-            dateViewButton.classList.remove('visible');
-            document.getElementById('selectXAxisButton').classList.remove('visible');
-            document.getElementById('selectYAxisButton').classList.remove('visible');
-            document.getElementById('selectColumnsButton').classList.remove('visible');
-            cancelSearchButton.classList.remove('visible');
-            closeOpenPages();
-            dataPage.classList.remove('active');
-            dataGrid.style.display = 'block';
-            document.getElementById('chartContainer').style.display = 'block';
-            displayData(file.content);
-            setTimeout(generateChart, 100);
+
+            displayData(file.content);  // Display the content of the file
+            applyChartState(index);  // Apply last known chart state
+
+            setTimeout(generateChart, 100);  // Regenerate the chart with the applied state
         }
     </script>
 </body>
