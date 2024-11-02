@@ -539,13 +539,13 @@
                 <option value="polarArea">Polar Area</option>
             </select>
         </div>
-        <input type="text" id="searchInput" placeholder="Enter search criteria" class="search-input" />
+        <input type="text" id="searchInput" placeholder="Enter filter criteria or RegEx" class="search-input" />
         <div class="date-view-selector" style="display: flex; justify-content: center; width: 100%; align-items: center; gap: 10px; margin-bottom: 10px;">
             <button id="dateViewButton" class="date-view-button" onclick="cycleDateView()">Day</button>
             <button id="selectXAxisButton" class="date-view-button" onclick="startXAxisSelection()">Add/Rem X Axis</button>
             <button id="selectYAxisButton" class="date-view-button" onclick="startYAxisSelection()">Add/Rem Y Axis</button>
-            <button id="selectColumnsButton" class="date-view-button" onclick="startColumnSelection()">Select Columns</button>
-            <button id="cancelSearchButton" class="cancel-search-button" onclick="clearSearch()">Cancel Search</button>
+            <button id="selectColumnsButton" class="date-view-button" onclick="startColumnSelection()">Select Columns (Filter)</button>
+            <button id="cancelSearchButton" class="cancel-search-button" onclick="clearSearch()">Cancel Filter</button>
         </div>
     </center>
     <input style="display: none;" type="file" id="fileInput" accept=".csv, .xml" />
@@ -1082,34 +1082,68 @@
         function runSearch() {
             const data = window.csvData || window.xmlData;
             if (!data || data.length === 0) return;
+
             const searchTerm = searchInput.value.trim();
             const searchColumns = Array.from(selectedSearchColumns);
+
             if (searchColumns.length === 0 || searchTerm === '') {
                 alert('Please select columns and enter a search term.');
                 return;
             }
+
             loadingIcon.style.display = 'block';
+
             setTimeout(() => {
+                let regex;
+                let isRegex = false;
+
+                // Check if the search term is a regex (enclosed in slashes)
+                if (searchTerm.startsWith('/') && searchTerm.lastIndexOf('/') > 0) {
+                    const lastSlashIndex = searchTerm.lastIndexOf('/');
+                    const pattern = searchTerm.slice(1, lastSlashIndex);
+                    const flags = searchTerm.slice(lastSlashIndex + 1);
+
+                    try {
+                        regex = new RegExp(pattern, flags);
+                        isRegex = true;
+                    } catch (e) {
+                        alert('Invalid regular expression');
+                        loadingIcon.style.display = 'none';
+                        return;
+                    }
+                }
+
                 const filteredData = data.filter(row => {
                     return searchColumns.some(index => {
                         const cellValue = Object.values(row)[index];
                         if (cellValue === undefined || cellValue === null) return false; // Skip undefined or null values
+
                         if (searchTerm.startsWith('"') && searchTerm.endsWith('"')) {
+                            // Exact match when search term is enclosed in double quotes
                             return cellValue === searchTerm.slice(1, -1);
                         }
+
+                        if (isRegex) {
+                            // Use regex for matching
+                            return regex.test(cellValue.toString());
+                        }
+
+                        // Default case-insensitive substring search
                         return cellValue.toString().toLowerCase().includes(searchTerm.toLowerCase());
                     });
                 });
+
                 window.csvData = filteredData; // Update the global data reference to filtered data
                 displayData(filteredData);
                 updateHeaderColors();  // Ensure axis indicators and colors are updated
                 resetSelectionMode();  // Reset the selection mode after search is complete
                 loadingIcon.style.display = 'none';
-                cancelSearchButton.textContent = 'Clear Search';  // Change button text to "Clear Search"
+                cancelSearchButton.textContent = 'Clear Filter';  // Change button text to "Clear Search"
                 cancelSearchButton.classList.add('visible');
                 generateChart(); // Regenerate the chart with the filtered data
             }, 100);
         }
+
 
         // Remove the call to setupChartStateListeners() in your DOMContentLoaded event listener:
         document.addEventListener('DOMContentLoaded', () => {
@@ -1313,7 +1347,7 @@
         }
 
         function clearSearch() {
-            cancelSearchButton.textContent = 'Cancel Search';
+            cancelSearchButton.textContent = 'Reset Filter';
             cancelSearch();
         }
 
@@ -1778,7 +1812,7 @@
                 isSelectingYAxis = false;
                 isSelectingColumns = true;
                 highlightSelectionButton('selectColumnsButton');
-                selectColumnsButton.textContent = "Search Columns";
+                selectColumnsButton.textContent = "Apply Filter";
                 cancelSearchButton.classList.add('visible');
             }
         }
