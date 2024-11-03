@@ -525,6 +525,7 @@
         <p>Click or drag and drop a file here (.xml, .csv)</p>
     </div>
     <center>
+        <button id="loadExampleButton" class="date-view-button visible" style="width: 165px; height: 25px;" onclick="loadExampleDataset()">Load Example Dataset</button>
         <div id="chartContainer">
             <canvas id="myChart"></canvas>
         </div>
@@ -575,6 +576,70 @@
         let isCtrlOrCmdPressed = false;
         let isShiftPressed = false;
         const columnColorMap = {};
+
+        const exampleDataset = `Date,Sales,Expenses,Profit
+            2021-01-01,200,150,50
+            2021-01-02,300,120,180
+            2021-01-03,250,100,150
+            2021-01-04,400,200,200
+            2021-01-05,350,180,170`;
+        
+        
+        function loadExampleDataset() {
+            // Clear any existing data
+            window.csvData = null;
+            window.xmlData = null;
+            originalData = null;
+            xAxisColumns.clear();
+            yAxisColumns.clear();
+            selectedSearchColumns.clear();
+            updateHeaderColors();
+
+            // Parse the example CSV data
+            Papa.parse(exampleDataset, {
+                header: true,
+                dynamicTyping: true,
+                complete: function(results) {
+                    window.csvData = results.data;
+                    originalData = window.csvData.slice(); // Store a copy of the original data
+
+                    // Display the data
+                    displayData(window.csvData, () => {
+                        // Automatically select the 'Date' column as X-axis
+                        const headers = getCurrentHeaders();
+                        const dateColumnIndex = headers.indexOf('Date');
+                        if (dateColumnIndex !== -1) {
+                            toggleXAxisSelection(dateColumnIndex, null, true); // Pass skipSave = true
+                        }
+
+                        // Automatically select 'Sales', 'Expenses', and 'Profit' columns as Y-axis
+                        const yAxisColumnNames = ['Sales', 'Expenses', 'Profit'];
+                        yAxisColumnNames.forEach(columnName => {
+                            const columnIndex = headers.indexOf(columnName);
+                            if (columnIndex !== -1 && columnIndex !== 2) {
+                                toggleYAxisSelection(columnIndex, null, true); // Pass skipSave = true
+                            }
+                        });
+
+                        // Set chart type to 'line' (or any other that makes sense)
+                        document.getElementById('chartTypeSelector').value = 'line';
+
+                        // Generate the chart
+                        generateChart();
+
+                        // Save the chart state
+                        const chartState = getChartState();
+                        // Save the example dataset in localStorage as a file (optional)
+                        saveFile('Example Dataset', window.csvData, chartState);
+                    });
+                }
+            });
+
+            // Close any open pages
+            closeOpenPages();
+        }
+
+
 
         // Virtualization settings
         const visibleRowsCount = 100; // Number of rows to render at a time for virtualization
@@ -714,7 +779,8 @@
 
         // Function to determine the currently selected file index
         function getCurrentFileIndex() {
-            return parseInt(localStorage.getItem('currentFileIndex'), 10);
+            const index = localStorage.getItem('currentFileIndex');
+            return index !== null ? parseInt(index, 10) : null;
         }
 
         // Save chart state and set it to the current file
