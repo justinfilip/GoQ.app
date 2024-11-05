@@ -558,7 +558,7 @@
     <div id="dataGrid"></div>
     <div id="dataPage" class="data-page"></div>
     <div class="loading-icon" id="loadingIcon"></div>
-    <div id="toast" class="toast">Please select columns and enter a search term.</div>
+    <div id="toast" class="toast">Please select columns and enter filter text or regular expression.</div>
     <script src="chart.js"></script>
     <script src="PapaParse-5.0.2/papaparse.js"></script>
     <script>
@@ -1526,7 +1526,7 @@
             document.getElementById('selectXAxisButton').classList.remove('highlighted');
             document.getElementById('selectYAxisButton').classList.remove('highlighted');
             document.getElementById('selectColumnsButton').classList.remove('highlighted');
-            selectColumnsButton.textContent = "Select Columns";
+            selectColumnsButton.textContent = "Select Columns (Filter)";
             cancelSearchButton.classList.remove('visible');
         }
 
