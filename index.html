@@ -129,22 +129,26 @@
             display: inline-block;
             flex-grow: 1;
             height: 35px;
-            border: dashed .1px #0000003d;
+            /* border: dashed .1px #0000003d; */
             border-radius: 7px;
             user-select: none;
             overflow-x: visible;
             scrollbar-width: thin;
         }
         .navigator:hover {
-            border: dashed .1px #0000003d;
+            /* border: dashed .1px #0000003d; */
             border-radius: 7px;
         }
         .button-text {
             position: relative;
-            transform: translateY(-10%);
+            /* transform: translateY(-8%); */
             text-align: center;
             font-size: 12px;
             color: #131d20d1;
+            border: .1px dashed #00000099;
+            padding: 10px;
+            border-radius: 7px;
+            margin-right: -15px;
         }
         .dashboards-button {
             display: inline-block;
@@ -173,6 +177,7 @@
                 width: 100%;
                 min-width: unset;
                 max-width: 100%;
+                height: auto;
             }
             .tooltip-container .tooltip {
                 display: none;
@@ -206,7 +211,7 @@
             position: absolute;
             top: 100%;
             left: 0;
-            background-color: white;
+            background-color: rgb(243, 243, 243);
             box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
             z-index: 1;
             width: 100%;
@@ -226,9 +231,9 @@
             display: block;
         }
         .drop-area {
-            border: .1px dashed #0000003d;
+            border: .1px dashed #00000099;
             border-radius: 7px;
-            padding: 20px;
+            /* padding: 20px; */
             text-align: center;
             font-size: 12px;
             color: #131d20d1;
@@ -236,7 +241,7 @@
             margin-bottom: 20px;
         }
         .drop-area.hover {
-            border: dashed .1px #0000003d;
+            border: .1px dashed #00000099;
             background-color: #0095ff2a;
             color: #131d20d1;
         }
@@ -287,7 +292,7 @@
             display: block;
         }
         #chartContainer {
-            width: 39%;
+            width: 50%;
             min-width: 400px;
             height: 100%;
             resize: both;
@@ -298,7 +303,7 @@
             position: relative;
             padding-top: 20px;
             border-radius: 7px;
-            border: .1px dashed #0000003d;
+            border: .1px dashed #00000099;
             padding-bottom: 20px;
         }
         .no-select {
@@ -312,7 +317,7 @@
             display: inline-block;
             color: #131d20d1;
             border-radius: 5px;
-            border: dashed .1px #0000003d;
+            border: .1px dashed #00000099;
             cursor: pointer;
             margin-bottom: 10px;
             margin-top: -10px;
@@ -324,7 +329,7 @@
             display: inline-block;
             color: #131d20d1;
             border-radius: 5px;
-            border: dashed .1px #0000003d;
+            border: .1px dashed #00000099;
             cursor: pointer;
             margin-bottom: 10px;
             margin-top: -10px;
@@ -410,7 +415,7 @@
             display: inline-block;
             color: white;
             border-radius: 5px;
-            border: dashed .1px #0000003d;
+            border: .1px dashed #00000099;
             cursor: pointer;
             margin-bottom: 10px;
             margin-top: -10px;
@@ -426,7 +431,7 @@
             width: 700px;
             max-width: 100%;
             padding: 5px;
-            border: dashed .1px #0000003d;
+            border: .1px dashed #00000099;
             border-radius: 5px;
             margin-bottom: 30px;
             margin-top: 30px;
@@ -487,7 +492,8 @@
     <div class="top-panel">
         <img class="goq-logo" src="250x250_goq.png" draggable="false">
         <div class="navigator">
-            <div class="dropdown" onclick="toggleDropdown()">Menu ▼
+            <button id="loadExampleButton" class="date-view-button visible" style="width: 165px; height: 100%; margin-top: 0px;" onclick="loadExampleDataset()">Load Example Dataset</button>
+            <!-- <div class="dropdown" onclick="toggleDropdown()">Menu ▼
                 <div class="dropdown-content">
                     <a href="#" onclick="showDashboards()">Dashboards</a>
                     <a href="#" onclick="showQueries()">Queries</a>
@@ -506,7 +512,7 @@
             </div>
             <div class="settings-button">
                 <p class="button-text">Settings</p>
-            </div>
+            </div> -->
             <!-- Tooltip container -->
             <div class="tooltip-container">
                 <div class="tooltip">
@@ -525,7 +531,6 @@
         <p>Click or drag and drop a file here (.xml, .csv)</p>
     </div>
     <center>
-        <button id="loadExampleButton" class="date-view-button visible" style="width: 165px; height: 25px;" onclick="loadExampleDataset()">Load Example Dataset</button>
         <div id="chartContainer">
             <canvas id="myChart"></canvas>
         </div>
@@ -540,7 +545,7 @@
                 <option value="polarArea">Polar Area</option>
             </select>
         </div>
-        <input type="text" id="searchInput" placeholder="Enter filter criteria or RegEx" class="search-input" />
+        <input type="text" id="searchInput" placeholder="Filter text or regular expression" class="search-input" />
         <div class="date-view-selector" style="display: flex; justify-content: center; width: 100%; align-items: center; gap: 10px; margin-bottom: 10px;">
             <button id="dateViewButton" class="date-view-button" onclick="cycleDateView()">Day</button>
             <button id="selectXAxisButton" class="date-view-button" onclick="startXAxisSelection()">Add/Rem X Axis</button>
@@ -578,11 +583,107 @@
         const columnColorMap = {};
 
         const exampleDataset = `Date,Sales,Expenses,Profit
-            2021-01-01,200,150,50
-            2021-01-02,300,120,180
-            2021-01-03,250,100,150
-            2021-01-04,400,200,200
-            2021-01-05,350,180,170`;
+            2021-01-01,371,290,81
+            2021-01-02,208,133,75
+            2021-01-03,423,307,116
+            2021-01-04,429,268,161
+            2021-01-05,272,213,59
+            2021-01-06,353,240,113
+            2021-01-07,464,376,88
+            2021-01-08,272,215,57
+            2021-01-09,341,189,152
+            2021-01-10,356,292,64
+            2021-01-11,381,253,128
+            2021-01-12,252,158,94
+            2021-01-13,225,142,83
+            2021-01-14,447,289,158
+            2021-01-15,340,271,69
+            2021-01-16,309,213,96
+            2021-01-17,341,248,93
+            2021-01-18,377,265,112
+            2021-01-19,452,334,118
+            2021-01-20,368,285,83
+            2021-01-21,386,321,65
+            2021-01-22,327,247,80
+            2021-01-23,311,210,101
+            2021-01-24,390,262,128
+            2021-01-25,273,201,72
+            2021-01-26,313,206,107
+            2021-01-27,273,220,53
+            2021-01-28,425,295,130
+            2021-01-29,483,358,125
+            2021-01-30,347,246,101
+            2021-01-31,364,305,59
+            2021-02-01,422,257,165
+            2021-02-02,456,367,89
+            2021-02-03,312,251,61
+            2021-02-04,338,265,73
+            2021-02-05,451,338,113
+            2021-02-06,401,287,114
+            2021-02-07,297,235,62
+            2021-02-08,355,292,63
+            2021-02-09,369,302,67
+            2021-02-10,370,287,83
+            2021-02-11,401,339,62
+            2021-02-12,426,316,110
+            2021-02-13,489,429,60
+            2021-02-14,281,205,76
+            2021-02-15,274,203,71
+            2021-02-16,344,294,50
+            2021-02-17,276,195,81
+            2021-02-18,233,173,60
+            2021-02-19,358,284,74
+            2021-02-20,483,431,52
+            2021-02-21,446,353,93
+            2021-02-22,475,398,77
+            2021-02-23,362,273,89
+            2021-02-24,304,243,61
+            2021-02-25,391,308,83
+            2021-02-26,364,304,60
+            2021-02-27,338,271,67
+            2021-02-28,230,160,70
+            2021-03-01,270,195,75
+            2021-03-02,392,301,91
+            2021-03-03,441,354,87
+            2021-03-04,466,406,60
+            2021-03-05,308,244,64
+            2021-03-06,241,180,61
+            2021-03-07,415,354,61
+            2021-03-08,367,315,52
+            2021-03-09,369,314,55
+            2021-03-10,375,305,70
+            2021-03-11,369,317,52
+            2021-03-12,478,397,81
+            2021-03-13,338,282,56
+            2021-03-14,246,196,50
+            2021-03-15,309,242,67
+            2021-03-16,230,161,69
+            2021-03-17,270,204,66
+            2021-03-18,372,307,65
+            2021-03-19,333,269,64
+            2021-03-20,429,348,81
+            2021-03-21,256,189,67
+            2021-03-22,287,230,57
+            2021-03-23,473,399,74
+            2021-03-24,452,373,79
+            2021-03-25,457,384,73
+            2021-03-26,376,314,62
+            2021-03-27,379,304,75
+            2021-03-28,379,299,80
+            2021-03-29,381,309,72
+            2021-03-30,314,263,51
+            2021-03-31,440,390,50
+            2021-04-01,292,225,67
+            2021-04-02,494,433,61
+            2021-04-03,456,393,63
+            2021-04-04,223,171,52
+            2021-04-05,490,408,82
+            2021-04-06,420,346,74
+            2021-04-07,262,192,70
+            2021-04-08,489,402,87
+            2021-04-09,419,361,58
+            2021-04-10,241,188,53`;
+
         
         
         function loadExampleDataset() {
@@ -636,7 +737,7 @@
             });
 
             // Close any open pages
-            closeOpenPages();
+            // closeOpenPages();
         }
 
 
@@ -644,9 +745,9 @@
         // Virtualization settings
         const visibleRowsCount = 100; // Number of rows to render at a time for virtualization
         document.addEventListener('keydown', (event) => {
-            if (event.shiftKey && event.key === 'D') {
-                toggleDataPage();
-            }
+            // if (event.shiftKey && event.key === 'D') {
+            //     toggleDataPage();
+            // }
             if (event.shiftKey && event.key === 'T') {
                 const dateViewButton = document.getElementById('dateViewButton');
                 if (!dateViewButton.classList.contains('disabled')) {
@@ -716,7 +817,8 @@
                 if (offset < file.size) {
                     readNextChunk();
                 } else {
-                    closeOpenPages();
+                    // closeOpenPages();
+                    console.log();
                 }
             };
 
@@ -1261,102 +1363,102 @@
         }
 
         // Modify the toggleDataPage function to handle selecting and updating files
-        function toggleDataPage() {
-            const files = JSON.parse(localStorage.getItem('files')) || [];
-            const chartContainer = document.getElementById('chartContainer');
-            const dataPage = document.getElementById('dataPage');
-            const dataGrid = document.getElementById('dataGrid');
+        // function toggleDataPage() {
+        //     const files = JSON.parse(localStorage.getItem('files')) || [];
+        //     const chartContainer = document.getElementById('chartContainer');
+        //     const dataPage = document.getElementById('dataPage');
+        //     const dataGrid = document.getElementById('dataGrid');
 
-            dataPage.innerHTML = '';
-            dataGrid.style.display = 'none';
+        //     dataPage.innerHTML = '';
+        //     dataGrid.style.display = 'none';
 
-            if (dataPage.classList.contains('active')) {
-                dataPage.classList.remove('active');
-                dataGrid.style.display = 'block';
-                chartContainer.style.display = 'block';
-                return;
-            }
+        //     if (dataPage.classList.contains('active')) {
+        //         dataPage.classList.remove('active');
+        //         dataGrid.style.display = 'block';
+        //         chartContainer.style.display = 'block';
+        //         return;
+        //     }
 
-            if (files.length === 0) {
-                dataPage.innerHTML = '<p>No files available</p>';
-            } else {
-                const table = document.createElement('table');
-                table.style.width = '100%';
-                table.style.borderCollapse = 'collapse';
+        //     if (files.length === 0) {
+        //         dataPage.innerHTML = '<p>No files available</p>';
+        //     } else {
+        //         const table = document.createElement('table');
+        //         table.style.width = '100%';
+        //         table.style.borderCollapse = 'collapse';
 
-                const thead = document.createElement('thead');
-                const headerRow = document.createElement('tr');
-                const headers = ['File Name', 'Description', 'Date Uploaded', 'Actions'];
+        //         const thead = document.createElement('thead');
+        //         const headerRow = document.createElement('tr');
+        //         const headers = ['File Name', 'Description', 'Date Uploaded', 'Actions'];
 
-                headers.forEach(headerText => {
-                    const th = document.createElement('th');
-                    th.textContent = headerText;
-                    th.style.padding = '5px';
-                    th.style.textAlign = 'left';
-                    headerRow.appendChild(th);
-                });
-                thead.appendChild(headerRow);
-                table.appendChild(thead);
+        //         headers.forEach(headerText => {
+        //             const th = document.createElement('th');
+        //             th.textContent = headerText;
+        //             th.style.padding = '5px';
+        //             th.style.textAlign = 'left';
+        //             headerRow.appendChild(th);
+        //         });
+        //         thead.appendChild(headerRow);
+        //         table.appendChild(thead);
 
-                const tbody = document.createElement('tbody');
-                files.forEach((file, index) => {
-                    const row = document.createElement('tr');
-                    row.style.height = '28px';
+        //         const tbody = document.createElement('tbody');
+        //         files.forEach((file, index) => {
+        //             const row = document.createElement('tr');
+        //             row.style.height = '28px';
 
-                    const nameCell = document.createElement('td');
-                    nameCell.textContent = file.name;
-                    nameCell.style.padding = '5px';
-                    row.appendChild(nameCell);
+        //             const nameCell = document.createElement('td');
+        //             nameCell.textContent = file.name;
+        //             nameCell.style.padding = '5px';
+        //             row.appendChild(nameCell);
 
-                    const descriptionCell = document.createElement('td');
-                    descriptionCell.textContent = file.description || 'No description available';
-                    descriptionCell.style.padding = '5px';
-                    row.appendChild(descriptionCell);
+        //             const descriptionCell = document.createElement('td');
+        //             descriptionCell.textContent = file.description || 'No description available';
+        //             descriptionCell.style.padding = '5px';
+        //             row.appendChild(descriptionCell);
 
-                    const dateCell = document.createElement('td');
-                    dateCell.textContent = new Date(file.dateUploaded).toLocaleString();
-                    dateCell.style.padding = '5px';
-                    row.appendChild(dateCell);
+        //             const dateCell = document.createElement('td');
+        //             dateCell.textContent = new Date(file.dateUploaded).toLocaleString();
+        //             dateCell.style.padding = '5px';
+        //             row.appendChild(dateCell);
 
-                    const actionCell = document.createElement('td');
-                    actionCell.textContent = 'Update & View';
-                    actionCell.style.cursor = 'pointer';
-                    actionCell.style.textAlign = 'center';
-                    actionCell.style.backgroundColor = '#00000000';
-                    actionCell.style.color = '#131d20d1';
-                    actionCell.style.padding = '7px';
-                    actionCell.addEventListener('click', () => {
-                        document.getElementById('fileInput').onchange = (e) => {
-                            const updatedFile = e.target.files[0];
-                            if (updatedFile) {
-                                handleFile(updatedFile, true, index); // Handle updated file
-                            }
-                        };
-                        document.getElementById('fileInput').click(); // Trigger file input
-                    });
-                    row.appendChild(actionCell);
+        //             const actionCell = document.createElement('td');
+        //             actionCell.textContent = 'Update & View';
+        //             actionCell.style.cursor = 'pointer';
+        //             actionCell.style.textAlign = 'center';
+        //             actionCell.style.backgroundColor = '#00000000';
+        //             actionCell.style.color = '#131d20d1';
+        //             actionCell.style.padding = '7px';
+        //             actionCell.addEventListener('click', () => {
+        //                 document.getElementById('fileInput').onchange = (e) => {
+        //                     const updatedFile = e.target.files[0];
+        //                     if (updatedFile) {
+        //                         handleFile(updatedFile, true, index); // Handle updated file
+        //                     }
+        //                 };
+        //                 document.getElementById('fileInput').click(); // Trigger file input
+        //             });
+        //             row.appendChild(actionCell);
 
-                    tbody.appendChild(row);
-                });
+        //             tbody.appendChild(row);
+        //         });
 
-                table.appendChild(tbody);
-                dataPage.appendChild(table);
-            }
+        //         table.appendChild(tbody);
+        //         dataPage.appendChild(table);
+        //     }
 
-            dataPage.classList.add('active');
-            chartContainer.style.display = 'none';
-        }
+        //     dataPage.classList.add('active');
+        //     chartContainer.style.display = 'none';
+        // }
 
-        function closeOpenPages() {
-            if (dataPage.classList.contains('active')) {
-                dataPage.classList.remove('active');
-            }
-            document.getElementById('chartContainer').style.display = 'block';
-            dataGrid.style.display = 'block';
-            if (dataGrid.innerHTML.trim() !== '') {
-                searchInput.style.display = 'block'; // Show search bar when dataset is visible
-            }
-        }
+        // function closeOpenPages() {
+        //     if (dataPage.classList.contains('active')) {
+        //         dataPage.classList.remove('active');
+        //     }
+        //     document.getElementById('chartContainer').style.display = 'block';
+        //     dataGrid.style.display = 'block';
+        //     if (dataGrid.innerHTML.trim() !== '') {
+        //         searchInput.style.display = 'block'; // Show search bar when dataset is visible
+        //     }
+        // }
 
         function initializeDefaultChart() {
             const ctx = document.getElementById('myChart').getContext('2d');
