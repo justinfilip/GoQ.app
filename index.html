@@ -499,13 +499,14 @@
             border: 0.1px solid #00000045;
             padding-bottom: 20px;
             resize: both;
+            aspect-ratio: 16 / 9;
         }
         .chart-wrapper.active {
             border: 3px solid #0095ff;
         }
         .chart-wrapper canvas {
             width: 100% !important;
-            height: 100% !important;
+            height: auto !important;
         }
         .dashboard-name-input {
             width: 200px;
@@ -823,6 +824,7 @@
             selectChart(activeChartIndex);
         }
         function loadExampleDataset() {
+            resetCharts()
             window.csvData = null;
             window.xmlData = null;
             originalData = null;
@@ -849,7 +851,6 @@
                         document.getElementById('chartTypeSelector').value = 'line';
                         generateChart();
                         const chartState = getChartState();
-                        saveFile('Example Dataset', window.csvData, chartState);
                     });
                 }
             });
@@ -904,16 +905,16 @@
             const file = fileInput.files[0];
             if (file) handleFile(file);
         });
-        function fileExists(fileName) {
-            let files = JSON.parse(localStorage.getItem('files')) || [];
-            return files.findIndex(file => file.name === fileName);
-        }
         function handleFile(file, isUpdatedFile = false, fileIndex = null) {
             const chunkSize = 5 * 1024 * 1024;
             let offset = 0;
             const fileType = file.type;
             const reader = new FileReader();
             const fileName = file.name;
+
+            // Reset charts and column selections on new dataset upload
+            resetCharts();
+
             reader.onload = function (event) {
                 const text = event.target.result;
                 if (fileType.includes('csv')) {
@@ -928,118 +929,53 @@
                     readNextChunk();
                 }
             };
+
             function readNextChunk() {
                 const blob = file.slice(offset, offset + chunkSize);
                 reader.readAsText(blob);
             }
+
             readNextChunk();
-            if (isUpdatedFile && fileIndex !== null) {
-                setTimeout(() => {
-                    viewFile(fileIndex);
-                }, 500);
-            }
         }
-        function saveFile(fileName, fileContent, chartState, isUpdatedFile = false, fileIndex = null) {
-            let files = JSON.parse(localStorage.getItem('files')) || [];
-            if (isUpdatedFile && fileIndex !== null) {
-                files[fileIndex].content = fileContent;
-                files[fileIndex].dateUploaded = Date.now();
-                files[fileIndex].chartState = chartState;
-                localStorage.setItem('files', JSON.stringify(files));
-                viewFile(fileIndex);
-            } else {
-                const existingFileIndex = fileExists(fileName);
-                if (existingFileIndex >= 0) {
-                    files[existingFileIndex].content = fileContent;
-                    files[existingFileIndex].dateUploaded = Date.now();
-                    files[existingFileIndex].chartState = chartState;
-                    localStorage.setItem('files', JSON.stringify(files));
-                    viewFile(existingFileIndex);
-                } else {
-                    const newFile = {
-                        name: fileName,
-                        description: "Dataset uploaded",
-                        dateUploaded: Date.now(),
-                        content: fileContent,
-                        chartState: chartState,
-                    };
-                    files.push(newFile);
-                    localStorage.setItem('files', JSON.stringify(files));
-                    const newIndex = files.length - 1;
-                    localStorage.setItem('currentFileIndex', newIndex);
-                    viewFile(newIndex);
-                }
-            }
+
+        // New function to reset charts and column selections
+        function resetCharts() {
+            charts = []; // Clear the charts array
+            activeChartIndex = null; // Reset the active chart index
+            const chartsContainer = document.getElementById('chartsContainer');
+            chartsContainer.innerHTML = ''; // Remove all chart elements
+            addNewChart(); // Add a default empty chart
+            updateHeaderColors(); // Update the header colors to reflect reset state
+            originalData = null; // Clear the original data reference
         }
-        function getCurrentFileIndex() {
-            const index = localStorage.getItem('currentFileIndex');
-            return index !== null ? parseInt(index, 10) : null;
-        }
-        function saveChartState(fileIndex) {
-            let files = JSON.parse(localStorage.getItem('files')) || [];
-            if (files[fileIndex]) {
-                const headers = getCurrentHeaders();
-                const chartState = {
-                    xAxis: Array.from(xAxisColumns).map(index => headers[index]),
-                    yAxis: Array.from(yAxisColumns).map(index => headers[index]),
-                    chartType: document.getElementById('chartTypeSelector').value
-                };
-                files[fileIndex].chartState = chartState;
-                localStorage.setItem('files', JSON.stringify(files));
-            }
-        }
+
         function getChartState() {
+            if (activeChartIndex === null) {
+                console.error("No active chart selected");
+                return null;
+            }
+
+            const chartState = charts[activeChartIndex];
+            if (!chartState) {
+                console.error("No chart state found for active chart index");
+                return null;
+            }
+
             const headers = getCurrentHeaders();
+
             return {
-                xAxis: Array.from(xAxisColumns).map(index => headers[index]),
-                yAxis: Array.from(yAxisColumns).map(index => headers[index]),
+                xAxis: Array.from(chartState.xAxisColumns).map(index => headers[index]),
+                yAxis: Array.from(chartState.yAxisColumns).map(index => headers[index]),
                 chartType: document.getElementById('chartTypeSelector').value
             };
         }
+
         function getCurrentHeaders() {
             const data = window.csvData || window.xmlData;
             if (data && data.length > 0) {
                 return Object.keys(data[0]);
             }
             return [];
-        }
-        function applyChartState(fileIndex) {
-            let files = JSON.parse(localStorage.getItem('files')) || [];
-            const file = files[fileIndex];
-            if (file && file.chartState) {
-                xAxisColumns.clear();
-                yAxisColumns.clear();
-                const headers = getCurrentHeaders();
-                const headerIndexMap = {};
-                headers.forEach((header, index) => {
-                    headerIndexMap[header] = index;
-                });
-                if (file.chartState.xAxis && file.chartState.xAxis.length > 0) {
-                    file.chartState.xAxis.forEach(headerName => {
-                        const index = headerIndexMap[headerName];
-                        if (index !== undefined) {
-                            const thElement = document.querySelector(`th[data-index="${index}"]`);
-                            if (thElement) {
-                                toggleXAxisSelection(index, thElement, true);
-                            }
-                        }
-                    });
-                }
-                if (file.chartState.yAxis && file.chartState.yAxis.length > 0) {
-                    file.chartState.yAxis.forEach(headerName => {
-                        const index = headerIndexMap[headerName];
-                        if (index !== undefined) {
-                            const thElement = document.querySelector(`th[data-index="${index}"]`);
-                            if (thElement) {
-                                toggleYAxisSelection(index, thElement, true);
-                            }
-                        }
-                    });
-                }
-                document.getElementById('chartTypeSelector').value = file.chartState.chartType;
-                updateHeaderColors();
-                generateChart();
-            }
         }
         function parseCSVChunk(text, isFirstChunk, fileName, isUpdatedFile = false, fileIndex = null) {
             Papa.parse(text, {
@@ -1057,7 +993,6 @@
                         displayData(window.csvData, () => {
                             setTimeout(() => generateChart(), 100);
                             const chartState = getChartState();
-                            saveFile(fileName, window.csvData, chartState, isUpdatedFile, fileIndex);
                         });
                     }
                 }
@@ -1100,7 +1035,6 @@
                     displayData(window.xmlData, () => {
                         setTimeout(() => generateChart(), 100);
                         const chartState = getChartState();
-                        saveFile(fileName, window.xmlData, chartState, isUpdatedFile, fileIndex);
                     });
                 }
             } catch (error) {
@@ -1184,20 +1118,46 @@
         function toggleXAxisSelection(index, thElement, skipSave = false) {
             index = parseInt(index, 10);
             const chartState = charts[activeChartIndex];
+
+            // Prevent assigning the same column to both X and Y axes
             if (chartState.yAxisColumns.has(index)) {
                 alert("This column is already assigned to the Y Axis. Unassign it from Y Axis first.");
                 return;
             }
+
+            // Toggle X-axis selection
             if (chartState.xAxisColumns.has(index)) {
                 chartState.xAxisColumns.delete(index);
             } else {
-                chartState.xAxisColumns.clear();
+                chartState.xAxisColumns.clear(); // Allow only one X-axis column
                 chartState.xAxisColumns.add(index);
+
+                // Automatically determine chart type based on column data
+                const data = window.csvData || window.xmlData;
+                const isDateColumn = data.every(row => {
+                    const value = Object.values(row)[index];
+                    return !isNaN(parseDate(value).getTime());
+                });
+
+                const isCategorical = data.every(row => {
+                    const value = Object.values(row)[index];
+                    return typeof value === "string" || isNaN(value);
+                });
+
+                if (isDateColumn) {
+                    chartState.chartType = "line"; // Use line chart for date data
+                    document.getElementById('chartTypeSelector').value = "line"; // Update chart type dropdown
+                } else if (isCategorical) {
+                    chartState.chartType = "bar"; // Use bar chart for categorical data
+                    document.getElementById('chartTypeSelector').value = "bar"; // Update chart type dropdown
+                }
             }
+
             updateHeaderColors();
             checkForDateColumn();
             generateChart();
         }
+
         function toggleYAxisSelection(index, thElement, skipSave = false) {
             index = parseInt(index, 10);
             const chartState = charts[activeChartIndex];
@@ -1219,28 +1179,40 @@
             const xAxisColumns = chartState.xAxisColumns;
             const yAxisColumns = chartState.yAxisColumns;
             const tableHeaders = document.querySelectorAll('th');
+
+            const existingColors = Object.values(chartState.columnColorMap);
+
             tableHeaders.forEach((th) => {
                 const index = parseInt(th.dataset.index, 10);
                 th.classList.remove('selected', 'axis-selected');
                 th.textContent = th.textContent.replace(/\s*\x|\s*\y/g, '').trim();
+
+                // X-Axis handling
                 if (xAxisColumns.has(index)) {
                     th.classList.add('axis-selected');
                     th.innerHTML = `${th.textContent} <span class="axis-indicator" style="background-color: #000000; color: #ffffff;">x</span>`;
-                } else if (yAxisColumns.has(index)) {
+                } 
+                // Y-Axis handling
+                else if (yAxisColumns.has(index)) {
+                    // Assign color if not already assigned
+                    if (!chartState.columnColorMap[index]) {
+                        chartState.columnColorMap[index] = getRandomColor(existingColors);
+                    }
+                    const color = chartState.columnColorMap[index];
                     th.classList.add('axis-selected');
-                    const dataset = charts[activeChartIndex].chartInstance?.data?.datasets.find(ds => ds.columnIndex === index);
-                    const color = dataset ? dataset.backgroundColor : '#000000';
                     th.innerHTML = `${th.textContent} <span class="axis-indicator" style="background-color: ${color}; color: #ffffff;">y</span>`;
                 }
+
+                // Highlight selected columns for search
                 if (selectedSearchColumns.has(index)) {
+                    th.classList.add('selected');
                     if (xAxisColumns.has(index) || yAxisColumns.has(index)) {
-                        th.classList.add('selected', 'axis-selected');
-                    } else {
-                        th.classList.add('selected');
+                        th.classList.add('axis-selected');
                     }
                 }
             });
         }
+
         function runSearch() {
             const data = window.csvData || window.xmlData;
             if (!data || data.length === 0) return;
@@ -1309,33 +1281,6 @@
                 }
             }, 5000);
         });
-        function viewFile(index) {
-            localStorage.setItem('currentFileIndex', index);
-            const files = JSON.parse(localStorage.getItem('files')) || [];
-            const file = files[index];
-            if (!file) return;
-            xAxisColumns.clear();
-            yAxisColumns.clear();
-            selectedSearchColumns.clear();
-            updateHeaderColors();
-            displayData(file.content, () => {
-                applyChartState(index);
-            });
-        }
-        function updateFileName(index, newName) {
-            let files = JSON.parse(localStorage.getItem('files')) || [];
-            if (files[index]) {
-                files[index].name = newName;
-                localStorage.setItem('files', JSON.stringify(files));
-            }
-        }
-        function updateFileDescription(index, newDescription) {
-            let files = JSON.parse(localStorage.getItem('files')) || [];
-            if (files[index]) {
-                files[index].description = newDescription;
-                localStorage.setItem('files', JSON.stringify(files));
-            }
-        }
         function initializeDefaultChart() {
             const ctx = document.getElementById('myChart').getContext('2d');
             chartInstance = new Chart(ctx, {
@@ -1400,14 +1345,6 @@
             document.getElementById('selectColumnsButton').classList.remove('highlighted');
             selectColumnsButton.textContent = "Select Columns (Filter)";
             cancelSearchButton.classList.remove('visible');
-        }
-        function updateFileContent(fileIndex, updatedContent) {
-            let files = JSON.parse(localStorage.getItem('files')) || [];
-            if (files[fileIndex]) {
-                files[fileIndex].content = updatedContent;
-                files[fileIndex].dateUploaded = Date.now();
-                localStorage.setItem('files', JSON.stringify(files));
-            }
         }
         function renderVirtualizedTable(data) {
             const tableContainer = document.querySelector('#dataGrid');
@@ -1477,119 +1414,124 @@
         function generateChartInternal(chartState) {
             const data = window.csvData || window.xmlData;
             if (!data || data.length === 0) return;
+
             let datasets = [];
             let xAxisData = [];
-            let existingColors = Object.values(chartState.columnColorMap);
+            let parsedDates = [];
+            let isDateAggregation = false;
+
+            // Extract X-axis data
             if (chartState.xAxisColumns.size > 0) {
                 xAxisData = Array.from(chartState.xAxisColumns).map(colIndex =>
                     data.map(row => Object.values(row)[colIndex])
                 ).flat();
+
+                // Check if X-axis data contains valid dates
+                parsedDates = xAxisData.map(value => ({
+                    original: value,
+                    date: parseDate(value)
+                })).filter(item => !isNaN(item.date.getTime())); // Keep only valid dates
+
+                isDateAggregation = parsedDates.length > 0 && chartState.dateView !== 'Day';
             }
+
+            // Extract Y-axis data
             if (chartState.yAxisColumns.size > 0) {
                 datasets = Array.from(chartState.yAxisColumns).map(colIndex => {
                     const columnData = data.map(row => parseFloat(Object.values(row)[colIndex]) || 0);
-                    const borderColor = chartState.columnColorMap[colIndex] || getRandomColor(existingColors, colIndex);
-                    existingColors.push(borderColor);
-                    chartState.columnColorMap[colIndex] = borderColor;
+
+                    // Assign unique color for each Y-axis column
+                    if (!chartState.columnColorMap[colIndex]) {
+                        chartState.columnColorMap[colIndex] = getRandomColor(Object.values(chartState.columnColorMap));
+                    }
+
                     return {
                         label: Object.keys(data[0])[colIndex],
-                        columnIndex: colIndex,
                         data: columnData,
-                        backgroundColor: borderColor,
-                        borderColor: borderColor,
-                        borderWidth: 1,
-                        tension: 0.1,
-                        pointRadius: 1,
-                        pointHoverRadius: 2,
-                        fill: false
+                        fill: chartState.chartType === 'line' ? false : undefined, // Set fill to false for line charts
+                        backgroundColor: chartState.columnColorMap[colIndex],
+                        borderColor: chartState.columnColorMap[colIndex],
+                        borderWidth: 1
                     };
                 });
-            } else {
-                datasets = [];
             }
-            const chartType = chartState.chartType;
-            let xAxisLabels = xAxisData;
-            if (xAxisData.length > 0) {
-                const isXDate = xAxisData.every(dateStr => {
-                    const date = parseDate(dateStr);
-                    return !isNaN(date.getTime());
-                });
-                if (isXDate) {
-                    const parsedDates = xAxisData.map(dateStr => {
-                        const date = parseDate(dateStr);
-                        return {
-                            date,
-                            original: dateStr
-                        };
-                    });
-                    const dateView = chartState.dateView.toLowerCase();
-                    const aggregatedData = aggregateDataByDateView(parsedDates, datasets, dateView);
-                    xAxisLabels = aggregatedData.aggregatedLabels;
-                    datasets = aggregatedData.aggregatedDatasets;
-                    const dateViewButton = document.getElementById('dateViewButton');
-                    dateViewButton.classList.remove('disabled');
-                    dateViewButton.classList.add('visible');
-                } else {
-                    const dateViewButton = document.getElementById('dateViewButton');
-                    dateViewButton.classList.add('disabled');
-                    dateViewButton.classList.remove('visible');
-                }
+
+            // Apply aggregation based on date view or categories
+            if (isDateAggregation) {
+                const { aggregatedLabels, aggregatedDatasets } = aggregateDataByDateView(
+                    parsedDates,
+                    datasets,
+                    chartState.dateView.toLowerCase()
+                );
+                xAxisData = aggregatedLabels;
+                datasets = aggregatedDatasets;
+            } else if (chartState.chartType === 'bar' && xAxisData.length > 0) {
+                const aggregated = aggregateDataByCategory(xAxisData, datasets);
+                xAxisData = aggregated.labels;
+                datasets = aggregated.datasets;
             }
+
+            // Destroy previous chart instance
             if (chartState.chartInstance) {
                 chartState.chartInstance.destroy();
             }
+
+            // Create new chart instance
             const ctx = document.getElementById(chartState.elementId).getContext('2d');
             chartState.chartInstance = new Chart(ctx, {
-                type: chartType,
+                type: chartState.chartType,
                 data: {
-                    labels: xAxisLabels,
+                    labels: xAxisData,
                     datasets: datasets
                 },
                 options: {
                     responsive: true,
-                    animation: false,
-                    scales: chartType === 'bar' ? {
+                    scales: {
                         x: {
-                            type: 'category',
                             beginAtZero: true,
                             title: {
                                 display: true,
-                                text: xAxisLabels.length > 0 ? 'X Axis' : 'No Data Selected'
+                                text: 'Category'
                             }
                         },
                         y: {
                             beginAtZero: true,
                             title: {
                                 display: true,
-                                text: datasets.length > 0 ? 'Y Axis' : 'No Data Selected'
+                                text: 'Value'
                             }
                         }
-                    } : {}
+                    }
                 }
             });
-            updateHeaderColors();
         }
-        function aggregateDataByCategory(xAxisData, datasets, existingColors) {
-            const categoryData = {};
-            const categoryColors = {};
-            xAxisData.forEach((label, index) => {
-                if (!categoryData[label]) {
-                    categoryData[label] = datasets.map(() => 0);
-                    categoryColors[label] = getRandomColor(existingColors);
+
+        function aggregateDataByCategory(xAxisData, datasets) {
+            const categoryMap = {};
+            xAxisData.forEach((category, i) => {
+                if (!categoryMap[category]) {
+                    categoryMap[category] = new Array(datasets.length).fill(0);
                 }
-                datasets.forEach((dataset, i) => {
-                    categoryData[label][i] += dataset.data[index];
+                datasets.forEach((dataset, index) => {
+                    categoryMap[category][index] += dataset.data[i];
                 });
             });
-            const labels = Object.keys(categoryData);
-            const aggregatedDatasets = datasets.map((dataset, i) => ({
-                ...dataset,
-                data: labels.map(label => categoryData[label][i]),
-                backgroundColor: labels.map(label => categoryColors[label]),
-                borderColor: labels.map(label => categoryColors[label])
+
+            const labels = Object.keys(categoryMap);
+            const aggregatedDatasets = datasets.map((dataset, index) => ({
+                label: dataset.label,
+                data: labels.map(label => categoryMap[label][index]),
+                backgroundColor: dataset.backgroundColor || '#007bff',
+                borderColor: dataset.borderColor || '#007bff'
             }));
-            return { labels, datasets: aggregatedDatasets };
+
+            return {
+                labels: labels,
+                datasets: aggregatedDatasets
+            };
         }
+
+
         function parseDate(dateString) {
             if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
                 return new Date(dateString);
@@ -1631,8 +1573,11 @@
             currentIndex = (currentIndex + 1) % views.length;
             chartState.dateView = views[currentIndex];
             dateViewButton.textContent = chartState.dateView;
+
+            // Trigger aggregation and chart generation
             generateChart();
         }
+
         function aggregateDataByDateView(parsedDates, datasets, dateView) {
             const groupedData = {};
             parsedDates.forEach((item, index) => {
@@ -1640,14 +1585,15 @@
                 const date = item.date;
                 switch (dateView) {
                     case 'week':
-                        const weekStart = new Date(date.setDate(date.getDate() - date.getDay()));
+                        const weekStart = new Date(date);
+                        weekStart.setDate(date.getDate() - date.getDay());
                         key = weekStart.toISOString().split('T')[0];
                         break;
                     case 'month':
-                        key = date.toISOString().split('T')[0].substring(0, 7);
+                        key = date.toISOString().split('T')[0].substring(0, 7); // YYYY-MM format
                         break;
                     default:
-                        key = date.toISOString().split('T')[0];
+                        key = date.toISOString().split('T')[0]; // YYYY-MM-DD format
                         break;
                 }
                 if (!groupedData[key]) {
@@ -1658,13 +1604,16 @@
                     groupedData[key].sums[i] += dataset.data[index];
                 });
             });
+
             const aggregatedLabels = Object.keys(groupedData);
             const aggregatedDatasets = datasets.map((dataset, i) => ({
                 ...dataset,
                 data: aggregatedLabels.map(label => groupedData[label].sums[i] / groupedData[label].count)
             }));
+
             return { aggregatedLabels, aggregatedDatasets };
         }
+
         function getRandomColor(existingColors) {
             const distinctColors = [
                 '#0095ff', '#FF6347', '#32CD32', '#8A2BE2', '#FF4500', '#FFD700',
@@ -1674,11 +1623,13 @@
                 '#556B2F', '#00CED1', '#FFB6C1', '#00FF7F', '#9400D3', '#D2691E',
                 '#DC143C', '#FF7F50',
             ];
+
             const availableColors = distinctColors.filter(color => !existingColors.includes(color));
             return availableColors.length > 0
                 ? availableColors[0]
                 : distinctColors[existingColors.length % distinctColors.length];
         }
+
         function checkForDateColumn() {
             const chartState = charts[activeChartIndex];
             const xAxisColumns = chartState.xAxisColumns;
