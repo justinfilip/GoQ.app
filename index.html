@@ -129,14 +129,14 @@
             display: inline-block;
             flex-grow: 1;
             height: 35px;
-            /* border: dashed .1px #0000003d; */
+            /* border: solid .1px #0000003d; */
             border-radius: 7px;
             user-select: none;
             overflow-x: visible;
             scrollbar-width: thin;
         }
         .navigator:hover {
-            /* border: dashed .1px #0000003d; */
+            /* border: solid .1px #0000003d; */
             border-radius: 7px;
         }
         .button-text {
@@ -145,7 +145,7 @@
             text-align: center;
             font-size: 12px;
             color: #131d20d1;
-            border: .1px dashed #00000099;
+            border: .1px solid #00000045;
             padding: 10px;
             border-radius: 7px;
             margin-right: -15px;
@@ -172,30 +172,7 @@
         .queries-button:hover .button-text, .data-button:hover .button-text, .settings-button:hover .button-text{
             color: #0095ff;
         }
-        @media screen and (max-width: 700px) {
-            #chartContainer {
-                width: 100%;
-                min-width: unset;
-                max-width: 100%;
-                height: auto;
-            }
-            .tooltip-container .tooltip {
-                display: none;
-            }
-            .navigator {
-                display: block;
-                position: relative;
-            }
-            .navigator .dashboards-button,
-            .navigator .queries-button,
-            .navigator .data-button,
-            .navigator .settings-button {
-                display: none;
-            }
-            .navigator .dropdown {
-                display: block;
-            }
-        }
+        
         .dropdown {
             display: none;
             color: #131d20d1;
@@ -222,7 +199,7 @@
             padding: 8px 16px;
             text-decoration: none;
             display: block;
-            border-bottom: 1px dashed #d3d3d3;
+            border-bottom: 1px solid #d3d3d3;
         }
         .dropdown-content a:hover {
             background-color: #0095ff69;
@@ -231,7 +208,7 @@
             display: block;
         }
         .drop-area {
-            border: .1px dashed #00000099;
+            border: .1px solid #00000045;
             border-radius: 7px;
             /* padding: 20px; */
             text-align: center;
@@ -241,7 +218,7 @@
             margin-bottom: 20px;
         }
         .drop-area.hover {
-            border: .1px dashed #00000099;
+            border: .1px solid #00000045;
             background-color: #0095ff2a;
             color: #131d20d1;
         }
@@ -303,7 +280,7 @@
             position: relative;
             padding-top: 20px;
             border-radius: 7px;
-            border: .1px dashed #00000099;
+            border: .1px solid #00000045;
             padding-bottom: 20px;
         }
         .no-select {
@@ -317,10 +294,10 @@
             display: inline-block;
             color: #131d20d1;
             border-radius: 5px;
-            border: .1px dashed #00000099;
+            border: .1px solid #00000045;
             cursor: pointer;
             margin-bottom: 10px;
-            margin-top: -10px;
+            margin-top: 10px;
             height: 25px;
             width: 69px;
         }
@@ -329,7 +306,7 @@
             display: inline-block;
             color: #131d20d1;
             border-radius: 5px;
-            border: .1px dashed #00000099;
+            border: .1px solid #00000045;
             cursor: pointer;
             margin-bottom: 10px;
             margin-top: -10px;
@@ -347,7 +324,7 @@
         .date-view-button.disabled {
             color: rgba(255, 255, 255, 0.3);
             cursor: not-allowed;
-            border: dashed .1px rgba(255, 255, 255, 0.3);
+            border: solid .1px rgba(255, 255, 255, 0.3);
             background-color: rgba(0, 0, 0, 0.1);
             opacity: 0.5;
         }
@@ -415,7 +392,7 @@
             display: inline-block;
             color: white;
             border-radius: 5px;
-            border: .1px dashed #00000099;
+            border: .1px solid #00000045;
             cursor: pointer;
             margin-bottom: 10px;
             margin-top: -10px;
@@ -431,7 +408,7 @@
             width: 700px;
             max-width: 100%;
             padding: 5px;
-            border: .1px dashed #00000099;
+            border: .1px solid #00000045;
             border-radius: 5px;
             margin-bottom: 30px;
             margin-top: 30px;
@@ -476,6 +453,53 @@
         #chartTypeContainer {
             display: none;
         }
+
+        #chartsContainer {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .chart-wrapper {
+            width: 100%;
+            max-width: 100%;
+            min-width: 420px;
+            min-height: 250px;
+            height: auto;
+            overflow: auto;
+            position: relative;
+            margin: 20px auto; /* Center the chart */
+            padding-top: 20px;
+            border-radius: 7px;
+            border: .1px solid #00000045;
+            padding-bottom: 20px;
+            resize: both;
+        }
+
+
+        .chart-wrapper.active {
+            /* border-color: #0095ff; */
+            border: 3px solid #0095ff;
+        }
+
+        .chart-wrapper canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .dashboard-name-input {
+            width: 200px;
+            height: 35px;
+            font-size: 12px;
+            color: #131d20d1;
+            border: 0.1px solid #00000045;
+            border-radius: 7px;
+            margin-right: 10px;
+            padding-left: 10px;
+            box-sizing: border-box;
+        }
+
     </style>
 </head>
 <!-- Google tag (gtag.js) -->
@@ -492,7 +516,15 @@
     <div class="top-panel">
         <img class="goq-logo" src="250x250_goq.png" draggable="false">
         <div class="navigator">
+            <input type="text" id="dashboardNameInput" placeholder="Enter Dashboard Name" class="dashboard-name-input" />
+
             <button id="loadExampleButton" class="date-view-button visible" style="width: 165px; height: 100%; margin-top: 0px;" onclick="loadExampleDataset()">Load Example Dataset</button>
+            <!-- Add this button to create new charts -->
+            <button id="addChartButton" onclick="addNewChart()" class="date-view-button visible" style="width: 165px; height: 100%; margin-top: 0px;">Add Chart</button>
+
+            <button id="exportPdfButton" onclick="exportToPDF()" class="date-view-button visible" style="width: 165px; height: 100%; margin-top: 0px;">Export PDF</button>
+
+
             <!-- <div class="dropdown" onclick="toggleDropdown()">Menu ▼
                 <div class="dropdown-content">
                     <a href="#" onclick="showDashboards()">Dashboards</a>
@@ -531,12 +563,17 @@
         <p>Click or drag and drop a file here (.xml, .csv)</p>
     </div>
     <center>
-        <div id="chartContainer">
+        <!-- <div id="chartContainer">
             <canvas id="myChart"></canvas>
-        </div>
+        </div> -->
+        <div id="chartsContainer"></div>
         <div id="chartTypeContainer" style="display: none; justify-content: center; align-items: center;">
             <!-- Modified the onchange handler to include saveChartState -->
-            <select id="chartTypeSelector" class="chart-type-dd" onchange="generateChart(); saveChartState(getCurrentFileIndex());">
+            <select id="chartTypeSelector" class="chart-type-dd" onchange="
+                const chartState = charts[activeChartIndex];
+                chartState.chartType = this.value;
+                generateChart();
+            ">
                 <option value="line">Line</option>
                 <option value="bar">Bar</option>
                 <option value="pie">Pie</option>
@@ -561,6 +598,9 @@
     <div id="toast" class="toast">Please select columns and enter filter text or regular expression.</div>
     <script src="chart.js"></script>
     <script src="PapaParse-5.0.2/papaparse.js"></script>
+    <script src="html2canvas.min.js"></script>
+    <script src="jspdf.umd.min.js"></script>
+
     <script>
         // Your JavaScript code with the integrated changes
         const dropArea = document.getElementById('dropArea');
@@ -581,6 +621,9 @@
         let isCtrlOrCmdPressed = false;
         let isShiftPressed = false;
         const columnColorMap = {};
+
+        let charts = [];
+        let activeChartIndex = null;
 
         const exampleDataset = `Date,Sales,Expenses,Profit
             2021-01-01,371,290,81
@@ -684,7 +727,129 @@
             2021-04-09,419,361,58
             2021-04-10,241,188,53`;
 
-        
+            function exportToPDF() {
+                // Get the dashboard name or set a default name
+                const dashboardName = document.getElementById('dashboardNameInput').value.trim() || 'Dashboard';
+
+                // Use html2canvas to capture the body content
+                html2canvas(document.body, {
+                    scale: 2, // Increase scale for better resolution
+                    useCORS: true,
+                    allowTaint: true, // Set to false to prevent tainted canvas
+                    onclone: (clonedDoc) => {
+                        // Hide elements that shouldn't appear in the PDF
+                        clonedDoc.getElementById('exportPdfButton').style.display = 'none';
+                        clonedDoc.getElementById('fileInput').style.display = 'none';
+                    }
+                }).then((canvas) => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+                    const imgProps = pdf.getImageProperties(imgData);
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+                    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                    pdf.save(`${dashboardName}.pdf`);
+                });
+            }
+
+
+            function selectChart(index) {
+                activeChartIndex = index;
+
+                // Remove 'active' class from all chart wrappers
+                document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+                    wrapper.classList.remove('active');
+                });
+
+                // Add 'active' class to the selected chart wrapper
+                const selectedWrapper = document.querySelector(`.chart-wrapper[data-index="${index}"]`);
+                if (selectedWrapper) {
+                    selectedWrapper.classList.add('active');
+                }
+
+                // Update the chartTypeSelector value to match the selected chart's type
+                document.getElementById('chartTypeSelector').value = charts[activeChartIndex].chartType;
+
+                // Update the dateViewButton text to match the selected chart's dateView
+                document.getElementById('dateViewButton').textContent = charts[activeChartIndex].dateView;
+
+                updateHeaderColors();
+                checkForDateColumn();  // Ensure date view button state is updated
+                generateChart();
+            }
+
+
+
+
+
+            function initializeChart(chartState) {
+                const ctx = document.getElementById(chartState.elementId).getContext('2d');
+                chartState.chartInstance = new Chart(ctx, {
+                    type: chartState.chartType,
+                    data: {
+                        labels: [],
+                        datasets: []
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'X Axis'
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Y Axis'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+
+            function addNewChart() {
+                // Create a new chart state
+                const newChartState = {
+                    xAxisColumns: new Set(),
+                    yAxisColumns: new Set(),
+                    chartType: 'line',
+                    chartInstance: null,
+                    elementId: `chart${charts.length}`,
+                    columnColorMap: {},
+                    dateView: 'Day',  // Added dateView property
+                };
+
+                charts.push(newChartState);
+                activeChartIndex = charts.length - 1;
+
+                // Create chart container
+                const chartWrapper = document.createElement('div');
+                chartWrapper.classList.add('chart-wrapper');
+                chartWrapper.dataset.index = activeChartIndex;
+                chartWrapper.onclick = () => selectChart(parseInt(chartWrapper.dataset.index));
+
+                // Create canvas element
+                const canvas = document.createElement('canvas');
+                canvas.id = newChartState.elementId;
+                chartWrapper.appendChild(canvas);
+
+                // Append to chartsContainer
+                document.getElementById('chartsContainer').appendChild(chartWrapper);
+
+                // Initialize chart
+                initializeChart(newChartState);
+
+                // Update UI
+                selectChart(activeChartIndex);
+            }
+
         
         function loadExampleDataset() {
             // Clear any existing data
@@ -738,6 +903,13 @@
 
             // Close any open pages
             // closeOpenPages();
+
+            charts[activeChartIndex].dateView = 'Day';
+            document.getElementById('dateViewButton').textContent = 'Day';
+
+            charts.forEach((chartState, index) => {
+                generateChartInternal(chartState);
+            });
         }
 
 
@@ -1162,57 +1334,146 @@
 
         function toggleXAxisSelection(index, thElement, skipSave = false) {
             index = parseInt(index, 10);
-            if (yAxisColumns.has(index)) {
+            const chartState = charts[activeChartIndex];
+
+            if (chartState.yAxisColumns.has(index)) {
                 alert("This column is already assigned to the Y Axis. Unassign it from Y Axis first.");
                 return;
             }
-            if (xAxisColumns.has(index)) {
-                xAxisColumns.delete(index);  // Deselect the column if already selected
+            if (chartState.xAxisColumns.has(index)) {
+                chartState.xAxisColumns.delete(index);
             } else {
-                xAxisColumns.clear();  // Only one X-axis column is allowed, so clear previous selection
-                xAxisColumns.add(index);  // Select the new column
+                chartState.xAxisColumns.clear();
+                chartState.xAxisColumns.add(index);
             }
 
-            updateHeaderColors();  // Update header colors to reflect changes
+            updateHeaderColors();
             checkForDateColumn();
-            generateChart();  // Update the chart to reflect new axis selection
+            generateChart();
 
-            if (!skipSave) {
-                // Save the updated chart state to localStorage
-                const currentFileIndex = getCurrentFileIndex();
-                console.log("Saving chart state.... \n\nSaving chart state index ", currentFileIndex)
-                saveChartState(currentFileIndex);
-            }
+            // if (!skipSave) {
+            //     // Save the updated chart state to localStorage or other storage if needed
+            // }
         }
+
+
+        // function toggleXAxisSelection(index, thElement, skipSave = false) {
+        //     index = parseInt(index, 10);
+        //     if (yAxisColumns.has(index)) {
+        //         alert("This column is already assigned to the Y Axis. Unassign it from Y Axis first.");
+        //         return;
+        //     }
+        //     if (xAxisColumns.has(index)) {
+        //         xAxisColumns.delete(index);  // Deselect the column if already selected
+        //     } else {
+        //         xAxisColumns.clear();  // Only one X-axis column is allowed, so clear previous selection
+        //         xAxisColumns.add(index);  // Select the new column
+        //     }
+
+        //     updateHeaderColors();  // Update header colors to reflect changes
+        //     checkForDateColumn();
+        //     generateChart();  // Update the chart to reflect new axis selection
+
+        //     if (!skipSave) {
+        //         // Save the updated chart state to localStorage
+        //         const currentFileIndex = getCurrentFileIndex();
+        //         console.log("Saving chart state.... \n\nSaving chart state index ", currentFileIndex)
+        //         saveChartState(currentFileIndex);
+        //     }
+        // }
+
+        // function toggleYAxisSelection(index, thElement, skipSave = false) {
+        //     index = parseInt(index, 10);
+        //     if (xAxisColumns.has(index)) {
+        //         alert("This column is already assigned to the X Axis. Unassign it from X Axis first.");
+        //         return;
+        //     }
+        //     if (yAxisColumns.has(index)) {
+        //         yAxisColumns.delete(index);  // Deselect the column if already selected
+        //     } else {
+        //         yAxisColumns.add(index);  // Select the new column
+        //     }
+
+        //     updateHeaderColors();  // Update header colors to reflect changes
+        //     checkForDateColumn();
+        //     generateChart();  // Update the chart to reflect new axis selection
+
+        //     if (!skipSave) {
+        //         // Save the updated chart state to localStorage
+        //         const currentFileIndex = getCurrentFileIndex();
+        //         console.log("Saving chart state.... \n\nSaving chart state index ", currentFileIndex)
+        //         saveChartState(currentFileIndex);
+        //     }
+        // }
 
         function toggleYAxisSelection(index, thElement, skipSave = false) {
             index = parseInt(index, 10);
-            if (xAxisColumns.has(index)) {
+            const chartState = charts[activeChartIndex];
+
+            if (chartState.xAxisColumns.has(index)) {
                 alert("This column is already assigned to the X Axis. Unassign it from X Axis first.");
                 return;
             }
-            if (yAxisColumns.has(index)) {
-                yAxisColumns.delete(index);  // Deselect the column if already selected
+            if (chartState.yAxisColumns.has(index)) {
+                chartState.yAxisColumns.delete(index);
             } else {
-                yAxisColumns.add(index);  // Select the new column
+                chartState.yAxisColumns.add(index);
             }
 
-            updateHeaderColors();  // Update header colors to reflect changes
+            updateHeaderColors();
             checkForDateColumn();
-            generateChart();  // Update the chart to reflect new axis selection
+            generateChart();
 
             if (!skipSave) {
-                // Save the updated chart state to localStorage
-                const currentFileIndex = getCurrentFileIndex();
-                console.log("Saving chart state.... \n\nSaving chart state index ", currentFileIndex)
-                saveChartState(currentFileIndex);
+                // Save the updated chart state to localStorage or other storage if needed
             }
         }
 
+
         // Ensure all other functions that use indices parse them correctly
+        // function updateHeaderColors() {
+        //     const tableHeaders = document.querySelectorAll('th');
+        //     const datasets = chartInstance?.data?.datasets || [];
+
+        //     tableHeaders.forEach((th) => {
+        //         const index = parseInt(th.dataset.index, 10);
+        //         th.classList.remove('selected', 'axis-selected');
+        //         th.textContent = th.textContent.replace(/\s*\x|\s*\y/g, '').trim();
+
+        //         // X-axis indicator
+        //         if (xAxisColumns.has(index)) {
+        //             th.classList.add('axis-selected');
+        //             th.innerHTML = `${th.textContent} <span class="axis-indicator" style="background-color: #000000; color: #ffffff;">x</span>`;
+        //         }
+        //         // Y-axis indicator
+        //         else if (yAxisColumns.has(index)) {
+        //             th.classList.add('axis-selected');
+
+        //             // Find the corresponding dataset for this column index
+        //             const dataset = datasets.find(ds => ds.label === th.textContent);
+        //             const color = dataset ? dataset.backgroundColor : '#000000'; // Default color fallback
+
+        //             // Update the Y-axis indicator background color with the dataset color
+        //             th.innerHTML = `${th.textContent} <span class="axis-indicator" style="background-color: ${color}; color: #ffffff;">y</span>`;
+        //         }
+
+        //         // Selected search columns handling
+        //         if (selectedSearchColumns.has(index)) {
+        //             if (xAxisColumns.has(index) || yAxisColumns.has(index)) {
+        //                 th.classList.add('selected', 'axis-selected');
+        //             } else {
+        //                 th.classList.add('selected');
+        //             }
+        //         }
+        //     });
+        // }
+
         function updateHeaderColors() {
+            const chartState = charts[activeChartIndex];
+            const xAxisColumns = chartState.xAxisColumns;
+            const yAxisColumns = chartState.yAxisColumns;
+
             const tableHeaders = document.querySelectorAll('th');
-            const datasets = chartInstance?.data?.datasets || [];
 
             tableHeaders.forEach((th) => {
                 const index = parseInt(th.dataset.index, 10);
@@ -1229,7 +1490,7 @@
                     th.classList.add('axis-selected');
 
                     // Find the corresponding dataset for this column index
-                    const dataset = datasets.find(ds => ds.label === th.textContent);
+                    const dataset = charts[activeChartIndex].chartInstance?.data?.datasets.find(ds => ds.columnIndex === index);
                     const color = dataset ? dataset.backgroundColor : '#000000'; // Default color fallback
 
                     // Update the Y-axis indicator background color with the dataset color
@@ -1246,6 +1507,7 @@
                 }
             });
         }
+
 
         function runSearch() {
             const data = window.csvData || window.xmlData;
@@ -1315,14 +1577,19 @@
 
         // Remove the call to setupChartStateListeners() in your DOMContentLoaded event listener:
         document.addEventListener('DOMContentLoaded', () => {
-            initializeDefaultChart();
-            const chartContainer = document.getElementById('chartContainer');
+            addNewChart();
+            const chartContainer = document.getElementById('chartsContainer');
             const resizeObserver = new ResizeObserver(() => {
                 if (chartInstance) {
                     chartInstance.resize();
                 }
             });
             resizeObserver.observe(chartContainer);
+
+            const dashboardNameInput = document.getElementById('dashboardNameInput');
+            dashboardNameInput.addEventListener('input', () => {
+                document.title = dashboardNameInput.value.trim() || 'Main Dashboard';
+            });
             // Removed or commented out the next line
             // setupChartStateListeners();
         });
@@ -1611,34 +1878,175 @@
 
         // Throttle chart update to reduce UI thread blocking
         let requestId;
+        // function generateChart() {
+        //     if (requestId) {
+        //         cancelAnimationFrame(requestId);
+        //     }
+        //     requestId = requestAnimationFrame(generateChartInternal);
+        // }
         function generateChart() {
             if (requestId) {
                 cancelAnimationFrame(requestId);
             }
-            requestId = requestAnimationFrame(generateChartInternal);
+            requestId = requestAnimationFrame(() => generateChartInternal(charts[activeChartIndex]));
         }
 
-        function generateChartInternal() {
+        // function generateChartInternal() {
+        //     const data = window.csvData || window.xmlData;
+        //     if (!data || data.length === 0) return;
+
+        //     let datasets = [];
+        //     let xAxisData = [];
+        //     let existingColors = Object.values(columnColorMap);
+            
+        //     if (xAxisColumns.size > 0) {
+        //         xAxisData = Array.from(xAxisColumns).map(colIndex =>
+        //             data.map(row => Object.values(row)[colIndex])
+        //         ).flat();
+        //     }
+
+        //     if (yAxisColumns.size > 0) {
+        //         datasets = Array.from(yAxisColumns).map(colIndex => {
+        //             const columnData = data.map(row => parseFloat(Object.values(row)[colIndex]) || 0);
+        //             const borderColor = columnColorMap[colIndex] || getRandomColor(existingColors, colIndex);
+        //             existingColors.push(borderColor);
+        //             return {
+        //                 label: Object.keys(data[0])[colIndex],
+        //                 data: columnData,
+        //                 backgroundColor: borderColor,
+        //                 borderColor: borderColor,
+        //                 borderWidth: 1,
+        //                 tension: 0.1,
+        //                 pointRadius: 1,
+        //                 pointHoverRadius: 2,
+        //                 fill: false  // Ensure line charts are not filled
+        //             };
+        //         });
+        //     } else {
+        //         datasets = [];
+        //     }
+
+        //     const chartType = document.getElementById('chartTypeSelector').value;
+        //     let xAxisLabels = xAxisData;
+            
+        //     if (['bar', 'pie', 'doughnut', 'polarArea'].includes(chartType)) {
+        //         // Aggregate data by categories for applicable chart types
+        //         const aggregatedData = aggregateDataByCategory(xAxisData, datasets, existingColors);
+        //         xAxisLabels = aggregatedData.labels;
+        //         datasets = aggregatedData.datasets;
+        //     } else {
+        //         const isXDate = xAxisData.every(dateStr => {
+        //             const date = parseDate(dateStr);
+        //             return !isNaN(date.getTime());
+        //         });
+        //         if (isXDate) {
+        //             const parsedDates = xAxisData.map(dateStr => {
+        //                 const date = parseDate(dateStr);
+        //                 return {
+        //                     date,
+        //                     original: dateStr
+        //                 };
+        //             });
+        //             const dateView = document.getElementById('dateViewButton').textContent.toLowerCase();
+        //             const aggregatedData = aggregateDataByDateView(parsedDates, datasets, dateView);
+        //             xAxisLabels = aggregatedData.aggregatedLabels;
+        //             datasets = aggregatedData.aggregatedDatasets;
+        //             const dateViewButton = document.getElementById('dateViewButton');
+        //             const minDate = new Date(Math.min(...parsedDates.map(d => d.date)));
+        //             const maxDate = new Date(Math.max(...parsedDates.map(d => d.date)));
+        //             const diffInMonths = maxDate.getMonth() - minDate.getMonth() + (12 * (maxDate.getFullYear() - minDate.getFullYear()));
+        //             if (diffInMonths >= 1) {
+        //                 dateViewButton.classList.remove('disabled');
+        //                 dateViewButton.classList.add('visible');
+        //             } else {
+        //                 dateViewButton.classList.add('disabled');
+        //                 dateViewButton.classList.remove('visible');
+        //             }
+        //         } else {
+        //             const dateViewButton = document.getElementById('dateViewButton');
+        //             dateViewButton.classList.add('disabled');
+        //             dateViewButton.classList.remove('visible');
+        //         }
+        //     }
+
+        //     if (chartInstance) {
+        //         chartInstance.destroy();
+        //     }
+
+        //     // Debouncing the resize to prevent excessive chart resizing
+        //     const debounceResize = (func, wait) => {
+        //         let timeout;
+        //         return function(...args) {
+        //             const context = this;
+        //             clearTimeout(timeout);
+        //             timeout = setTimeout(() => func.apply(context, args), wait);
+        //         };
+        //     };
+
+        //     const resizeObserver = new ResizeObserver(debounceResize(() => {
+        //         if (chartInstance) {
+        //             chartInstance.resize();
+        //         }
+        //     }, 200));
+
+        //     resizeObserver.observe(document.getElementById('chartContainer'));
+
+        //     const ctx = document.getElementById('myChart').getContext('2d');
+        //     chartInstance = new Chart(ctx, {
+        //         type: chartType,
+        //         data: {
+        //             labels: xAxisLabels,
+        //             datasets: datasets
+        //         },
+        //         options: {
+        //             responsive: true,
+        //             animation: false,
+        //             scales: chartType === 'bar' ? {
+        //                 x: {
+        //                     type: 'category',
+        //                     beginAtZero: true,
+        //                     title: {
+        //                         display: true,
+        //                         text: xAxisLabels.length > 0 ? 'X Axis' : 'No Data Selected'
+        //                     }
+        //                 },
+        //                 y: {
+        //                     beginAtZero: true,
+        //                     title: {
+        //                         display: true,
+        //                         text: datasets.length > 0 ? 'Y Axis' : 'No Data Selected'
+        //                     }
+        //                 }
+        //             } : {} // Other chart types like pie, doughnut, etc. don't need specific axis settings
+        //         }
+        //     });
+
+        //     updateHeaderColors();
+        // }
+
+        function generateChartInternal(chartState) {
             const data = window.csvData || window.xmlData;
             if (!data || data.length === 0) return;
 
             let datasets = [];
             let xAxisData = [];
-            let existingColors = Object.values(columnColorMap);
-            
-            if (xAxisColumns.size > 0) {
-                xAxisData = Array.from(xAxisColumns).map(colIndex =>
+            let existingColors = Object.values(chartState.columnColorMap);
+
+            if (chartState.xAxisColumns.size > 0) {
+                xAxisData = Array.from(chartState.xAxisColumns).map(colIndex =>
                     data.map(row => Object.values(row)[colIndex])
                 ).flat();
             }
 
-            if (yAxisColumns.size > 0) {
-                datasets = Array.from(yAxisColumns).map(colIndex => {
+            if (chartState.yAxisColumns.size > 0) {
+                datasets = Array.from(chartState.yAxisColumns).map(colIndex => {
                     const columnData = data.map(row => parseFloat(Object.values(row)[colIndex]) || 0);
-                    const borderColor = columnColorMap[colIndex] || getRandomColor(existingColors, colIndex);
+                    const borderColor = chartState.columnColorMap[colIndex] || getRandomColor(existingColors, colIndex);
                     existingColors.push(borderColor);
+                    chartState.columnColorMap[colIndex] = borderColor;
                     return {
                         label: Object.keys(data[0])[colIndex],
+                        columnIndex: colIndex,
                         data: columnData,
                         backgroundColor: borderColor,
                         borderColor: borderColor,
@@ -1646,26 +2054,23 @@
                         tension: 0.1,
                         pointRadius: 1,
                         pointHoverRadius: 2,
-                        fill: false  // Ensure line charts are not filled
+                        fill: false
                     };
                 });
             } else {
                 datasets = [];
             }
 
-            const chartType = document.getElementById('chartTypeSelector').value;
+            const chartType = chartState.chartType;
             let xAxisLabels = xAxisData;
-            
-            if (['bar', 'pie', 'doughnut', 'polarArea'].includes(chartType)) {
-                // Aggregate data by categories for applicable chart types
-                const aggregatedData = aggregateDataByCategory(xAxisData, datasets, existingColors);
-                xAxisLabels = aggregatedData.labels;
-                datasets = aggregatedData.datasets;
-            } else {
+
+            // Handle date parsing and aggregation
+            if (xAxisData.length > 0) {
                 const isXDate = xAxisData.every(dateStr => {
                     const date = parseDate(dateStr);
                     return !isNaN(date.getTime());
                 });
+
                 if (isXDate) {
                     const parsedDates = xAxisData.map(dateStr => {
                         const date = parseDate(dateStr);
@@ -1674,21 +2079,17 @@
                             original: dateStr
                         };
                     });
-                    const dateView = document.getElementById('dateViewButton').textContent.toLowerCase();
+
+                    const dateView = chartState.dateView.toLowerCase();
+
                     const aggregatedData = aggregateDataByDateView(parsedDates, datasets, dateView);
                     xAxisLabels = aggregatedData.aggregatedLabels;
                     datasets = aggregatedData.aggregatedDatasets;
+
+                    // Update dateViewButton visibility and state
                     const dateViewButton = document.getElementById('dateViewButton');
-                    const minDate = new Date(Math.min(...parsedDates.map(d => d.date)));
-                    const maxDate = new Date(Math.max(...parsedDates.map(d => d.date)));
-                    const diffInMonths = maxDate.getMonth() - minDate.getMonth() + (12 * (maxDate.getFullYear() - minDate.getFullYear()));
-                    if (diffInMonths >= 1) {
-                        dateViewButton.classList.remove('disabled');
-                        dateViewButton.classList.add('visible');
-                    } else {
-                        dateViewButton.classList.add('disabled');
-                        dateViewButton.classList.remove('visible');
-                    }
+                    dateViewButton.classList.remove('disabled');
+                    dateViewButton.classList.add('visible');
                 } else {
                     const dateViewButton = document.getElementById('dateViewButton');
                     dateViewButton.classList.add('disabled');
@@ -1696,30 +2097,12 @@
                 }
             }
 
-            if (chartInstance) {
-                chartInstance.destroy();
+            if (chartState.chartInstance) {
+                chartState.chartInstance.destroy();
             }
 
-            // Debouncing the resize to prevent excessive chart resizing
-            const debounceResize = (func, wait) => {
-                let timeout;
-                return function(...args) {
-                    const context = this;
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => func.apply(context, args), wait);
-                };
-            };
-
-            const resizeObserver = new ResizeObserver(debounceResize(() => {
-                if (chartInstance) {
-                    chartInstance.resize();
-                }
-            }, 200));
-
-            resizeObserver.observe(document.getElementById('chartContainer'));
-
-            const ctx = document.getElementById('myChart').getContext('2d');
-            chartInstance = new Chart(ctx, {
+            const ctx = document.getElementById(chartState.elementId).getContext('2d');
+            chartState.chartInstance = new Chart(ctx, {
                 type: chartType,
                 data: {
                     labels: xAxisLabels,
@@ -1744,12 +2127,13 @@
                                 text: datasets.length > 0 ? 'Y Axis' : 'No Data Selected'
                             }
                         }
-                    } : {} // Other chart types like pie, doughnut, etc. don't need specific axis settings
+                    } : {}
                 }
             });
 
             updateHeaderColors();
         }
+
 
         function aggregateDataByCategory(xAxisData, datasets, existingColors) {
             const categoryData = {};
@@ -1814,13 +2198,17 @@
         }
 
         function cycleDateView() {
+            const chartState = charts[activeChartIndex];
             const dateViewButton = document.getElementById('dateViewButton');
             const views = ['Day', 'Week', 'Month'];
-            let currentIndex = views.indexOf(dateViewButton.textContent);
+            let currentIndex = views.indexOf(chartState.dateView);
             currentIndex = (currentIndex + 1) % views.length;
-            dateViewButton.textContent = views[currentIndex];
+            chartState.dateView = views[currentIndex];
+            dateViewButton.textContent = chartState.dateView;
             generateChart();
         }
+
+
         function aggregateDataByDateView(parsedDates, datasets, dateView) {
             const groupedData = {};
             parsedDates.forEach((item, index) => {
@@ -1873,13 +2261,36 @@
         }
 
 
+        // function checkForDateColumn() {
+        //     const dateViewButton = document.getElementById('dateViewButton');
+        //     const table = document.querySelector('#dataGrid table');
+        //     const rows = Array.from(table.querySelectorAll('tbody tr'));
+        //     const isXDate = Array.from(xAxisColumns).some(colIndex =>
+        //         rows.every(row => !isNaN(Date.parse(row.querySelector(`td:nth-child(${colIndex + 1})`).textContent.trim())))
+        //     );
+        //     if (isXDate) {
+        //         dateViewButton.classList.remove('disabled');
+        //         dateViewButton.classList.add('visible');
+        //     } else {
+        //         dateViewButton.classList.add('disabled');
+        //         dateViewButton.classList.remove('visible');
+        //     }
+        // }
+
         function checkForDateColumn() {
+            const chartState = charts[activeChartIndex];
+            const xAxisColumns = chartState.xAxisColumns;
             const dateViewButton = document.getElementById('dateViewButton');
-            const table = document.querySelector('#dataGrid table');
-            const rows = Array.from(table.querySelectorAll('tbody tr'));
+            const data = window.csvData || window.xmlData;
+            if (!data || data.length === 0) return;
+
             const isXDate = Array.from(xAxisColumns).some(colIndex =>
-                rows.every(row => !isNaN(Date.parse(row.querySelector(`td:nth-child(${colIndex + 1})`).textContent.trim())))
+                data.every(row => {
+                    const cellValue = Object.values(row)[colIndex];
+                    return !isNaN(parseDate(cellValue).getTime());
+                })
             );
+
             if (isXDate) {
                 dateViewButton.classList.remove('disabled');
                 dateViewButton.classList.add('visible');
@@ -1888,6 +2299,7 @@
                 dateViewButton.classList.remove('visible');
             }
         }
+
         
         function sortTable(columnName, columnIndex) {
             const data = window.csvData || window.xmlData;
