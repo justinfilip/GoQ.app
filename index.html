@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>New Dashboard</title>
+    <title>GoQ | Business Intelligence and Analytics Software</title>
+    <meta name="description" content="GoQ is the industry leading tool for anyone to view and understand their data. Upload or drag and drop to create visualizations and export with a click of a button.">
+    <meta property="og:title" content="GoQ: Business Intelligence and Analytics Software">
+    <meta property="og:description" content="GoQ is visual analytics software for business intelligence and analytics. View and understand any data with GoQ.">
     <link rel="icon" type="image/png" href="goq_favicon.png">
     <style>
         * {
@@ -1601,6 +1604,13 @@
             });
             // Removed or commented out the next line
             // setupChartStateListeners();
+
+
+            setTimeout(() => {
+                if (!dashboardNameInput.value.trim()) {
+                    document.title = "New Dashboard";
+                }
+            }, 5000);
         });
 
         // Function to display the file and apply chart state
