@@ -217,6 +217,7 @@
             color: #131d20d1;
             margin-top: 20px;
             margin-bottom: 20px;
+            transition: .1s;
         }
         .drop-area.hover {
             border: 0.1px solid #00000045;
@@ -516,6 +517,37 @@
             margin-right: 10px;
             padding-left: 10px;
             box-sizing: border-box;
+        }
+        @media (max-width: 1000px) {
+            .navigator {
+                justify-content: center; /* Center the items on smaller screens */
+            }
+            .drop-area {
+                order: 3; /* Move the drop area below other elements */
+                width: 100%; /* Make the drop area full width */
+                margin-top: 10px; /* Add some top margin for spacing */
+            }
+            .drop-area {
+                border: 0.1px solid #00000045;
+                border-radius: 7px;
+                text-align: center;
+                font-size: 12px;
+                color: #131d20d1;
+                margin-top: 60px;
+                margin-bottom: 10px;
+                transition: .1s;
+            }
+            .drop-area.hover {
+                border: 0.1px solid #00000045;
+                background-color: #0095ff2a;
+                color: #131d20d1;
+            }
+            .button-text {
+                display: none;
+            }
+            .tooltip-container {
+                display: none;
+            }
         }
     </style>
 </head>
