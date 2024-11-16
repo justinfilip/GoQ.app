@@ -301,7 +301,7 @@
             margin-bottom: 10px;
             margin-top: 10px;
             height: 25px;
-            width: 69px;
+            width: 100px;
         }
         .date-view-button {
             background-color: #ffffff00;
@@ -598,6 +598,18 @@
                 <option value="radar">Radar</option>
                 <option value="polarArea">Polar Area</option>
             </select>
+
+            <select id="aggregationTypeSelector" class="chart-type-dd" onchange="
+                const chartState = charts[activeChartIndex];
+                chartState.aggregationType = this.value;
+                generateChart();
+            ">
+                <option value="sum">Sum</option>
+                <option value="average">Average</option>
+                <option value="count">Count</option>
+                <option value="max">Max</option>
+                <option value="min">Min</option>
+            </select>
         </div>
         <input type="text" id="searchInput" placeholder="Filter text or regular expression" class="search-input" />
         <div class="date-view-selector" style="display: flex; justify-content: center; width: 100%; align-items: center; gap: 10px; margin-bottom: 10px;">
@@ -767,6 +779,7 @@
                 selectedWrapper.classList.add('active');
             }
             document.getElementById('chartTypeSelector').value = charts[activeChartIndex].chartType;
+            document.getElementById('aggregationTypeSelector').value = charts[activeChartIndex].aggregationType || 'average';
             document.getElementById('dateViewButton').textContent = charts[activeChartIndex].dateView;
             updateHeaderColors();
             checkForDateColumn();
@@ -810,6 +823,7 @@
                 elementId: `chart${charts.length}`,
                 columnColorMap: {},
                 dateView: 'Day',
+                aggregationType: 'average', // Default aggregation type
             };
             charts.push(newChartState);
             activeChartIndex = charts.length - 1;
@@ -1462,7 +1476,8 @@
                 const { aggregatedLabels, aggregatedDatasets } = aggregateDataByDateView(
                     parsedDates,
                     datasets,
-                    chartState.dateView.toLowerCase()
+                    chartState.dateView.toLowerCase(),
+                    chartState.aggregationType
                 );
                 xAxisData = aggregatedLabels;
                 datasets = aggregatedDatasets;
@@ -1506,7 +1521,6 @@
                 }
             });
         }
-
         function aggregateDataByCategory(xAxisData, datasets) {
             const categoryMap = {};
             xAxisData.forEach((category, i) => {
@@ -1579,7 +1593,7 @@
             generateChart();
         }
 
-        function aggregateDataByDateView(parsedDates, datasets, dateView) {
+        function aggregateDataByDateView(parsedDates, datasets, dateView, aggregationType) {
             const groupedData = {};
             parsedDates.forEach((item, index) => {
                 let key;
@@ -1598,23 +1612,35 @@
                         break;
                 }
                 if (!groupedData[key]) {
-                    groupedData[key] = { count: 0, sums: datasets.map(() => 0) };
+                    groupedData[key] = { values: datasets.map(() => []) };
                 }
-                groupedData[key].count += 1;
                 datasets.forEach((dataset, i) => {
-                    groupedData[key].sums[i] += dataset.data[index];
+                    groupedData[key].values[i].push(dataset.data[index]);
                 });
             });
-
             const aggregatedLabels = Object.keys(groupedData);
             const aggregatedDatasets = datasets.map((dataset, i) => ({
                 ...dataset,
-                data: aggregatedLabels.map(label => groupedData[label].sums[i] / groupedData[label].count)
+                data: aggregatedLabels.map(label => {
+                    const values = groupedData[label].values[i];
+                    switch (aggregationType) {
+                        case 'sum':
+                            return values.reduce((a, b) => a + b, 0);
+                        case 'average':
+                            return values.reduce((a, b) => a + b, 0) / values.length;
+                        case 'count':
+                            return values.length;
+                        case 'max':
+                            return Math.max(...values);
+                        case 'min':
+                            return Math.min(...values);
+                        default:
+                            return values.reduce((a, b) => a + b, 0) / values.length;
+                    }
+                })
             }));
-
             return { aggregatedLabels, aggregatedDatasets };
         }
-
         function getRandomColor(existingColors) {
             const distinctColors = [
                 '#0095ff', '#FF6347', '#32CD32', '#8A2BE2', '#FF4500', '#FFD700',
