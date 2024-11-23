@@ -485,6 +485,16 @@
             justify-content: flex-start;
             align-items: flex-start;
         }
+        .chart-type-container {
+            display: flex; /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .chart-wrapper.active .chart-type-container {
+            display: flex; /* Show when chart is active */
+        }
+
         .chart-wrapper {
             width: 100%;
             max-width: 100%;
@@ -497,10 +507,10 @@
             margin: 20px auto;
             padding-top: 20px;
             border-radius: 7px;
-            border: 0.1px solid #00000045;
+            /* border: 0.1px solid #00000045; */
             padding-bottom: 20px;
             resize: both;
-            aspect-ratio: 16 / 9;
+            border: 3px solid #00000019;
         }
         .chart-wrapper.active {
             border: 3px solid #0095ff;
@@ -585,7 +595,7 @@
     </div>
     <center>
         <div id="chartsContainer"></div>
-        <div id="chartTypeContainer" style="display: none; justify-content: center; align-items: center;">
+        <!-- <div id="chartTypeContainer" style="display: none; justify-content: center; align-items: center;">
             <select id="chartTypeSelector" class="chart-type-dd" onchange="
                 const chartState = charts[activeChartIndex];
                 chartState.chartType = this.value;
@@ -610,7 +620,7 @@
                 <option value="max">Max</option>
                 <option value="min">Min</option>
             </select>
-        </div>
+        </div> -->
         <input type="text" id="searchInput" placeholder="Filter text or regular expression" class="search-input" />
         <div class="date-view-selector" style="display: flex; justify-content: center; width: 100%; align-items: center; gap: 10px; margin-bottom: 10px;">
             <button id="dateViewButton" class="date-view-button" onclick="cycleDateView()">Day</button>
@@ -773,17 +783,31 @@
             activeChartIndex = index;
             document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
                 wrapper.classList.remove('active');
+                // Hide the selectors
+                const chartTypeContainer = wrapper.querySelector('.chart-type-container');
+                if (chartTypeContainer) {
+                    chartTypeContainer.style.display = 'none';
+                }
             });
             const selectedWrapper = document.querySelector(`.chart-wrapper[data-index="${index}"]`);
             if (selectedWrapper) {
                 selectedWrapper.classList.add('active');
+                // Show the selectors
+                const chartTypeContainer = selectedWrapper.querySelector('.chart-type-container');
+                if (chartTypeContainer) {
+                    chartTypeContainer.style.display = 'flex';
+                }
+
+                // Update the selectors' values
+                const chartTypeSelector = selectedWrapper.querySelector('.chart-type-dd:nth-child(1)');
+                const aggregationTypeSelector = selectedWrapper.querySelector('.chart-type-dd:nth-child(2)');
+                chartTypeSelector.value = charts[activeChartIndex].chartType;
+                aggregationTypeSelector.value = charts[activeChartIndex].aggregationType || 'average';
             }
-            document.getElementById('chartTypeSelector').value = charts[activeChartIndex].chartType;
-            document.getElementById('aggregationTypeSelector').value = charts[activeChartIndex].aggregationType || 'average';
             document.getElementById('dateViewButton').textContent = charts[activeChartIndex].dateView;
             updateHeaderColors();
             checkForDateColumn();
-            generateChart();
+            // generateChart();
         }
         function initializeChart(chartState) {
             const ctx = document.getElementById(chartState.elementId).getContext('2d');
@@ -827,14 +851,65 @@
             };
             charts.push(newChartState);
             activeChartIndex = charts.length - 1;
+
             const chartWrapper = document.createElement('div');
             chartWrapper.classList.add('chart-wrapper');
             chartWrapper.dataset.index = activeChartIndex;
             chartWrapper.onclick = () => selectChart(parseInt(chartWrapper.dataset.index));
+
             const canvas = document.createElement('canvas');
             canvas.id = newChartState.elementId;
             chartWrapper.appendChild(canvas);
+
+            // Create chartTypeContainer div
+            const chartTypeContainer = document.createElement('div');
+            chartTypeContainer.classList.add('chart-type-container');
+
+            // Create chartTypeSelector
+            const chartTypeSelector = document.createElement('select');
+            chartTypeSelector.classList.add('chart-type-dd');
+            chartTypeSelector.innerHTML = `
+                <option value="line">Line</option>
+                <option value="bar">Bar</option>
+                <option value="pie">Pie</option>
+                <option value="doughnut">Doughnut</option>
+                <option value="radar">Radar</option>
+                <option value="polarArea">Polar Area</option>
+            `;
+            chartTypeSelector.value = newChartState.chartType;
+            chartTypeSelector.onchange = function() {
+                const chartState = charts[activeChartIndex];
+                chartState.chartType = this.value;
+                generateChart();
+            };
+
+            // Create aggregationTypeSelector
+            const aggregationTypeSelector = document.createElement('select');
+            aggregationTypeSelector.classList.add('chart-type-dd');
+            aggregationTypeSelector.innerHTML = `
+                <option value="sum">Sum</option>
+                <option value="average">Average</option>
+                <option value="count">Count</option>
+                <option value="max">Max</option>
+                <option value="min">Min</option>
+            `;
+            aggregationTypeSelector.value = newChartState.aggregationType;
+            aggregationTypeSelector.onchange = function() {
+                const chartState = charts[activeChartIndex];
+                chartState.aggregationType = this.value;
+                generateChart();
+            };
+
+            // Append selectors to chartTypeContainer
+            chartTypeContainer.appendChild(chartTypeSelector);
+            chartTypeContainer.appendChild(aggregationTypeSelector);
+
+            // Append chartTypeContainer to chartWrapper
+            chartWrapper.appendChild(chartTypeContainer);
+
+            // Append chartWrapper to chartsContainer
             document.getElementById('chartsContainer').appendChild(chartWrapper);
+
             initializeChart(newChartState);
             selectChart(activeChartIndex);
         }
@@ -1071,7 +1146,7 @@
                 selectColumnsButton.classList.remove('visible');
                 cancelSearchButton.classList.remove('visible');
                 searchInput.style.display = 'none';
-                document.getElementById('chartTypeContainer').style.display = 'none';
+                // document.getElementById('chartTypeContainer').style.display = 'none';
                 if (callback) callback();
                 return;
             }
@@ -1081,7 +1156,7 @@
             selectColumnsButton.classList.add('visible');
             cancelSearchButton.classList.remove('visible');
             searchInput.style.display = 'block';
-            document.getElementById('chartTypeContainer').style.display = 'block';
+            // document.getElementById('chartTypeContainer').style.display = 'block';
             const dataGrid = document.getElementById('dataGrid');
             dataGrid.innerHTML = '';
             const table = document.createElement('table');
@@ -1159,12 +1234,15 @@
                     return typeof value === "string" || isNaN(value);
                 });
 
+                const selectedWrapper = document.querySelector(`.chart-wrapper[data-index="${activeChartIndex}"]`);
+                const chartTypeSelector = selectedWrapper.querySelector('.chart-type-dd:nth-child(1)');
+
                 if (isDateColumn) {
                     chartState.chartType = "line"; // Use line chart for date data
-                    document.getElementById('chartTypeSelector').value = "line"; // Update chart type dropdown
+                    chartTypeSelector.value = "line"; // Update chart type dropdown
                 } else if (isCategorical) {
                     chartState.chartType = "bar"; // Use bar chart for categorical data
-                    document.getElementById('chartTypeSelector').value = "bar"; // Update chart type dropdown
+                    chartTypeSelector.value = "bar"; // Update chart type dropdown
                 }
             }
 
@@ -1502,6 +1580,7 @@
                 },
                 options: {
                     responsive: true,
+                    animation: false,
                     scales: {
                         x: {
                             beginAtZero: true,
