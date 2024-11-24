@@ -99,6 +99,9 @@
             background-color: #007acc;
             color: #131d20d1;
         }
+        tr.selected-row {
+            background-color: #0095ff31 !important;
+        }
         .axis-indicator {
             position: absolute;
             top: -44px;
@@ -175,6 +178,54 @@
         .data-button:hover .button-text,
         .settings-button:hover .button-text {
             color: #0095ff;
+        }
+        .delete-rows-button {
+            background-color: #ff4c4c;
+            display: inline-block;
+            color: white;
+            border-radius: 5px;
+            border: 0.1px solid #00000045;
+            cursor: pointer;
+            margin-bottom: 10px;
+            margin-top: -10px;
+            visibility: hidden;
+            height: 50px;
+            width: 69px;
+        }
+        .delete-rows-button.visible {
+            visibility: visible;
+        }
+        .undo-button {
+            background-color: #ffcc00;
+            display: inline-block;
+            color: black;
+            border-radius: 5px;
+            border: 0.1px solid #00000045;
+            cursor: pointer;
+            margin-bottom: 10px;
+            margin-top: -10px;
+            visibility: hidden;
+            height: 50px;
+            width: 69px;
+        }
+        .undo-button.visible {
+            visibility: visible;
+        }
+        .redo-button {
+            background-color: #4CAF50;
+            display: inline-block;
+            color: white;
+            border-radius: 5px;
+            border: 0.1px solid #00000045;
+            cursor: pointer;
+            margin-bottom: 10px;
+            margin-top: -10px;
+            visibility: hidden;
+            height: 50px;
+            width: 69px;
+        }
+        .redo-button.visible {
+            visibility: visible;
         }
         .dropdown {
             display: none;
@@ -627,7 +678,10 @@
             <button id="selectXAxisButton" class="date-view-button" onclick="startXAxisSelection()">Add/Rem X Axis</button>
             <button id="selectYAxisButton" class="date-view-button" onclick="startYAxisSelection()">Add/Rem Y Axis</button>
             <button id="selectColumnsButton" class="date-view-button" onclick="startColumnSelection()">Select Columns (Filter)</button>
+            <button id="undoButton" class="undo-button" onclick="undoAction()">Undo</button>
+            <button id="redoButton" class="redo-button" onclick="redoAction()">Redo</button>
             <button id="cancelSearchButton" class="cancel-search-button" onclick="clearSearch()">Cancel Filter</button>
+            <button id="deleteRowsButton" class="delete-rows-button" onclick="deleteSelectedRows()">Delete Rows</button>
         </div>
     </center>
     <input style="display: none;" type="file" id="fileInput" accept=".csv, .xml" />
@@ -658,6 +712,10 @@
         const columnColorMap = {};
         let charts = [];
         let activeChartIndex = null;
+        let selectedRows = new Set();
+        let stateStack = []; // Stack to keep track of previous states
+        let redoStack = [];  // Stack to keep track of undone states
+
         const exampleDataset = `Date,Sales,Expenses,Profit
             2021-01-01,371,290,81
             2021-01-02,208,133,75
@@ -759,6 +817,265 @@
             2021-04-08,489,402,87
             2021-04-09,419,361,58
             2021-04-10,241,188,53`;
+
+        function updateUndoRedoButtonVisibility() {
+            const undoButton = document.getElementById('undoButton');
+            const redoButton = document.getElementById('redoButton');
+
+            if (stateStack.length > 0) {
+                undoButton.classList.add('visible');
+            } else {
+                undoButton.classList.remove('visible');
+            }
+
+            if (redoStack.length > 0) {
+                redoButton.classList.add('visible');
+            } else {
+                redoButton.classList.remove('visible');
+            }
+        }
+        
+        function saveState() {
+            const clonedCharts = charts.map(chartState => {
+                const { chartInstance, ...rest } = chartState;
+
+                // Convert Sets to Arrays for serialization
+                const clonedChartState = {
+                    ...rest,
+                    xAxisColumns: Array.from(rest.xAxisColumns),
+                    yAxisColumns: Array.from(rest.yAxisColumns),
+                    columnColorMap: { ...rest.columnColorMap }
+                };
+
+                // Deep clone the chartState without circular references
+                const deepClonedChartState = JSON.parse(JSON.stringify(clonedChartState));
+
+                return deepClonedChartState;
+            });
+
+            const currentState = {
+                csvData: window.csvData ? JSON.parse(JSON.stringify(window.csvData)) : null,
+                xmlData: window.xmlData ? JSON.parse(JSON.stringify(window.xmlData)) : null,
+                originalData: originalData ? JSON.parse(JSON.stringify(originalData)) : null,
+                selectedRows: Array.from(selectedRows),
+                charts: clonedCharts,
+                activeChartIndex: activeChartIndex,
+                selectedSearchColumns: Array.from(selectedSearchColumns),
+                sortDirection: { ...sortDirection },
+                isSelectingXAxis: isSelectingXAxis,
+                isSelectingYAxis: isSelectingYAxis,
+                isSelectingColumns: isSelectingColumns,
+                searchInputValue: searchInput.value,
+            };
+            stateStack.push(currentState);
+
+            // Clear the redoStack whenever a new action is performed
+            redoStack = [];
+
+            updateUndoRedoButtonVisibility();
+        }
+
+        function generateAllCharts() {
+            charts.forEach(chartState => {
+                generateChartInternal(chartState);
+            });
+        }
+
+        function getCurrentState() {
+            const clonedCharts = charts.map(chartState => {
+                const { chartInstance, ...rest } = chartState;
+
+                // Convert Sets to Arrays for serialization
+                const clonedChartState = {
+                    ...rest,
+                    xAxisColumns: Array.from(rest.xAxisColumns),
+                    yAxisColumns: Array.from(rest.yAxisColumns),
+                    columnColorMap: { ...rest.columnColorMap }
+                };
+
+                // Deep clone the chartState without circular references
+                const deepClonedChartState = JSON.parse(JSON.stringify(clonedChartState));
+
+                return deepClonedChartState;
+            });
+
+            return {
+                csvData: window.csvData ? JSON.parse(JSON.stringify(window.csvData)) : null,
+                xmlData: window.xmlData ? JSON.parse(JSON.stringify(window.xmlData)) : null,
+                originalData: originalData ? JSON.parse(JSON.stringify(originalData)) : null,
+                selectedRows: Array.from(selectedRows),
+                charts: clonedCharts,
+                activeChartIndex: activeChartIndex,
+                selectedSearchColumns: Array.from(selectedSearchColumns),
+                sortDirection: { ...sortDirection },
+                isSelectingXAxis: isSelectingXAxis,
+                isSelectingYAxis: isSelectingYAxis,
+                isSelectingColumns: isSelectingColumns,
+                searchInputValue: searchInput.value,
+            };
+        }
+
+        function restoreState(state) {
+            // Restore data variables
+            window.csvData = state.csvData ? JSON.parse(JSON.stringify(state.csvData)) : null;
+            window.xmlData = state.xmlData ? JSON.parse(JSON.stringify(state.xmlData)) : null;
+            originalData = state.originalData ? JSON.parse(JSON.stringify(state.originalData)) : null;
+
+            // Restore selected rows
+            selectedRows = new Set(state.selectedRows);
+
+            // Destroy existing chart instances
+            charts.forEach(chartState => {
+                if (chartState.chartInstance) {
+                    chartState.chartInstance.destroy();
+                }
+            });
+
+            // Clear existing charts from the DOM
+            const chartsContainer = document.getElementById('chartsContainer');
+            chartsContainer.innerHTML = '';
+
+            // Restore charts
+            charts = state.charts.map((chartStateData, index) => {
+                // Convert arrays back to Sets
+                chartStateData.xAxisColumns = new Set(chartStateData.xAxisColumns);
+                chartStateData.yAxisColumns = new Set(chartStateData.yAxisColumns);
+
+                // Ensure columnColorMap is restored properly
+                chartStateData.columnColorMap = chartStateData.columnColorMap || {};
+
+                // Re-initialize chartInstance
+                chartStateData.chartInstance = null;
+                chartStateData.elementId = `chart${index}`;
+
+                // Create chart wrapper and canvas elements
+                const chartWrapper = document.createElement('div');
+                chartWrapper.classList.add('chart-wrapper');
+                chartWrapper.dataset.index = index;
+                chartWrapper.onclick = () => selectChart(parseInt(chartWrapper.dataset.index));
+
+                const canvas = document.createElement('canvas');
+                canvas.id = chartStateData.elementId;
+                chartWrapper.appendChild(canvas);
+
+                // Create chartTypeContainer div
+                const chartTypeContainer = document.createElement('div');
+                chartTypeContainer.classList.add('chart-type-container');
+
+                // Create chartTypeSelector
+                const chartTypeSelector = document.createElement('select');
+                chartTypeSelector.classList.add('chart-type-dd', 'chart-type-selector');
+                chartTypeSelector.innerHTML = `
+                    <option value="line">Line</option>
+                    <option value="bar">Bar</option>
+                    <option value="pie">Pie</option>
+                    <option value="doughnut">Doughnut</option>
+                    <option value="radar">Radar</option>
+                    <option value="polarArea">Polar Area</option>
+                `;
+                chartTypeSelector.value = chartStateData.chartType;
+                chartTypeSelector.onchange = function() {
+                    saveState(); // Save state before changing chart type
+                    const chartState = charts[activeChartIndex];
+                    chartState.chartType = this.value;
+                    generateChart();
+                };
+
+                // Create aggregationTypeSelector
+                const aggregationTypeSelector = document.createElement('select');
+                aggregationTypeSelector.classList.add('chart-type-dd');
+                aggregationTypeSelector.innerHTML = `
+                    <option value="sum">Sum</option>
+                    <option value="average">Average</option>
+                    <option value="count">Count</option>
+                    <option value="max">Max</option>
+                    <option value="min">Min</option>
+                `;
+                aggregationTypeSelector.value = chartStateData.aggregationType;
+                aggregationTypeSelector.onchange = function() {
+                    saveState(); // Save state before changing aggregation type
+                    const chartState = charts[activeChartIndex];
+                    chartState.aggregationType = this.value;
+                    generateChart();
+                };
+
+                // Append selectors to chartTypeContainer
+                chartTypeContainer.appendChild(chartTypeSelector);
+                chartTypeContainer.appendChild(aggregationTypeSelector);
+
+                // Append chartTypeContainer to chartWrapper
+                chartWrapper.appendChild(chartTypeContainer);
+
+                // Append chartWrapper to chartsContainer
+                chartsContainer.appendChild(chartWrapper);
+
+                // Initialize the chart
+                initializeChart(chartStateData);
+
+                return chartStateData;
+            });
+            activeChartIndex = state.activeChartIndex;
+
+            // Restore other variables
+            selectedSearchColumns = new Set(state.selectedSearchColumns);
+            sortDirection = { ...state.sortDirection };
+            isSelectingXAxis = state.isSelectingXAxis;
+            isSelectingYAxis = state.isSelectingYAxis;
+            isSelectingColumns = state.isSelectingColumns;
+            searchInput.value = state.searchInputValue;
+
+            // Re-render the table
+            displayData(window.csvData || window.xmlData, () => {
+                updateDeleteRowsButtonVisibility();
+                updateUndoRedoButtonVisibility();
+                updateHeaderColors();
+            });
+
+            // Update the date view button text
+            document.getElementById('dateViewButton').textContent = charts[activeChartIndex].dateView;
+
+            // Regenerate all charts
+            generateAllCharts();
+
+            // Select the active chart
+            selectChart(activeChartIndex);
+        }
+
+        function undoAction() {
+            if (stateStack.length === 0) return;
+
+            // Save the current state to redoStack before undoing
+            const currentState = getCurrentState();
+            redoStack.push(currentState);
+
+            const prevState = stateStack.pop();
+
+            restoreState(prevState);
+
+            updateUndoRedoButtonVisibility();
+        }
+        function redoAction() {
+            if (redoStack.length === 0) return;
+
+            // Save the current state to stateStack before redoing
+            const currentState = getCurrentState();
+            stateStack.push(currentState);
+
+            const nextState = redoStack.pop();
+
+            restoreState(nextState);
+
+            updateUndoRedoButtonVisibility();
+        }
+
+        function updateUndoButtonVisibility() {
+            const undoButton = document.getElementById('undoButton');
+            if (stateStack.length > 0) {
+                undoButton.classList.add('visible');
+            } else {
+                undoButton.classList.remove('visible');
+            }
+        }
         function exportToPDF() {
             const dashboardName = document.getElementById('dashboardNameInput').value.trim() || 'Dashboard';
             html2canvas(document.body, {
@@ -878,6 +1195,7 @@
             `;
             chartTypeSelector.value = newChartState.chartType;
             chartTypeSelector.onchange = function() {
+                saveState(); // Save state before changing chart type
                 const chartState = charts[activeChartIndex];
                 chartState.chartType = this.value;
                 generateChart();
@@ -895,6 +1213,7 @@
             `;
             aggregationTypeSelector.value = newChartState.aggregationType;
             aggregationTypeSelector.onchange = function() {
+                saveState(); // Save state before changing chart type
                 const chartState = charts[activeChartIndex];
                 chartState.aggregationType = this.value;
                 generateChart();
@@ -912,9 +1231,10 @@
 
             initializeChart(newChartState);
             selectChart(activeChartIndex);
+
         }
         function loadExampleDataset() {
-            resetCharts()
+            resetCharts();
             window.csvData = null;
             window.xmlData = null;
             originalData = null;
@@ -938,7 +1258,14 @@
                                 toggleYAxisSelection(columnIndex, null, true);
                             }
                         });
-                        document.getElementById('chartTypeSelector').value = 'line';
+
+                        // Correctly set the chart type selector's value
+                        const selectedWrapper = document.querySelector(`.chart-wrapper[data-index="${activeChartIndex}"]`);
+                        const chartTypeSelector = selectedWrapper.querySelector('.chart-type-selector');
+                        if (chartTypeSelector) {
+                            chartTypeSelector.value = 'line';
+                        }
+
                         generateChart();
                         const chartState = getChartState();
                     });
@@ -950,6 +1277,8 @@
                 generateChartInternal(chartState);
             });
         }
+
+
         const visibleRowsCount = 100;
         document.addEventListener('keydown', (event) => {
             if (event.shiftKey && event.key === 'T') {
@@ -1053,12 +1382,24 @@
 
             const headers = getCurrentHeaders();
 
+            // Get the active chart wrapper
+            const selectedWrapper = document.querySelector(`.chart-wrapper[data-index="${activeChartIndex}"]`);
+            if (!selectedWrapper) {
+                console.error("No chart wrapper found for active chart index");
+                return null;
+            }
+
+            // Get the chart type selector within the active chart wrapper
+            const chartTypeSelector = selectedWrapper.querySelector('.chart-type-selector');
+            const chartTypeValue = chartTypeSelector ? chartTypeSelector.value : 'line'; // Default to 'line' if not found
+
             return {
                 xAxis: Array.from(chartState.xAxisColumns).map(index => headers[index]),
                 yAxis: Array.from(chartState.yAxisColumns).map(index => headers[index]),
-                chartType: document.getElementById('chartTypeSelector').value
+                chartType: chartTypeValue
             };
         }
+
 
         function getCurrentHeaders() {
             const data = window.csvData || window.xmlData;
@@ -1215,6 +1556,8 @@
                 return;
             }
 
+            if (!skipSave) saveState(); // Save state before making changes
+
             // Toggle X-axis selection
             if (chartState.xAxisColumns.has(index)) {
                 chartState.xAxisColumns.delete(index);
@@ -1250,7 +1593,6 @@
             checkForDateColumn();
             generateChart();
         }
-
         function toggleYAxisSelection(index, thElement, skipSave = false) {
             index = parseInt(index, 10);
             const chartState = charts[activeChartIndex];
@@ -1258,6 +1600,9 @@
                 alert("This column is already assigned to the X Axis. Unassign it from X Axis first.");
                 return;
             }
+
+            if (!skipSave) saveState(); // Save state before making changes
+
             if (chartState.yAxisColumns.has(index)) {
                 chartState.yAxisColumns.delete(index);
             } else {
@@ -1267,6 +1612,7 @@
             checkForDateColumn();
             generateChart();
         }
+
         function updateHeaderColors() {
             const chartState = charts[activeChartIndex];
             const xAxisColumns = chartState.xAxisColumns;
@@ -1480,6 +1826,17 @@
                 for (let i = loadedRowCount; i < endRow; i++) {
                     const tr = document.createElement('tr');
                     tr.dataset.index = i;
+
+                    // Handle row selection
+                    tr.addEventListener('click', () => {
+                        toggleRowSelection(i, tr);
+                    });
+
+                    // Highlight if selected
+                    if (selectedRows.has(i)) {
+                        tr.classList.add('selected-row');
+                    }
+
                     Object.keys(data[i]).forEach(header => {
                         const td = document.createElement('td');
                         td.textContent = data[i][header] === 0 ? '0' : data[i][header] || '';
@@ -1496,6 +1853,50 @@
                 }
             });
             updateHeaderColors();
+        }
+        function toggleRowSelection(rowIndex, trElement) {
+            if (selectedRows.has(rowIndex)) {
+                selectedRows.delete(rowIndex);
+                trElement.classList.remove('selected-row');
+            } else {
+                selectedRows.add(rowIndex);
+                trElement.classList.add('selected-row');
+            }
+            updateDeleteRowsButtonVisibility();
+        }
+        function updateDeleteRowsButtonVisibility() {
+            const deleteRowsButton = document.getElementById('deleteRowsButton');
+            if (selectedRows.size > 0) {
+                deleteRowsButton.classList.add('visible');
+            } else {
+                deleteRowsButton.classList.remove('visible');
+            }
+        }
+        function deleteSelectedRows() {
+            if (selectedRows.size === 0) return;
+
+            saveState(); // Save state before deleting rows
+
+            // Remove selected rows from the data
+            const data = window.csvData || window.xmlData;
+            const remainingData = data.filter((_, index) => !selectedRows.has(index));
+
+            // Update the data variables
+            if (window.csvData) {
+                window.csvData = remainingData;
+                originalData = window.csvData.slice();
+            } else if (window.xmlData) {
+                window.xmlData = remainingData;
+                originalData = window.xmlData.slice();
+            }
+
+            // Clear selected rows
+            selectedRows.clear();
+
+            // Re-render the table and chart
+            displayData(remainingData);
+            generateChart();
+            updateDeleteRowsButtonVisibility();
         }
         let requestId;
         function generateChart() {
@@ -1660,6 +2061,8 @@
             return formats.some(regex => regex.test(dateString));
         }
         function cycleDateView() {
+            saveState(); // Save state before changing date view
+
             const chartState = charts[activeChartIndex];
             const dateViewButton = document.getElementById('dateViewButton');
             const views = ['Day', 'Week', 'Month'];
@@ -1671,7 +2074,6 @@
             // Trigger aggregation and chart generation
             generateChart();
         }
-
         function aggregateDataByDateView(parsedDates, datasets, dateView, aggregationType) {
             const groupedData = {};
             parsedDates.forEach((item, index) => {
