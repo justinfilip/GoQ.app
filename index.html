@@ -195,12 +195,15 @@
             cursor: pointer;
             margin-bottom: 10px;
             margin-top: -10px;
-            visibility: hidden;
             height: 50px;
             width: 69px;
         }
         .delete-rows-button.visible {
             visibility: visible;
+        }
+        .delete-rows-button.disabled {
+            opacity: 0.5;
+            pointer-events: none;
         }
         .undo-button {
             background-color: #ffcc00;
@@ -211,12 +214,15 @@
             cursor: pointer;
             margin-bottom: 10px;
             margin-top: -10px;
-            visibility: hidden;
             height: 50px;
             width: 69px;
         }
         .undo-button.visible {
             visibility: visible;
+        }
+        .undo-button.disabled {
+            opacity: 0.5;
+            pointer-events: none;
         }
         .redo-button {
             background-color: #4CAF50;
@@ -227,12 +233,15 @@
             cursor: pointer;
             margin-bottom: 10px;
             margin-top: -10px;
-            visibility: hidden;
             height: 50px;
             width: 69px;
         }
         .redo-button.visible {
             visibility: visible;
+        }
+        .redo-button.disabled {
+            opacity: 0.5;
+            pointer-events: none;
         }
         .dropdown {
             display: none;
@@ -370,9 +379,6 @@
             cursor: pointer;
             margin-bottom: 10px;
             margin-top: -10px;
-            visibility: hidden;
-            opacity: 0.5;
-            pointer-events: none;
             height: 50px;
             width: 69px;
         }
@@ -382,11 +388,11 @@
             pointer-events: auto;
         }
         .date-view-button.disabled {
-            color: rgba(255, 255, 255, 0.3);
+            color: rgba(0, 0, 0, 0.3);
             cursor: not-allowed;
-            border: solid 0.1px rgba(255, 255, 255, 0.3);
+            border: solid 0.1px rgba(0, 0, 0, 0.3);
             background-color: rgba(0, 0, 0, 0.1);
-            opacity: 0.5;
+            pointer-events: none;
         }
         .highlighted {
             background-color: #0095ff22;
@@ -456,12 +462,15 @@
             cursor: pointer;
             margin-bottom: 10px;
             margin-top: -10px;
-            visibility: hidden;
             height: 50px;
             width: 69px;
         }
         .cancel-search-button.visible {
             visibility: visible;
+        }
+        .cancel-search-button.disabled {
+            opacity: 0.5;
+            pointer-events: none;
         }
         .search-input {
             display: none;
@@ -470,8 +479,8 @@
             padding: 5px;
             border: 0.1px solid #00000045;
             border-radius: 5px;
-            margin-bottom: 30px;
-            margin-top: 30px;
+            margin-bottom: 15px;
+            margin-top: 10px;
         }
         .toast {
             visibility: hidden;
@@ -562,11 +571,12 @@
             max-height:fit-content;
             overflow: auto;
             position: relative;
-            margin: 20px auto;
-            padding-top: 20px;
+            margin: 10px auto;
+            margin-bottom: 0px;
+            padding-top: 10px;
             border-radius: 7px;
             /* border: 0.1px solid #00000045; */
-            padding-bottom: 20px;
+            padding-bottom: 10px;
             resize: both;
             border: 3px solid #00000019;
         }
@@ -683,17 +693,17 @@
                 <option value="min">Min</option>
             </select>
         </div> -->
-        <input type="text" id="searchInput" placeholder="Filter text or regular expression" class="search-input" />
-        <div class="date-view-selector" style="display: flex; justify-content: center; width: 100%; align-items: center; gap: 10px; margin-bottom: 10px;">
-            <button id="dateViewButton" class="date-view-button" onclick="cycleDateView()">Day</button>
-            <button id="selectXAxisButton" class="date-view-button" onclick="startXAxisSelection()">Add/Rem X Axis</button>
-            <button id="selectYAxisButton" class="date-view-button" onclick="startYAxisSelection()">Add/Rem Y Axis</button>
-            <button id="selectColumnsButton" class="date-view-button" onclick="startColumnSelection()">Select Columns (Filter)</button>
-            <button id="undoButton" class="undo-button" onclick="undoAction()">Undo</button>
-            <button id="redoButton" class="redo-button" onclick="redoAction()">Redo</button>
-            <button id="cancelSearchButton" class="cancel-search-button" onclick="clearSearch()">Cancel Filter</button>
-            <button id="deleteRowsButton" class="delete-rows-button" onclick="deleteSelectedRows()">Delete Rows</button>
+        <div class="date-view-selector" style="display: flex; justify-content: center; width: 100%; align-items: center; gap: 10px; margin-top: 30px;">
+            <!-- <button id="dateViewButton" class="date-view-button disabled" onclick="cycleDateView()">Day</button> -->
+            <button id="selectXAxisButton" class="date-view-button disabled" onclick="startXAxisSelection()">Add/Rem X Axis</button>
+            <button id="selectYAxisButton" class="date-view-button disabled" onclick="startYAxisSelection()">Add/Rem Y Axis</button>
+            <button id="selectColumnsButton" class="date-view-button disabled" onclick="startColumnSelection()">Select Columns (Filter)</button>
+            <button id="undoButton" class="undo-button disabled" onclick="undoAction()">Undo</button>
+            <button id="redoButton" class="redo-button disabled" onclick="redoAction()">Redo</button>
+            <button id="cancelSearchButton" class="cancel-search-button disabled" onclick="clearSearch()">Cancel Filter</button>
+            <button id="deleteRowsButton" class="delete-rows-button disabled" onclick="deleteSelectedRows()">Delete Rows</button>
         </div>
+        <input type="text" id="searchInput" placeholder="Filter text or regular expression" class="search-input" />
     </center>
     <input style="display: none;" type="file" id="fileInput" accept=".csv, .xml" />
     <div id="dataGrid"></div>
@@ -726,7 +736,7 @@
         let selectedRows = new Set();
         let stateStack = []; // Stack to keep track of previous states
         let redoStack = [];  // Stack to keep track of undone states
-
+        let isFilterActive = false;
         const exampleDataset = `Date,Sales,Expenses,Profit
             2021-01-01,371,290,81
             2021-01-02,208,133,75
@@ -834,15 +844,15 @@
             const redoButton = document.getElementById('redoButton');
 
             if (stateStack.length > 0) {
-                undoButton.classList.add('visible');
+                undoButton.classList.remove('disabled');
             } else {
-                undoButton.classList.remove('visible');
+                undoButton.classList.add('disabled');
             }
 
             if (redoStack.length > 0) {
-                redoButton.classList.add('visible');
+                redoButton.classList.remove('disabled');
             } else {
-                redoButton.classList.remove('visible');
+                redoButton.classList.add('disabled');
             }
         }
         
@@ -1010,9 +1020,29 @@
                     generateChart();
                 };
 
+                // Create dateViewSelector
+                const dateViewSelector = document.createElement('select');
+                dateViewSelector.classList.add('chart-type-dd');
+                dateViewSelector.innerHTML = `
+                    <option value="Day">Day</option>
+                    <option value="Week">Week</option>
+                    <option value="Month">Month</option>
+                `;
+                dateViewSelector.value = chartStateData.dateView;
+                dateViewSelector.onchange = function() {
+                    saveState(); // Save state before changing date view
+                    const chartState = charts[activeChartIndex];
+                    chartState.dateView = this.value;
+                    generateChart();
+                };
+
+                // Initially disable dateViewSelector
+                dateViewSelector.disabled = true;
+
                 // Append selectors to chartTypeContainer
                 chartTypeContainer.appendChild(chartTypeSelector);
                 chartTypeContainer.appendChild(aggregationTypeSelector);
+                chartTypeContainer.appendChild(dateViewSelector);
 
                 // Append chartTypeContainer to chartWrapper
                 chartWrapper.appendChild(chartTypeContainer);
@@ -1042,17 +1072,33 @@
                 updateHeaderColors();
             });
 
-            // Update the date view button text
-            document.getElementById('dateViewButton').textContent = charts[activeChartIndex].dateView;
-
             // Regenerate all charts
             generateAllCharts();
 
             // Select the active chart
             selectChart(activeChartIndex);
+
+            // Enable or disable the dateViewSelector based on X-axis date validity
+            charts.forEach((chartState, index) => {
+                const selectedWrapper = document.querySelector(`.chart-wrapper[data-index="${index}"]`);
+                if (selectedWrapper) {
+                    const dateViewSelector = selectedWrapper.querySelector('.chart-type-dd:nth-child(3)');
+                    const isXDate = Array.from(chartState.xAxisColumns).some(colIndex =>
+                        (window.csvData || window.xmlData).every(row => {
+                            const cellValue = Object.values(row)[colIndex];
+                            return !isNaN(parseDate(cellValue).getTime());
+                        })
+                    );
+                    dateViewSelector.disabled = !isXDate;
+                }
+            });
         }
 
+
         function undoAction() {
+            const undoButton = document.getElementById('undoButton');
+            if (undoButton.classList.contains('disabled')) return;
+
             if (stateStack.length === 0) return;
 
             // Save the current state to redoStack before undoing
@@ -1066,6 +1112,9 @@
             updateUndoRedoButtonVisibility();
         }
         function redoAction() {
+            const redoButton = document.getElementById('redoButton');
+            if (redoButton.classList.contains('disabled')) return;
+
             if (redoStack.length === 0) return;
 
             // Save the current state to stateStack before redoing
@@ -1129,13 +1178,13 @@
                 // Update the selectors' values
                 const chartTypeSelector = selectedWrapper.querySelector('.chart-type-dd:nth-child(1)');
                 const aggregationTypeSelector = selectedWrapper.querySelector('.chart-type-dd:nth-child(2)');
+                const dateViewSelector = selectedWrapper.querySelector('.chart-type-dd:nth-child(3)');
                 chartTypeSelector.value = charts[activeChartIndex].chartType;
                 aggregationTypeSelector.value = charts[activeChartIndex].aggregationType || 'average';
+                dateViewSelector.value = charts[activeChartIndex].dateView || 'Day';
             }
-            document.getElementById('dateViewButton').textContent = charts[activeChartIndex].dateView;
             updateHeaderColors();
             checkForDateColumn();
-            // generateChart();
         }
         function initializeChart(chartState) {
             const ctx = document.getElementById(chartState.elementId).getContext('2d');
@@ -1224,15 +1273,35 @@
             `;
             aggregationTypeSelector.value = newChartState.aggregationType;
             aggregationTypeSelector.onchange = function() {
-                saveState(); // Save state before changing chart type
+                saveState(); // Save state before changing aggregation type
                 const chartState = charts[activeChartIndex];
                 chartState.aggregationType = this.value;
                 generateChart();
             };
 
+            // Create dateViewSelector
+            const dateViewSelector = document.createElement('select');
+            dateViewSelector.classList.add('chart-type-dd');
+            dateViewSelector.innerHTML = `
+                <option value="Day">Day</option>
+                <option value="Week">Week</option>
+                <option value="Month">Month</option>
+            `;
+            dateViewSelector.value = newChartState.dateView;
+            dateViewSelector.onchange = function() {
+                saveState(); // Save state before changing date view
+                const chartState = charts[activeChartIndex];
+                chartState.dateView = this.value;
+                generateChart();
+            };
+
+            // Initially disable dateViewSelector
+            dateViewSelector.disabled = true;
+
             // Append selectors to chartTypeContainer
             chartTypeContainer.appendChild(chartTypeSelector);
             chartTypeContainer.appendChild(aggregationTypeSelector);
+            chartTypeContainer.appendChild(dateViewSelector);
 
             // Append chartTypeContainer to chartWrapper
             chartWrapper.appendChild(chartTypeContainer);
@@ -1242,7 +1311,6 @@
 
             initializeChart(newChartState);
             selectChart(activeChartIndex);
-
         }
         function loadExampleDataset() {
             resetCharts();
@@ -1283,7 +1351,7 @@
                 }
             });
             charts[activeChartIndex].dateView = 'Day';
-            document.getElementById('dateViewButton').textContent = 'Day';
+            // document.getElementById('dateViewButton').textContent = 'Day';
             charts.forEach((chartState, index) => {
                 generateChartInternal(chartState);
             });
@@ -1292,12 +1360,12 @@
 
         const visibleRowsCount = 100;
         document.addEventListener('keydown', (event) => {
-            if (event.shiftKey && event.key === 'T') {
-                const dateViewButton = document.getElementById('dateViewButton');
-                if (!dateViewButton.classList.contains('disabled')) {
-                    dateViewButton.click();
-                }
-            }
+            // if (event.shiftKey && event.key === 'T') {
+            //     const dateViewButton = document.getElementById('dateViewButton');
+            //     if (!dateViewButton.classList.contains('disabled')) {
+            //         dateViewButton.click();
+            //     }
+            // }
             if (event.key === 'Control' || event.key === 'Meta') {
                 isCtrlOrCmdPressed = true;
             }
@@ -1485,28 +1553,29 @@
             }
         }
         function displayData(data, callback) {
-            const dateViewButton = document.getElementById('dateViewButton');
+            // const dateViewButton = document.getElementById('dateViewButton');
             const selectXAxisButton = document.getElementById('selectXAxisButton');
             const selectYAxisButton = document.getElementById('selectYAxisButton');
             const selectColumnsButton = document.getElementById('selectColumnsButton');
             const cancelSearchButton = document.getElementById('cancelSearchButton');
+
             if (data.length === 0) {
                 document.querySelector('#dataGrid').innerHTML = '<p>No data available</p>';
-                dateViewButton.classList.remove('visible');
-                selectXAxisButton.classList.remove('visible');
-                selectYAxisButton.classList.remove('visible');
-                selectColumnsButton.classList.remove('visible');
-                cancelSearchButton.classList.remove('visible');
+                // dateViewButton.classList.add('disabled');
+                selectXAxisButton.classList.add('disabled');
+                selectYAxisButton.classList.add('disabled');
+                selectColumnsButton.classList.add('disabled');
+                cancelSearchButton.classList.add('disabled');
                 searchInput.style.display = 'none';
-                // document.getElementById('chartTypeContainer').style.display = 'none';
                 if (callback) callback();
                 return;
             }
-            dateViewButton.classList.add('visible');
-            selectXAxisButton.classList.add('visible');
-            selectYAxisButton.classList.add('visible');
-            selectColumnsButton.classList.add('visible');
-            cancelSearchButton.classList.remove('visible');
+
+            // dateViewButton.classList.add('disabled');
+            selectXAxisButton.classList.remove('disabled');
+            selectYAxisButton.classList.remove('disabled');
+            selectColumnsButton.classList.remove('disabled');
+            cancelSearchButton.classList.add('disabled');
             searchInput.style.display = 'block';
             // document.getElementById('chartTypeContainer').style.display = 'block';
             const dataGrid = document.getElementById('dataGrid');
@@ -1556,6 +1625,14 @@
             updateHeaderColors();
             renderVirtualizedTable(data);
             if (callback) callback();
+        }
+        function updateCancelSearchButtonVisibility() {
+            const cancelSearchButton = document.getElementById('cancelSearchButton');
+            if (isFilterActive) {
+                cancelSearchButton.classList.remove('disabled');
+            } else {
+                cancelSearchButton.classList.add('disabled');
+            }
         }
         function toggleXAxisSelection(index, thElement, skipSave = false) {
             index = parseInt(index, 10);
@@ -1708,7 +1785,11 @@
                 resetSelectionMode();
                 loadingIcon.style.display = 'none';
                 cancelSearchButton.textContent = 'Clear Filter';
-                cancelSearchButton.classList.add('visible');
+                
+                // Set isFilterActive to true and update button visibility
+                isFilterActive = true;
+                updateCancelSearchButtonVisibility();
+
                 generateChart();
             }, 100);
         }
@@ -1759,7 +1840,7 @@
                     }
                 }
             });
-            document.getElementById('dateViewButton').classList.remove('visible');
+            // document.getElementById('dateViewButton').classList.remove('visible');
             document.getElementById('selectXAxisButton').classList.remove('visible');
             document.getElementById('selectYAxisButton').classList.remove('visible');
         }
@@ -1777,12 +1858,22 @@
             selectedSearchColumns.clear();
             resetSelectionMode();
             searchInput.value = '';
+
+            // Reset the data to original
             window.csvData = originalData.slice();
+
             displayData(window.csvData || window.xmlData);
             updateHeaderColors();
             generateChart();
+
+            // Set isFilterActive to false and update button visibility
+            isFilterActive = false;
+            updateCancelSearchButtonVisibility();
         }
         function clearSearch() {
+            const cancelSearchButton = document.getElementById('cancelSearchButton');
+            if (cancelSearchButton.classList.contains('disabled')) return;
+
             cancelSearchButton.textContent = 'Reset Filter';
             cancelSearch();
         }
@@ -1878,12 +1969,15 @@
         function updateDeleteRowsButtonVisibility() {
             const deleteRowsButton = document.getElementById('deleteRowsButton');
             if (selectedRows.size > 0) {
-                deleteRowsButton.classList.add('visible');
+                deleteRowsButton.classList.remove('disabled');
             } else {
-                deleteRowsButton.classList.remove('visible');
+                deleteRowsButton.classList.add('disabled');
             }
         }
         function deleteSelectedRows() {
+            const deleteRowsButton = document.getElementById('deleteRowsButton');
+            if (deleteRowsButton.classList.contains('disabled')) return;
+
             if (selectedRows.size === 0) return;
 
             saveState(); // Save state before deleting rows
@@ -2071,20 +2165,22 @@
             ];
             return formats.some(regex => regex.test(dateString));
         }
-        function cycleDateView() {
-            saveState(); // Save state before changing date view
+        // function cycleDateView() {
+        //     const dateViewButton = document.getElementById('dateViewButton');
+        //     if (dateViewButton.classList.contains('disabled')) return;
 
-            const chartState = charts[activeChartIndex];
-            const dateViewButton = document.getElementById('dateViewButton');
-            const views = ['Day', 'Week', 'Month'];
-            let currentIndex = views.indexOf(chartState.dateView);
-            currentIndex = (currentIndex + 1) % views.length;
-            chartState.dateView = views[currentIndex];
-            dateViewButton.textContent = chartState.dateView;
+        //     saveState(); // Save state before changing date view
 
-            // Trigger aggregation and chart generation
-            generateChart();
-        }
+        //     const chartState = charts[activeChartIndex];
+        //     const views = ['Day', 'Week', 'Month'];
+        //     let currentIndex = views.indexOf(chartState.dateView);
+        //     currentIndex = (currentIndex + 1) % views.length;
+        //     chartState.dateView = views[currentIndex];
+        //     dateViewButton.textContent = chartState.dateView;
+
+        //     // Trigger aggregation and chart generation
+        //     generateChart();
+        // }
         function aggregateDataByDateView(parsedDates, datasets, dateView, aggregationType) {
             const groupedData = {};
             parsedDates.forEach((item, index) => {
@@ -2152,7 +2248,6 @@
         function checkForDateColumn() {
             const chartState = charts[activeChartIndex];
             const xAxisColumns = chartState.xAxisColumns;
-            const dateViewButton = document.getElementById('dateViewButton');
             const data = window.csvData || window.xmlData;
             if (!data || data.length === 0) return;
             const isXDate = Array.from(xAxisColumns).some(colIndex =>
@@ -2161,12 +2256,15 @@
                     return !isNaN(parseDate(cellValue).getTime());
                 })
             );
-            if (isXDate) {
-                dateViewButton.classList.remove('disabled');
-                dateViewButton.classList.add('visible');
-            } else {
-                dateViewButton.classList.add('disabled');
-                dateViewButton.classList.remove('visible');
+            // Find the dateViewSelector in the active chart's container
+            const selectedWrapper = document.querySelector(`.chart-wrapper[data-index="${activeChartIndex}"]`);
+            if (selectedWrapper) {
+                const dateViewSelector = selectedWrapper.querySelector('.chart-type-dd:nth-child(3)');
+                if (isXDate) {
+                    dateViewSelector.disabled = false;
+                } else {
+                    dateViewSelector.disabled = true;
+                }
             }
         }
         function sortTable(columnName, columnIndex) {
@@ -2219,6 +2317,9 @@
         let isSelectingYAxis = false;
         let isSelectingColumns = false;
         function startXAxisSelection() {
+            const selectXAxisButton = document.getElementById('selectXAxisButton');
+            if (selectXAxisButton.classList.contains('disabled')) return;
+
             if (isSelectingXAxis) {
                 resetSelectionMode();
             } else {
@@ -2229,6 +2330,9 @@
             }
         }
         function startYAxisSelection() {
+            const selectYAxisButton = document.getElementById('selectYAxisButton');
+            if (selectYAxisButton.classList.contains('disabled')) return;
+
             if (isSelectingYAxis) {
                 resetSelectionMode();
             } else {
@@ -2239,6 +2343,9 @@
             }
         }
         function startColumnSelection() {
+            const selectColumnsButton = document.getElementById('selectColumnsButton');
+            if (selectColumnsButton.classList.contains('disabled')) return;
+
             if (isSelectingColumns) {
                 resetSelectionMode();
                 runSearch();
@@ -2248,7 +2355,7 @@
                 isSelectingColumns = true;
                 highlightSelectionButton('selectColumnsButton');
                 selectColumnsButton.textContent = "Apply Filter";
-                cancelSearchButton.classList.add('visible');
+                cancelSearchButton.classList.remove('disabled');
             }
         }
         function highlightSelectionButton(buttonId) {
