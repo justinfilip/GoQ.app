@@ -1360,12 +1360,9 @@
 
         const visibleRowsCount = 100;
         document.addEventListener('keydown', (event) => {
-            // if (event.shiftKey && event.key === 'T') {
-            //     const dateViewButton = document.getElementById('dateViewButton');
-            //     if (!dateViewButton.classList.contains('disabled')) {
-            //         dateViewButton.click();
-            //     }
-            // }
+            if (event.shiftKey && event.key.toUpperCase() === 'T') {
+                cycleDateViewSelector();
+            }
             if (event.key === 'Control' || event.key === 'Meta') {
                 isCtrlOrCmdPressed = true;
             }
@@ -2165,22 +2162,22 @@
             ];
             return formats.some(regex => regex.test(dateString));
         }
-        // function cycleDateView() {
-        //     const dateViewButton = document.getElementById('dateViewButton');
-        //     if (dateViewButton.classList.contains('disabled')) return;
+        function cycleDateViewSelector() {
+            const chartState = charts[activeChartIndex];
+            const selectedWrapper = document.querySelector(`.chart-wrapper[data-index="${activeChartIndex}"]`);
+            if (selectedWrapper) {
+                const dateViewSelector = selectedWrapper.querySelector('.chart-type-dd:nth-child(3)');
+                if (dateViewSelector && !dateViewSelector.disabled) {
+                    const options = Array.from(dateViewSelector.options);
+                    const currentIndex = options.findIndex(option => option.value === dateViewSelector.value);
+                    const nextIndex = (currentIndex + 1) % options.length;
+                    dateViewSelector.value = options[nextIndex].value;
+                    // Trigger the onchange event
+                    dateViewSelector.dispatchEvent(new Event('change'));
+                }
+            }
+        }
 
-        //     saveState(); // Save state before changing date view
-
-        //     const chartState = charts[activeChartIndex];
-        //     const views = ['Day', 'Week', 'Month'];
-        //     let currentIndex = views.indexOf(chartState.dateView);
-        //     currentIndex = (currentIndex + 1) % views.length;
-        //     chartState.dateView = views[currentIndex];
-        //     dateViewButton.textContent = chartState.dateView;
-
-        //     // Trigger aggregation and chart generation
-        //     generateChart();
-        // }
         function aggregateDataByDateView(parsedDates, datasets, dateView, aggregationType) {
             const groupedData = {};
             parsedDates.forEach((item, index) => {
