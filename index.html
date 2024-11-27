@@ -655,6 +655,7 @@
                     <p class="button-text">Hotkeys</p>
                     <div class="tooltiptext">
                         <strong>Shift + T:</strong> Cycle Date View<br><br>
+                        <strong>Shift + A:</strong> Cycle Aggregation Type<br><br>
                         <strong>Shift + Cmd/Ctrl + Click:</strong> Select Column for X Axis<br><br>
                         <strong>Shift + Click:</strong> Select Column for Y Axis
                     </div>
@@ -1362,6 +1363,9 @@
         document.addEventListener('keydown', (event) => {
             if (event.shiftKey && event.key.toUpperCase() === 'T') {
                 cycleDateViewSelector();
+            }
+            if (event.shiftKey && event.key.toUpperCase() === 'A') {
+                cycleAggregationTypeSelector();
             }
             if (event.key === 'Control' || event.key === 'Meta') {
                 isCtrlOrCmdPressed = true;
@@ -2161,6 +2165,21 @@
                 /^\d{2}\.\d{2}\.\d{4}$/
             ];
             return formats.some(regex => regex.test(dateString));
+        }
+        function cycleAggregationTypeSelector() {
+            const chartState = charts[activeChartIndex];
+            const selectedWrapper = document.querySelector(`.chart-wrapper[data-index="${activeChartIndex}"]`);
+            if (selectedWrapper) {
+                const aggregationTypeSelector = selectedWrapper.querySelector('.chart-type-dd:nth-child(2)');
+                if (aggregationTypeSelector && !aggregationTypeSelector.disabled) {
+                    const options = Array.from(aggregationTypeSelector.options);
+                    const currentIndex = options.findIndex(option => option.value === aggregationTypeSelector.value);
+                    const nextIndex = (currentIndex + 1) % options.length;
+                    aggregationTypeSelector.value = options[nextIndex].value;
+                    // Trigger the onchange event
+                    aggregationTypeSelector.dispatchEvent(new Event('change'));
+                }
+            }
         }
         function cycleDateViewSelector() {
             const chartState = charts[activeChartIndex];
