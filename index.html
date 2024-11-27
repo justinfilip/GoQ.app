@@ -656,6 +656,7 @@
                     <div class="tooltiptext">
                         <strong>Shift + T:</strong> Cycle Date View<br><br>
                         <strong>Shift + A:</strong> Cycle Aggregation Type<br><br>
+                        <strong>Shift + C:</strong> Cycle Chart Type<br><br>
                         <strong>Shift + Cmd/Ctrl + Click:</strong> Select Column for X Axis<br><br>
                         <strong>Shift + Click:</strong> Select Column for Y Axis
                     </div>
@@ -1366,6 +1367,9 @@
             }
             if (event.shiftKey && event.key.toUpperCase() === 'A') {
                 cycleAggregationTypeSelector();
+            }
+            if (event.shiftKey && event.key.toUpperCase() === 'C') {
+                cycleChartTypeSelector();
             }
             if (event.key === 'Control' || event.key === 'Meta') {
                 isCtrlOrCmdPressed = true;
@@ -2165,6 +2169,21 @@
                 /^\d{2}\.\d{2}\.\d{4}$/
             ];
             return formats.some(regex => regex.test(dateString));
+        }
+        function cycleChartTypeSelector() {
+            const chartState = charts[activeChartIndex];
+            const selectedWrapper = document.querySelector(`.chart-wrapper[data-index="${activeChartIndex}"]`);
+            if (selectedWrapper) {
+                const chartTypeSelector = selectedWrapper.querySelector('.chart-type-dd:nth-child(1)');
+                if (chartTypeSelector && !chartTypeSelector.disabled) {
+                    const options = Array.from(chartTypeSelector.options);
+                    const currentIndex = options.findIndex(option => option.value === chartTypeSelector.value);
+                    const nextIndex = (currentIndex + 1) % options.length;
+                    chartTypeSelector.value = options[nextIndex].value;
+                    // Trigger the onchange event
+                    chartTypeSelector.dispatchEvent(new Event('change'));
+                }
+            }
         }
         function cycleAggregationTypeSelector() {
             const chartState = charts[activeChartIndex];
