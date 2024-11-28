@@ -452,12 +452,8 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         .cancel-search-button {
             background-color: #ff4c4c;
@@ -604,7 +600,29 @@
             padding-left: 10px;
             box-sizing: border-box;
         }
-        @media (max-width: 1000px) {
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.276); /* Semi-transparent black */
+            display: none; /* Hidden by default */
+            z-index: 1000; /* Ensure it covers all other content */
+        }
+        .loading-icon-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70px;
+            height: 70px;
+            border: 2px solid #0095ff;
+            border-top: 2px solid #0095ff00;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @media (max-width: 1045px) {
             .navigator {
                 justify-content: center; /* Center the items on smaller screens */
             }
@@ -656,6 +674,7 @@
             <input type="text" id="dashboardNameInput" placeholder="Enter Dashboard Name" class="dashboard-name-input" />
             <button id="loadExampleButton" class="date-view-button visible" style="width: 165px; height: 100%; margin-top: 0px;" onclick="loadExampleDataset()">Load Example Dataset</button>
             <button id="addChartButton" onclick="addNewChart()" class="date-view-button visible" style="width: 165px; height: 100%; margin-top: 0px;">Add Chart</button>
+            <button id="exportCsvButton" onclick="exportToCSV()" class="date-view-button visible" style="width: 165px; height: 100%; margin-top: 0px;">Export CSV</button>
             <button id="exportPdfButton" onclick="exportToPDF()" class="date-view-button visible" style="width: 165px; height: 100%; margin-top: 0px;">Export PDF</button>
             <div class="tooltip-container">
                 <div class="tooltip">
@@ -676,34 +695,7 @@
     </div>
     <center>
         <div id="chartsContainer"></div>
-        <!-- <div id="chartTypeContainer" style="display: none; justify-content: center; align-items: center;">
-            <select id="chartTypeSelector" class="chart-type-dd" onchange="
-                const chartState = charts[activeChartIndex];
-                chartState.chartType = this.value;
-                generateChart();
-            ">
-                <option value="line">Line</option>
-                <option value="bar">Bar</option>
-                <option value="pie">Pie</option>
-                <option value="doughnut">Doughnut</option>
-                <option value="radar">Radar</option>
-                <option value="polarArea">Polar Area</option>
-            </select>
-
-            <select id="aggregationTypeSelector" class="chart-type-dd" onchange="
-                const chartState = charts[activeChartIndex];
-                chartState.aggregationType = this.value;
-                generateChart();
-            ">
-                <option value="sum">Sum</option>
-                <option value="average">Average</option>
-                <option value="count">Count</option>
-                <option value="max">Max</option>
-                <option value="min">Min</option>
-            </select>
-        </div> -->
         <div class="date-view-selector" style="display: flex; justify-content: center; width: 100%; align-items: center; gap: 10px; margin-top: 30px;">
-            <!-- <button id="dateViewButton" class="date-view-button disabled" onclick="cycleDateView()">Day</button> -->
             <button id="selectXAxisButton" class="date-view-button disabled" onclick="startXAxisSelection()">Add/Rem X Axis</button>
             <button id="selectYAxisButton" class="date-view-button disabled" onclick="startYAxisSelection()">Add/Rem Y Axis</button>
             <button id="selectColumnsButton" class="date-view-button disabled" onclick="startColumnSelection()">Select Columns (Filter)</button>
@@ -719,6 +711,9 @@
     <div id="dataPage" class="data-page"></div>
     <div class="loading-icon" id="loadingIcon"></div>
     <div id="toast" class="toast">Please select columns and enter filter text or regular expression.</div>
+    <div class="overlay" id="overlay">
+        <div class="loading-icon-overlay"></div>
+    </div>
     <script src="chart.js"></script>
     <script src="PapaParse-5.0.2/papaparse.js"></script>
     <script src="html2canvas.min.js"></script>
@@ -1145,6 +1140,9 @@
         }
         function exportToPDF() {
             const dashboardName = document.getElementById('dashboardNameInput').value.trim() || 'Dashboard';
+            // Show the overlay and loading icon
+            document.getElementById('overlay').style.display = 'block';
+
             html2canvas(document.body, {
                 scale: 2,
                 useCORS: true,
@@ -1152,6 +1150,8 @@
                 onclone: (clonedDoc) => {
                     clonedDoc.getElementById('exportPdfButton').style.display = 'none';
                     clonedDoc.getElementById('fileInput').style.display = 'none';
+                    // Hide the overlay in the cloned document to avoid capturing it
+                    clonedDoc.getElementById('overlay').style.display = 'none';
                 }
             }).then((canvas) => {
                 const imgData = canvas.toDataURL('image/png');
@@ -1161,7 +1161,45 @@
                 const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
                 pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
                 pdf.save(`${dashboardName}.pdf`);
+                // Hide the overlay and loading icon after saving
+                document.getElementById('overlay').style.display = 'none';
+            }).catch((error) => {
+                console.error('Error generating PDF:', error);
+                alert('An error occurred while generating the PDF.');
+                // Hide the overlay and loading icon in case of error
+                document.getElementById('overlay').style.display = 'none';
             });
+        }
+        function exportToCSV() {
+            const dashboardName = document.getElementById('dashboardNameInput').value.trim() || 'Dataset';
+            // Show the overlay and loading icon
+            document.getElementById('overlay').style.display = 'block';
+
+            setTimeout(() => {
+                const data = window.csvData || window.xmlData;
+                if (!data || data.length === 0) {
+                    alert('No data available to export.');
+                    document.getElementById('overlay').style.display = 'none';
+                    return;
+                }
+
+                const csv = Papa.unparse(data);
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                if (link.download !== undefined) {
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', `${dashboardName}.csv`);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } else {
+                    alert('Your browser does not support exporting files.');
+                }
+                // Hide the overlay and loading icon after exporting
+                document.getElementById('overlay').style.display = 'none';
+            }, 500); // Simulate loading delay
         }
         function selectChart(index) {
             activeChartIndex = index;
@@ -1416,6 +1454,12 @@
         fileInput.addEventListener('change', () => {
             const file = fileInput.files[0];
             if (file) handleFile(file);
+        });
+        searchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent form submission or default behavior
+                event.target.blur();    // Remove focus to 'lock in' change
+            }
         });
         function handleFile(file, isUpdatedFile = false, fileIndex = null) {
             const chunkSize = 5 * 1024 * 1024;
@@ -1901,10 +1945,6 @@
             selectColumnsButton.textContent = "Select Columns (Filter)";
             cancelSearchButton.classList.remove('visible');
         }
-        
-        // ... (Your existing JavaScript code before the renderVirtualizedTable function remains unchanged) ...
-
-        // Update the renderVirtualizedTable function to add checkboxes for row selection
         function renderVirtualizedTable(data) {
             const tableContainer = document.querySelector('#dataGrid');
             tableContainer.innerHTML = '';
@@ -1986,6 +2026,13 @@
                         td.addEventListener('input', (event) => {
                             const newValue = event.target.textContent;
                             updateCellValue(event.target.dataset.rowIndex, event.target.dataset.header, newValue);
+                        });
+
+                        td.addEventListener('keydown', (event) => {
+                            if (event.key === 'Enter') {
+                                event.preventDefault(); // Prevent newline
+                                event.target.blur();    // Remove focus to 'lock in' change
+                            }
                         });
 
                         tr.appendChild(td);
