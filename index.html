@@ -109,6 +109,12 @@
         tr.selected-row {
             background-color: #0095ff31 !important;
         }
+        td:first-child, th:first-child {
+            text-align: center; /* Center-align the checkbox column */
+            width: 30px; /* Adjust the width to make the column narrower */
+            padding: 0; /* Remove padding to minimize the column width */
+            margin: 0; /* Remove margin to minimize the column width */
+        }
         .axis-indicator {
             position: absolute;
             top: -44px;
@@ -629,6 +635,7 @@
                 display: none;
             }
         }
+        
     </style>
 </head>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-TVRZYXSS4C"></script>
@@ -1095,8 +1102,6 @@
                 }
             });
         }
-
-
         function undoAction() {
             const undoButton = document.getElementById('undoButton');
             if (undoButton.classList.contains('disabled')) return;
@@ -1362,6 +1367,10 @@
 
         const visibleRowsCount = 100;
         document.addEventListener('keydown', (event) => {
+            if (event.target.matches('input, textarea') || event.target.isContentEditable) {
+                // Do not handle hotkeys when typing in input or contentEditable elements
+                return;
+            }
             if (event.shiftKey && event.key.toUpperCase() === 'T') {
                 cycleDateViewSelector();
             }
@@ -1892,6 +1901,10 @@
             selectColumnsButton.textContent = "Select Columns (Filter)";
             cancelSearchButton.classList.remove('visible');
         }
+        
+        // ... (Your existing JavaScript code before the renderVirtualizedTable function remains unchanged) ...
+
+        // Update the renderVirtualizedTable function to add checkboxes for row selection
         function renderVirtualizedTable(data) {
             const tableContainer = document.querySelector('#dataGrid');
             tableContainer.innerHTML = '';
@@ -1899,7 +1912,13 @@
             const thead = document.createElement('thead');
             const tbody = document.createElement('tbody');
             const headerRow = document.createElement('tr');
-            Object.keys(data[0]).forEach((header, index) => {
+            const headers = Object.keys(data[0]);
+
+            // Add an empty header cell for the checkbox column
+            const checkboxHeader = document.createElement('th');
+            headerRow.appendChild(checkboxHeader);
+
+            headers.forEach((header, index) => {
                 const th = document.createElement('th');
                 th.textContent = header;
                 th.dataset.index = index;
@@ -1934,19 +1953,41 @@
                     const tr = document.createElement('tr');
                     tr.dataset.index = i;
 
-                    // Handle row selection
-                    tr.addEventListener('click', () => {
-                        toggleRowSelection(i, tr);
-                    });
+                    // Add a cell with a checkbox for row selection
+                    const checkboxTd = document.createElement('td');
+                    checkboxTd.style.padding = '0'; // Remove padding from the cell
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.dataset.rowIndex = i;
 
-                    // Highlight if selected
+                    // Set the checkbox state based on whether the row is selected
                     if (selectedRows.has(i)) {
+                        checkbox.checked = true;
                         tr.classList.add('selected-row');
                     }
 
-                    Object.keys(data[i]).forEach(header => {
+                    // Handle checkbox change event
+                    checkbox.addEventListener('change', (event) => {
+                        toggleRowSelection(i, tr, event.target.checked);
+                    });
+
+                    checkboxTd.appendChild(checkbox);
+                    tr.appendChild(checkboxTd);
+
+                    headers.forEach((header, colIndex) => {
                         const td = document.createElement('td');
+                        td.contentEditable = true; // Make the cell editable
                         td.textContent = data[i][header] === 0 ? '0' : data[i][header] || '';
+                        td.dataset.rowIndex = i;
+                        td.dataset.colIndex = colIndex;
+                        td.dataset.header = header;
+
+                        // Add event listener for when cell content changes
+                        td.addEventListener('input', (event) => {
+                            const newValue = event.target.textContent;
+                            updateCellValue(event.target.dataset.rowIndex, event.target.dataset.header, newValue);
+                        });
+
                         tr.appendChild(td);
                     });
                     tbody.appendChild(tr);
@@ -1961,13 +2002,41 @@
             });
             updateHeaderColors();
         }
-        function toggleRowSelection(rowIndex, trElement) {
-            if (selectedRows.has(rowIndex)) {
-                selectedRows.delete(rowIndex);
-                trElement.classList.remove('selected-row');
+        function updateCellValue(rowIndex, header, newValue) {
+            saveState(); // Save state before updating the cell value
+            rowIndex = parseInt(rowIndex, 10);
+            const data = window.csvData || window.xmlData;
+            const oldValue = data[rowIndex][header];
+
+            // Try to parse the new value to maintain data type
+            const parsedOldValue = parseFloat(oldValue);
+            if (!isNaN(parsedOldValue)) {
+                // If the old value was a number, try to parse the new value
+                const parsedNewValue = parseFloat(newValue);
+                data[rowIndex][header] = isNaN(parsedNewValue) ? 0 : parsedNewValue;
             } else {
+                // Otherwise, keep it as a string
+                data[rowIndex][header] = newValue;
+            }
+
+            // Update the original data as well
+            if (window.csvData) {
+                originalData[rowIndex][header] = data[rowIndex][header];
+            } else if (window.xmlData) {
+                originalData[rowIndex][header] = data[rowIndex][header];
+            }
+
+            // Regenerate the charts to reflect the updated data
+            generateAllCharts();
+        }
+        function toggleRowSelection(rowIndex, trElement, isChecked) {
+            saveState(); // Save state before modifying selection
+            if (isChecked) {
                 selectedRows.add(rowIndex);
                 trElement.classList.add('selected-row');
+            } else {
+                selectedRows.delete(rowIndex);
+                trElement.classList.remove('selected-row');
             }
             updateDeleteRowsButtonVisibility();
         }
