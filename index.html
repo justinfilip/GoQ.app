@@ -1138,85 +1138,133 @@
                 undoButton.classList.remove('visible');
             }
         }
-        function exportToPDF() {
-            const dashboardName = document.getElementById('dashboardNameInput').value.trim() || 'Dashboard';
-            // Show the overlay and loading icon
-            document.getElementById('overlay').style.display = 'block';
 
-            html2canvas(document.body, {
-                scale: 2,
-                useCORS: true,
-                allowTaint: true,
-                onclone: (clonedDoc) => {
-                    // Hide unwanted elements
-                    clonedDoc.getElementById('exportPdfButton').style.display = 'none';
-                    clonedDoc.getElementById('fileInput').style.display = 'none';
-                    if (clonedDoc.getElementById('exportCsvButton')) clonedDoc.getElementById('exportCsvButton').style.display = 'none';
-                    if (clonedDoc.getElementById('loadExampleButton')) clonedDoc.getElementById('loadExampleButton').style.display = 'none';
-                    if (clonedDoc.getElementById('addChartButton')) clonedDoc.getElementById('addChartButton').style.display = 'none';
-                    if (clonedDoc.querySelector('.tooltip-container')) clonedDoc.querySelector('.tooltip-container').style.display = 'none';
-                    if (clonedDoc.getElementById('dropArea')) clonedDoc.getElementById('dropArea').style.display = 'none';
-                    if (clonedDoc.querySelector('.date-view-selector')) clonedDoc.querySelector('.date-view-selector').style.display = 'none';
-                    if (clonedDoc.getElementById('searchInput')) clonedDoc.getElementById('searchInput').style.display = 'none';
-                    if (clonedDoc.getElementById('dataGrid')) clonedDoc.getElementById('dataGrid').style.display = 'none';
-                    if (clonedDoc.getElementById('dataPage')) clonedDoc.getElementById('dataPage').style.display = 'none';
-                    if (clonedDoc.getElementById('overlay')) clonedDoc.getElementById('overlay').style.display = 'none';
 
-                    // Remove the GTM noscript block/iframe if present
-                    const gtmNoScript = clonedDoc.querySelector('noscript');
-                    if (gtmNoScript) gtmNoScript.remove();
-                    const gtmIframe = clonedDoc.querySelector('iframe[src*="googletagmanager.com"]');
-                    if (gtmIframe) gtmIframe.remove();
+        /**
+         * Adds a page to the PDF from a portion of the big image.
+         * @param {jsPDF} pdf 
+         * @param {String} imgData data URL of the full page image
+         * @param {Number} pdfWidth PDF page width in mm
+         * @param {Number} canvasWidth width of the captured canvas in px
+         * @param {Number} canvasHeight height of the captured canvas in px
+         * @param {Number} startY in px, where the page starts in the large image
+         * @param {Number} sliceHeightInPx how tall the slice is in px
+         */
+        function addPageFromCanvas(pdf, imgData, pdfWidth, canvasWidth, canvasHeight, startY, sliceHeightInPx) {
+            const imgProps = pdf.getImageProperties(imgData);
+            const scale = pdfWidth / canvasWidth;
 
-                    // Replace dashboardNameInput with a title
-                    const clonedNavigator = clonedDoc.querySelector('.navigator');
-                    const clonedDashboardNameInput = clonedDoc.getElementById('dashboardNameInput');
-                    const dashboardNameValue = clonedDashboardNameInput.value || 'Dashboard';
+            // The sliceHeightInPx in the image corresponds to sliceHeightInPx * scale in mm on the PDF.
+            const sliceHeightInMM = (sliceHeightInPx * scale);
 
-                    const dashboardTitle = clonedDoc.createElement('h1');
-                    dashboardTitle.textContent = dashboardNameValue;
-                    dashboardTitle.style.fontSize = '18px';
-                    dashboardTitle.style.margin = '0';
-                    dashboardTitle.style.color = '#131d20d1';
-                    dashboardTitle.style.marginTop = '8px';
+            // If this isn't the first page added, we need to add a new page
+            if (pdf.getNumberOfPages() > 0) {
+                pdf.addPage();
+            }
 
-                    clonedNavigator.replaceChild(dashboardTitle, clonedDashboardNameInput);
-                }
-            }).then((canvas) => {
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+            // Add the image slice. We'll use addImage with a 'dy' parameter to shift source.
+            // Since jsPDF's addImage doesn't natively slice the image, we need to rely on
+            // a workaround: draw the entire image but clip to the area we want.
+            // Alternatively, we can create a temporary canvas and cut that portion out, then add that as image.
 
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = pdf.internal.pageSize.getHeight();
+            // Creating a temporary canvas for the slice:
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = canvasWidth;
+            tempCanvas.height = sliceHeightInPx;
 
-                // Convert canvas height to PDF scale
-                const imgProps = pdf.getImageProperties(imgData);
-                const pageHeightInPixels = (imgProps.height * pdfWidth) / imgProps.width; // full image height in PDF units
-
-                let position = 0;
-                let heightLeft = pageHeightInPixels;
-
-                // Add the first page
-                pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pageHeightInPixels);
-                heightLeft -= pdfHeight;
-
-                // If the content is bigger than one page, add new pages
-                while (heightLeft > 0) {
-                    pdf.addPage();
-                    position = - (pageHeightInPixels - heightLeft);
-                    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pageHeightInPixels);
-                    heightLeft -= pdfHeight;
-                }
-
-                pdf.save(`${dashboardName}.pdf`);
-                document.getElementById('overlay').style.display = 'none';
-            }).catch((error) => {
-                console.error('Error generating PDF:', error);
-                alert('An error occurred while generating the PDF.');
-                document.getElementById('overlay').style.display = 'none';
+            const fullImage = new Image();
+            fullImage.src = imgData;
+            return new Promise(resolve => {
+                fullImage.onload = () => {
+                    // Draw the portion we want
+                    tempCtx.drawImage(fullImage, 0, -startY);
+                    const sliceData = tempCanvas.toDataURL('image/png');
+                    
+                    pdf.addImage(sliceData, 'PNG', 0, 0, pdfWidth, sliceHeightInMM);
+                    resolve();
+                };
             });
         }
+        async function exportToPDF() {
+            const dashboardName = document.getElementById('dashboardNameInput').value.trim() || 'Dashboard';
+            // Show overlay if needed
+            document.getElementById('overlay').style.display = 'block';
 
+            // Hide unwanted elements and modify the DOM as needed (e.g., hide buttons, convert dashboard name input to title, etc.)
+            // Make sure all charts are visible and laid out as you want them in the final PDF.
+
+            // Get all chart wrappers
+            const chartWrappers = document.querySelectorAll('.chart-wrapper');
+
+            // Record the positions of each chart so we know safe break points
+            const chartPositions = [];
+            chartWrappers.forEach(wrapper => {
+                const rect = wrapper.getBoundingClientRect();
+                // Store the positions relative to the document, adjust if needed
+                chartPositions.push({
+                    top: rect.top + window.scrollY,
+                    bottom: rect.bottom + window.scrollY
+                });
+            });
+
+            // Scroll to top just to ensure a consistent screenshot
+            window.scrollTo(0, 0);
+
+            // Capture the entire page once
+            const canvas = await html2canvas(document.body, { scale: 2, useCORS: true, allowTaint: true });
+            const imgData = canvas.toDataURL('image/png');
+
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+
+            // Image is captured at device pixels. We must know how many device pixels equal one mm.
+            // We'll calculate a ratio to convert from image pixels to PDF mm coordinates.
+            const pageHeightInPx = (canvas.height * (pdfWidth / canvas.width));
+
+            // We'll iterate through charts and figure out how to split the image into pages.
+            // We'll track a "currentY" in image pixels for where the current page starts.
+            // We'll also track how high we can go before we exceed a page (in pixels), and only break between charts.
+
+            let currentY = 0; // in the image's pixel space
+            let pageCount = 0;
+
+            for (let i = 0; i < chartPositions.length; i++) {
+                const chartBottom = chartPositions[i].bottom;
+                
+                // Convert chartBottom from page coordinates to the scaled coordinates that match the final image
+                // Since we captured the entire body, the chartPositions are relative to document top:
+                // The canvas height corresponds to the entire document height in pixels, so no further scale needed for position checks.
+                // The main scale difference is when adding image to PDF: we scale by (pdfWidth / canvas.width).
+
+                // Determine how tall the current page is in image pixels: 
+                // pageHeightInPx is how tall one PDF page is in image pixels.
+                // currentY is where we started for this page, so the allowed height from currentY is (currentY + pageHeightInPx).
+                let currentPageMaxY = currentY + pageHeightInPx;
+
+                if (chartBottom > currentPageMaxY) {
+                    // This chart won't fit on the current page, so we finalize the current page up to the previous chart.
+                    // Add the current page image
+                    addPageFromCanvas(pdf, imgData, pdfWidth, canvas.width, canvas.height, currentY, pageHeightInPx);
+                    pageCount++;
+                    
+                    // Start a new page from this chart
+                    currentY = (chartPositions[i-1] ? chartPositions[i-1].bottom : 0);
+                }
+
+                // If we're at the last chart, add the final page
+                if (i === chartPositions.length - 1) {
+                    // Add last page from currentY to end of document (or just enough to include this last chart)
+                    // We only want to include up to the last chart bottom
+                    const finalPageHeightInPx = (chartBottom - currentY);
+                    addPageFromCanvas(pdf, imgData, pdfWidth, canvas.width, canvas.height, currentY, finalPageHeightInPx);
+                }
+            }
+
+            pdf.save(`${dashboardName}.pdf`);
+            document.getElementById('overlay').style.display = 'none';
+        }
         function exportToCSV() {
             const dashboardName = document.getElementById('dashboardNameInput').value.trim() || 'Dataset';
             // Show the overlay and loading icon
