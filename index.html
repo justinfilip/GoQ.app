@@ -1142,6 +1142,11 @@
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF('p', 'mm', 'a4');
 
+            // Remove "active" class from all chart wrappers so none appear selected
+            document.querySelectorAll('.chart-wrapper.active').forEach(wrapper => {
+                wrapper.classList.remove('active');
+            });
+
             // Retrieve logo image from the DOM (for example, the .goq-logo element)
             const logoImg = document.querySelector('.goq-logo');
             let logoDataURL = null;
@@ -1165,12 +1170,11 @@
                 pdf.addImage(logoDataURL, 'PNG', 8, 8, 30, 30); 
             }
             // Add dashboard title next to logo
-            // Move text a bit to the right if logo is present
             const titleX = logoDataURL ? 15 : 11;
             pdf.setFontSize(7);
             pdf.setTextColor(19, 29, 32);
             pdf.text(dashboardName, titleX, 11);
-            
+
             let yOffset = 15; // vertical offset to start placing charts below title/logo
 
             // Get all chart wrappers and export each as an image including borders
