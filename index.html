@@ -1138,52 +1138,6 @@
                 undoButton.classList.remove('visible');
             }
         }
-
-
-        /**
-         * Adds a page to the PDF from a portion of the big image.
-         * @param {jsPDF} pdf 
-         * @param {String} imgData data URL of the full page image
-         * @param {Number} pdfWidth PDF page width in mm
-         * @param {Number} canvasWidth width of the captured canvas in px
-         * @param {Number} canvasHeight height of the captured canvas in px
-         * @param {Number} startY in px, where the page starts in the large image
-         * @param {Number} sliceHeightInPx how tall the slice is in px
-         */
-         async function addPageFromCanvas(pdf, imgData, pdfWidth, canvasWidth, canvasHeight, startY, sliceHeightInPx) {
-            const imgProps = pdf.getImageProperties(imgData);
-            const scale = pdfWidth / canvasWidth;
-            const sliceHeightInMM = sliceHeightInPx * scale;
-
-            if (pdf.getNumberOfPages() > 0) {
-                pdf.addPage();
-            }
-
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCanvas.width = canvasWidth;
-            tempCanvas.height = sliceHeightInPx;
-
-            const fullImage = new Image();
-            fullImage.src = imgData;
-
-            await new Promise(resolve => {
-                fullImage.onload = () => {
-                    // Draw the exact portion we want
-                    tempCtx.drawImage(
-                        fullImage,
-                        0, startY,
-                        tempCanvas.width, sliceHeightInPx,
-                        0, 0,
-                        tempCanvas.width, sliceHeightInPx
-                    );
-                    const sliceData = tempCanvas.toDataURL('image/png');
-                    pdf.addImage(sliceData, 'PNG', 0, 0, pdfWidth, sliceHeightInMM);
-                    resolve();
-                };
-                fullImage.onerror = () => resolve(); // Handle errors gracefully
-            });
-        }
         async function exportToPDF() {
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF('p', 'mm', 'a4');
@@ -1210,12 +1164,14 @@
             const pageWidth = pdf.internal.pageSize.getWidth();
             if (logoDataURL) {
                 // Add logo at top-left corner, 10mm from top and left
+                logoDataURL.width = 35;
+                logoDataURL.height = 35;
                 pdf.addImage(logoDataURL, 'PNG', 10, 10, 20, 20); 
             }
             // Add dashboard title next to logo
             // Move text a bit to the right if logo is present
             const titleX = logoDataURL ? 40 : 10;
-            pdf.setFontSize(16);
+            pdf.setFontSize(12);
             pdf.text(dashboardName, titleX, 20);
 
             // Start adding charts below the title
