@@ -1164,7 +1164,7 @@
             const pageWidth = pdf.internal.pageSize.getWidth();
             if (logoDataURL) {
                 // Add logo at top-left corner, 10mm from top and left
-                pdf.addImage(logoDataURL, 'PNG', 8, 8, 35, 35); 
+                pdf.addImage(logoDataURL, 'PNG', 8, 8, 30, 30); 
             }
             // Add dashboard title next to logo
             // Move text a bit to the right if logo is present
@@ -1173,7 +1173,7 @@
             pdf.text(dashboardName, titleX, 10);
 
             // Start adding charts below the title
-            let yOffset = 10; // vertical offset to start placing charts
+            let yOffset = 15; // vertical offset to start placing charts
 
             // Get all chart wrappers and export each chart
             const chartWrappers = document.querySelectorAll('.chart-wrapper');
