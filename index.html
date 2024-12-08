@@ -1185,82 +1185,73 @@
             });
         }
         async function exportToPDF() {
-            const dashboardName = document.getElementById('dashboardNameInput').value.trim() || 'Dashboard';
-            
-            // Show the overlay before starting to capture (if you want to show some loading indication)
-            document.getElementById('overlay').style.display = 'block';
-
             const { jsPDF } = window.jspdf;
-
-            // Use onclone to modify the cloned document before html2canvas renders it
-            const canvas = await html2canvas(document.body, {
-                scale: 2,
-                useCORS: true,
-                allowTaint: true,
-                onclone: (clonedDoc) => {
-                    // Hide overlay and other unwanted elements from the cloned document
-                    const overlay = clonedDoc.getElementById('overlay');
-                    if (overlay) overlay.style.display = 'none';
-
-                    const exportCsvButton = clonedDoc.getElementById('exportCsvButton');
-                    if (exportCsvButton) exportCsvButton.style.display = 'none';
-
-                    const loadExampleButton = clonedDoc.getElementById('loadExampleButton');
-                    if (loadExampleButton) loadExampleButton.style.display = 'none';
-
-                    const addChartButton = clonedDoc.getElementById('addChartButton');
-                    if (addChartButton) addChartButton.style.display = 'none';
-
-                    const dropArea = clonedDoc.getElementById('dropArea');
-                    if (dropArea) dropArea.style.display = 'none';
-
-                    const searchInput = clonedDoc.getElementById('searchInput');
-                    if (searchInput) searchInput.style.display = 'none';
-
-                    const dataGrid = clonedDoc.getElementById('dataGrid');
-                    if (dataGrid) dataGrid.style.display = 'none';
-
-                    const dataPage = clonedDoc.getElementById('dataPage');
-                    if (dataPage) dataPage.style.display = 'none';
-
-                    const dateViewSelector = clonedDoc.querySelector('.date-view-selector');
-                    if (dateViewSelector) dateViewSelector.style.display = 'none';
-
-                    const tooltipContainer = clonedDoc.querySelector('.tooltip-container');
-                    if (tooltipContainer) tooltipContainer.style.display = 'none';
-
-                    // Replace the dashboard name input with a title
-                    const clonedNavigator = clonedDoc.querySelector('.navigator');
-                    const clonedDashboardNameInput = clonedDoc.getElementById('dashboardNameInput');
-                    const dashboardNameValue = clonedDashboardNameInput.value || 'Dashboard';
-
-                    const dashboardTitle = clonedDoc.createElement('h1');
-                    dashboardTitle.textContent = dashboardNameValue;
-                    dashboardTitle.style.fontSize = '18px';
-                    dashboardTitle.style.margin = '0';
-                    dashboardTitle.style.color = '#131d20d1';
-                    dashboardTitle.style.marginTop = '8px';
-
-                    clonedNavigator.replaceChild(dashboardTitle, clonedDashboardNameInput);
-                }
-            });
-
-            // After capturing, you can now show the overlay again if you want 
-            // to indicate that the PDF is being generated
-            // document.getElementById('overlay').style.display = 'block'; 
-
-            const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF('p', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight();
 
-            // Just a single page for demonstration
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            // Retrieve logo image from the DOM (for example, an <img id="logo"...> element)
+            const logoImg = document.querySelector('.goq-logo');
+            let logoDataURL = null;
+            if (logoImg) {
+                // Convert the logo <img> to a Base64 data URL
+                // To ensure cross-origin images work, you might need the correct server setup or a local image.
+                const logoCanvas = document.createElement('canvas');
+                const ctx = logoCanvas.getContext('2d');
+                logoCanvas.width = logoImg.width;
+                logoCanvas.height = logoImg.height;
+                ctx.drawImage(logoImg, 0, 0, logoImg.width, logoImg.height);
+                logoDataURL = logoCanvas.toDataURL('image/png');
+            }
+
+            // Dashboard title from input
+            const dashboardName = document.getElementById('dashboardNameInput').value.trim() || 'Dashboard';
+
+            // Add logo (if available) and dashboard title at the top of the PDF
+            // Adjust coordinates and sizes as needed.
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            if (logoDataURL) {
+                // Add logo at top-left corner, 10mm from top and left
+                pdf.addImage(logoDataURL, 'PNG', 10, 10, 20, 20); 
+            }
+            // Add dashboard title next to logo
+            // Move text a bit to the right if logo is present
+            const titleX = logoDataURL ? 40 : 10;
+            pdf.setFontSize(16);
+            pdf.text(dashboardName, titleX, 20);
+
+            // Start adding charts below the title
+            let yOffset = 40; // vertical offset to start placing charts
+
+            // Get all chart wrappers and export each chart
+            const chartWrappers = document.querySelectorAll('.chart-wrapper');
+            for (let i = 0; i < chartWrappers.length; i++) {
+                const chartWrapper = chartWrappers[i];
+                const index = parseInt(chartWrapper.dataset.index, 10);
+                const chartState = charts[index];
+                if (!chartState || !chartState.chartInstance) continue;
+
+                // Convert chart to image
+                const chartImage = chartState.chartInstance.toBase64Image();
+
+                // Determine width and height for the chart image on the PDF
+                // For example, fit the chart to full page width (minus margins)
+                const chartWidthMm = pageWidth - 20; // 10mm margin on each side
+                const chartHeightMm = (chartWidthMm * 0.5); // adjust aspect ratio as needed
+
+                // Check if we need a new page if chart won't fit on the remaining space
+                if (yOffset + chartHeightMm > pdf.internal.pageSize.getHeight() - 20) {
+                    pdf.addPage();
+                    yOffset = 20; // reset offset on new page
+                }
+
+                // Add chart image
+                pdf.addImage(chartImage, 'PNG', 10, yOffset, chartWidthMm, chartHeightMm);
+                yOffset += chartHeightMm + 10; // Add some spacing after the chart
+            }
+
+            // Finally, save the PDF
             pdf.save(`${dashboardName}.pdf`);
-
-            // Hide the overlay once done
-            document.getElementById('overlay').style.display = 'none';
         }
+
 
         function exportToCSV() {
             const dashboardName = document.getElementById('dashboardNameInput').value.trim() || 'Dataset';
