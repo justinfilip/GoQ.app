@@ -1149,8 +1149,8 @@
                 // Convert the logo <img> to a Base64 data URL
                 const logoCanvas = document.createElement('canvas');
                 const ctx = logoCanvas.getContext('2d');
-                logoCanvas.width = logoImg.width;
-                logoCanvas.height = logoImg.height;
+                logoCanvas.width = 250;
+                logoCanvas.height = 250;
                 ctx.drawImage(logoImg, 0, 0, logoImg.width, logoImg.height);
                 logoDataURL = logoCanvas.toDataURL('image/png');
             }
