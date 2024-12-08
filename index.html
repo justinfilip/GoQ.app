@@ -1142,11 +1142,6 @@
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF('p', 'mm', 'a4');
 
-            // Remove "active" class from all chart wrappers so none appear selected
-            document.querySelectorAll('.chart-wrapper.active').forEach(wrapper => {
-                wrapper.classList.remove('active');
-            });
-
             // Retrieve logo image from the DOM (for example, the .goq-logo element)
             const logoImg = document.querySelector('.goq-logo');
             let logoDataURL = null;
@@ -1163,48 +1158,76 @@
             // Dashboard title from input
             const dashboardName = document.getElementById('dashboardNameInput').value.trim() || 'Dashboard';
 
-            // Add logo (if available) and dashboard title at the top of the PDF
-            const pageWidth = pdf.internal.pageSize.getWidth();
-            if (logoDataURL) {
-                // Add the logo at the top-left corner
-                pdf.addImage(logoDataURL, 'PNG', 8, 8, 30, 30); 
-            }
-            // Add dashboard title next to logo
-            const titleX = logoDataURL ? 15 : 11;
-            pdf.setFontSize(7);
-            pdf.setTextColor(19, 29, 32);
-            pdf.text(dashboardName, titleX, 11);
-
-            let yOffset = 15; // vertical offset to start placing charts below title/logo
-
-            // Get all chart wrappers and export each as an image including borders
+            // Temporarily remove 'active' classes and hide selectors
             const chartWrappers = document.querySelectorAll('.chart-wrapper');
-            for (let i = 0; i < chartWrappers.length; i++) {
-                const chartWrapper = chartWrappers[i];
-
-                // Use html2canvas to capture the entire wrapper including the border
-                const chartCanvas = await html2canvas(chartWrapper, {
-                    scale: 2,
-                    useCORS: true
-                });
-                const chartImage = chartCanvas.toDataURL('image/png');
-
-                const pdfPageWidth = pageWidth - 20; // 10mm margin on each side
-                // Maintain aspect ratio of the captured image
-                const aspectRatio = chartCanvas.width / chartCanvas.height;
-                const chartHeightMm = pdfPageWidth / aspectRatio;
-
-                // Check if we need a new page if chart won't fit on the remaining space
-                if (yOffset + chartHeightMm > pdf.internal.pageSize.getHeight() - 20) {
-                    pdf.addPage();
-                    yOffset = 20; // reset offset on new page
+            const prevActiveWrappers = [];
+            chartWrappers.forEach(wrapper => {
+                if (wrapper.classList.contains('active')) {
+                    prevActiveWrappers.push(wrapper);
+                    wrapper.classList.remove('active');
                 }
+                const chartTypeContainer = wrapper.querySelector('.chart-type-container');
+                if (chartTypeContainer) {
+                    chartTypeContainer.style.display = 'none';
+                }
+            });
 
-                pdf.addImage(chartImage, 'PNG', 10, yOffset, pdfPageWidth, chartHeightMm);
-                yOffset += chartHeightMm + 10; // add spacing after the chart
-            }
+            // Use onclone to modify the cloned document before html2canvas renders it
+            const canvas = await html2canvas(document.body, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                onclone: (clonedDoc) => {
+                    // Hide overlay and other unwanted elements from the cloned document
+                    const overlay = clonedDoc.getElementById('overlay');
+                    if (overlay) overlay.style.display = 'none';
 
-            // Finally, save the PDF
+                    const exportCsvButton = clonedDoc.getElementById('exportCsvButton');
+                    if (exportCsvButton) exportCsvButton.style.display = 'none';
+
+                    const loadExampleButton = clonedDoc.getElementById('loadExampleButton');
+                    if (loadExampleButton) loadExampleButton.style.display = 'none';
+
+                    const addChartButton = clonedDoc.getElementById('addChartButton');
+                    if (addChartButton) addChartButton.style.display = 'none';
+
+                    const dropArea = clonedDoc.getElementById('dropArea');
+                    if (dropArea) dropArea.style.display = 'none';
+
+                    const searchInput = clonedDoc.getElementById('searchInput');
+                    if (searchInput) searchInput.style.display = 'none';
+
+                    const dataGrid = clonedDoc.getElementById('dataGrid');
+                    if (dataGrid) dataGrid.style.display = 'none';
+
+                    const dataPage = clonedDoc.getElementById('dataPage');
+                    if (dataPage) dataPage.style.display = 'none';
+
+                    const dateViewSelector = clonedDoc.querySelector('.date-view-selector');
+                    if (dateViewSelector) dateViewSelector.style.display = 'none';
+
+                    const tooltipContainer = clonedDoc.querySelector('.tooltip-container');
+                    if (tooltipContainer) tooltipContainer.style.display = 'none';
+                }
+            });
+
+            // After capturing, restore the state if needed
+            // (If you don't need to restore after export, you can skip this)
+            prevActiveWrappers.forEach(wrapper => wrapper.classList.add('active'));
+            chartWrappers.forEach(wrapper => {
+                const chartTypeContainer = wrapper.querySelector('.chart-type-container');
+                if (chartTypeContainer) {
+                    // Show again only if it should be visible when not exporting
+                    // If you don't want them to re-appear after export, remove this line.
+                    chartTypeContainer.style.display = ''; 
+                }
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
             pdf.save(`${dashboardName}.pdf`);
         }
 
