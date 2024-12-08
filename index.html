@@ -1803,7 +1803,7 @@
             tableHeaders.forEach((th) => {
                 const index = parseInt(th.dataset.index, 10);
                 th.classList.remove('selected', 'axis-selected');
-                th.textContent = th.textContent.replace(/\s*\x|\s*\y/g, '').trim();
+                th.textContent = th.textContent.replace(/\\x|\\y/g, '').trim();
 
                 // X-Axis handling
                 if (xAxisColumns.has(index)) {
