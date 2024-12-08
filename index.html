@@ -1244,7 +1244,7 @@
                 if (chartBottom > currentPageMaxY) {
                     // This chart won't fit on the current page, so we finalize the current page up to the previous chart.
                     // Add the current page image
-                    await addPageFromCanvas(pdf, imgData, pdfWidth, canvas.width, canvas.height, currentY, pageHeightInPx);
+                    addPageFromCanvas(pdf, imgData, pdfWidth, canvas.width, canvas.height, currentY, pageHeightInPx);
                     pageCount++;
                     
                     // Start a new page from this chart
@@ -1256,7 +1256,7 @@
                     // Add last page from currentY to end of document (or just enough to include this last chart)
                     // We only want to include up to the last chart bottom
                     const finalPageHeightInPx = (chartBottom - currentY);
-                    await addPageFromCanvas(pdf, imgData, pdfWidth, canvas.width, canvas.height, currentY, finalPageHeightInPx);
+                    addPageFromCanvas(pdf, imgData, pdfWidth, canvas.width, canvas.height, currentY, finalPageHeightInPx);
                 }
             }
 
