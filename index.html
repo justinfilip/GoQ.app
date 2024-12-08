@@ -1150,24 +1150,15 @@
          * @param {Number} startY in px, where the page starts in the large image
          * @param {Number} sliceHeightInPx how tall the slice is in px
          */
-        function addPageFromCanvas(pdf, imgData, pdfWidth, canvasWidth, canvasHeight, startY, sliceHeightInPx) {
+         async function addPageFromCanvas(pdf, imgData, pdfWidth, canvasWidth, canvasHeight, startY, sliceHeightInPx) {
             const imgProps = pdf.getImageProperties(imgData);
             const scale = pdfWidth / canvasWidth;
+            const sliceHeightInMM = sliceHeightInPx * scale;
 
-            // The sliceHeightInPx in the image corresponds to sliceHeightInPx * scale in mm on the PDF.
-            const sliceHeightInMM = (sliceHeightInPx * scale);
-
-            // If this isn't the first page added, we need to add a new page
             if (pdf.getNumberOfPages() > 0) {
                 pdf.addPage();
             }
 
-            // Add the image slice. We'll use addImage with a 'dy' parameter to shift source.
-            // Since jsPDF's addImage doesn't natively slice the image, we need to rely on
-            // a workaround: draw the entire image but clip to the area we want.
-            // Alternatively, we can create a temporary canvas and cut that portion out, then add that as image.
-
-            // Creating a temporary canvas for the slice:
             const tempCanvas = document.createElement('canvas');
             const tempCtx = tempCanvas.getContext('2d');
             tempCanvas.width = canvasWidth;
@@ -1175,15 +1166,22 @@
 
             const fullImage = new Image();
             fullImage.src = imgData;
-            return new Promise(resolve => {
+
+            await new Promise(resolve => {
                 fullImage.onload = () => {
-                    // Draw the portion we want
-                    tempCtx.drawImage(fullImage, 0, -startY);
+                    // Draw the exact portion we want
+                    tempCtx.drawImage(
+                        fullImage,
+                        0, startY,
+                        tempCanvas.width, sliceHeightInPx,
+                        0, 0,
+                        tempCanvas.width, sliceHeightInPx
+                    );
                     const sliceData = tempCanvas.toDataURL('image/png');
-                    
                     pdf.addImage(sliceData, 'PNG', 0, 0, pdfWidth, sliceHeightInMM);
                     resolve();
                 };
+                fullImage.onerror = () => resolve(); // Handle errors gracefully
             });
         }
         async function exportToPDF() {
@@ -1246,7 +1244,7 @@
                 if (chartBottom > currentPageMaxY) {
                     // This chart won't fit on the current page, so we finalize the current page up to the previous chart.
                     // Add the current page image
-                    addPageFromCanvas(pdf, imgData, pdfWidth, canvas.width, canvas.height, currentY, pageHeightInPx);
+                    await addPageFromCanvas(pdf, imgData, pdfWidth, canvas.width, canvas.height, currentY, pageHeightInPx);
                     pageCount++;
                     
                     // Start a new page from this chart
@@ -1258,7 +1256,7 @@
                     // Add last page from currentY to end of document (or just enough to include this last chart)
                     // We only want to include up to the last chart bottom
                     const finalPageHeightInPx = (chartBottom - currentY);
-                    addPageFromCanvas(pdf, imgData, pdfWidth, canvas.width, canvas.height, currentY, finalPageHeightInPx);
+                    await addPageFromCanvas(pdf, imgData, pdfWidth, canvas.width, canvas.height, currentY, finalPageHeightInPx);
                 }
             }
 
