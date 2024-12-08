@@ -1161,6 +1161,10 @@
                     if (clonedDoc.getElementById('dataGrid')) clonedDoc.getElementById('dataGrid').style.display = 'none';
                     if (clonedDoc.getElementById('dataPage')) clonedDoc.getElementById('dataPage').style.display = 'none';
                     if (clonedDoc.getElementById('overlay')) clonedDoc.getElementById('overlay').style.display = 'none';
+                    clonedDoc.documentElement.style.height = 'auto';
+                    clonedDoc.documentElement.style.overflow = 'visible';
+                    clonedDoc.body.style.height = 'auto';
+                    clonedDoc.body.style.overflow = 'visible';
 
                     // Remove the Google Tag Manager noscript block and iframe
                     const gtmNoScript = clonedDoc.querySelector('noscript');
