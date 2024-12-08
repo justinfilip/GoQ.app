@@ -1150,8 +1150,8 @@
                 // To ensure cross-origin images work, you might need the correct server setup or a local image.
                 const logoCanvas = document.createElement('canvas');
                 const ctx = logoCanvas.getContext('2d');
-                logoCanvas.width = logoImg.width;
-                logoCanvas.height = logoImg.height;
+                logoCanvas.width = 250;
+                logoCanvas.height = 250;
                 ctx.drawImage(logoImg, 0, 0, logoImg.width, logoImg.height);
                 logoDataURL = logoCanvas.toDataURL('image/png');
             }
@@ -1173,7 +1173,7 @@
             pdf.text(dashboardName, titleX, 20);
 
             // Start adding charts below the title
-            let yOffset = 40; // vertical offset to start placing charts
+            let yOffset = 10; // vertical offset to start placing charts
 
             // Get all chart wrappers and export each chart
             const chartWrappers = document.querySelectorAll('.chart-wrapper');
