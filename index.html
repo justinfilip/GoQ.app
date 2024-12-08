@@ -1149,25 +1149,26 @@
                 allowTaint: true,
                 onclone: (clonedDoc) => {
                     // Hide unwanted elements
-                    clonedDoc.getElementById('exportPdfButton').style.display = 'none';
-                    clonedDoc.getElementById('fileInput').style.display = 'none';
-                    if (clonedDoc.getElementById('exportCsvButton')) clonedDoc.getElementById('exportCsvButton').style.display = 'none';
-                    if (clonedDoc.getElementById('loadExampleButton')) clonedDoc.getElementById('loadExampleButton').style.display = 'none';
-                    if (clonedDoc.getElementById('addChartButton')) clonedDoc.getElementById('addChartButton').style.display = 'none';
-                    if (clonedDoc.querySelector('.tooltip-container')) clonedDoc.querySelector('.tooltip-container').style.display = 'none';
-                    if (clonedDoc.getElementById('dropArea')) clonedDoc.getElementById('dropArea').style.display = 'none';
-                    if (clonedDoc.querySelector('.date-view-selector')) clonedDoc.querySelector('.date-view-selector').style.display = 'none';
-                    if (clonedDoc.getElementById('searchInput')) clonedDoc.getElementById('searchInput').style.display = 'none';
-                    if (clonedDoc.getElementById('dataGrid')) clonedDoc.getElementById('dataGrid').style.display = 'none';
-                    if (clonedDoc.getElementById('dataPage')) clonedDoc.getElementById('dataPage').style.display = 'none';
-
-                    // Remove overlay from cloned doc just in case
-                    if (clonedDoc.getElementById('overlay')) clonedDoc.getElementById('overlay').style.display = 'none';
+                    const hideIfExists = (selector) => {
+                        const el = clonedDoc.querySelector(selector);
+                        if (el) el.style.display = 'none';
+                    };
+                    hideIfExists('#exportPdfButton');
+                    hideIfExists('#exportCsvButton');
+                    hideIfExists('#loadExampleButton');
+                    hideIfExists('#addChartButton');
+                    hideIfExists('.tooltip-container');
+                    hideIfExists('#dropArea');
+                    hideIfExists('.date-view-selector');
+                    hideIfExists('#searchInput');
+                    hideIfExists('#dataGrid');
+                    hideIfExists('#dataPage');
+                    hideIfExists('#overlay');
 
                     // Convert the dashboardNameInput into a large title
                     const clonedNavigator = clonedDoc.querySelector('.navigator');
                     const clonedDashboardNameInput = clonedDoc.getElementById('dashboardNameInput');
-                    const dashboardNameValue = clonedDashboardNameInput.value || 'Dashboard';
+                    const dashboardNameValue = clonedDashboardNameInput ? clonedDashboardNameInput.value : 'Dashboard';
 
                     // Create a new heading element for the dashboard title
                     const dashboardTitle = clonedDoc.createElement('h1');
@@ -1177,8 +1178,20 @@
                     dashboardTitle.style.color = '#131d20d1';
                     dashboardTitle.style.marginTop = '8px';
 
-                    // Remove the input and replace it with the heading
-                    clonedNavigator.replaceChild(dashboardTitle, clonedDashboardNameInput);
+                    // Replace the input with the heading
+                    if (clonedNavigator && clonedDashboardNameInput) {
+                        clonedNavigator.replaceChild(dashboardTitle, clonedDashboardNameInput);
+                    }
+
+                    // Hide any other child elements in the navigator, leaving only the logo and the new title
+                    Array.from(clonedNavigator.childNodes).forEach(node => {
+                        // Keep the logo and the dashboard title visible, hide everything else
+                        if (node !== dashboardTitle && !(node.classList && node.classList.contains('goq-logo'))) {
+                            if (node.style) {
+                                node.style.display = 'none';
+                            }
+                        }
+                    });
                 }
             }).then((canvas) => {
                 const imgData = canvas.toDataURL('image/png');
@@ -1197,6 +1210,7 @@
                 document.getElementById('overlay').style.display = 'none';
             });
         }
+
         function exportToCSV() {
             const dashboardName = document.getElementById('dashboardNameInput').value.trim() || 'Dataset';
             // Show the overlay and loading icon
