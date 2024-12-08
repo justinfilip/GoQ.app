@@ -1168,9 +1168,9 @@
             }
             // Add dashboard title next to logo
             // Move text a bit to the right if logo is present
-            const titleX = logoDataURL ? 15 : 15;
+            const titleX = logoDataURL ? 15 : 10;
             pdf.setFontSize(8);
-            pdf.text(dashboardName, titleX, 15);
+            pdf.text(dashboardName, titleX, 11);
 
             // Start adding charts below the title
             let yOffset = 15; // vertical offset to start placing charts
