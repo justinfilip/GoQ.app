@@ -1148,8 +1148,8 @@
             if (logoImg) {
                 const logoCanvas = document.createElement('canvas');
                 const ctx = logoCanvas.getContext('2d');
-                logoCanvas.width = logoImg.width;
-                logoCanvas.height = logoImg.height;
+                logoCanvas.width = 250;
+                logoCanvas.height = 250;
                 ctx.drawImage(logoImg, 0, 0, logoImg.width, logoImg.height);
                 logoDataURL = logoCanvas.toDataURL('image/png');
             }
@@ -1168,14 +1168,14 @@
 
             const pageWidth = pdf.internal.pageSize.getWidth();
             if (logoDataURL) {
-                pdf.addImage(logoDataURL, 'PNG', 8, 8, 30, 30); 
+                pdf.addImage(logoDataURL, 'PNG', 8, 8, 30, 30);  
             }
-            const titleX = logoDataURL ? 45 : 15;
-            pdf.setFontSize(14);
+            const titleX = logoDataURL ? 15 : 11;
+            pdf.setFontSize(7);
             pdf.setTextColor(19, 29, 32);
-            pdf.text(dashboardName, titleX, 20);
+            pdf.text(dashboardName, titleX, 11);
 
-            let yOffset = 30; // vertical offset after the title/logo
+            let yOffset = 10; // vertical offset after the title/logo
 
             // Capture each chart wrapper with html2canvas
             for (let i = 0; i < chartWrappers.length; i++) {
