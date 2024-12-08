@@ -1142,7 +1142,10 @@
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF('p', 'mm', 'a4');
 
-            // Retrieve logo image from the DOM (for example, the .goq-logo element)
+            // Show the overlay before starting the PDF generation process
+            document.getElementById('overlay').style.display = 'block';
+
+            // Retrieve logo image from the DOM
             const logoImg = document.querySelector('.goq-logo');
             let logoDataURL = null;
             if (logoImg) {
@@ -1201,6 +1204,9 @@
             }
 
             pdf.save(`${dashboardName}.pdf`);
+
+            // Hide the overlay after the PDF has been saved
+            document.getElementById('overlay').style.display = 'none';
         }
 
         function exportToCSV() {
