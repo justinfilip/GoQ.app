@@ -1186,83 +1186,82 @@
         }
         async function exportToPDF() {
             const dashboardName = document.getElementById('dashboardNameInput').value.trim() || 'Dashboard';
-            // Show overlay if needed
+            
+            // Show the overlay before starting to capture (if you want to show some loading indication)
             document.getElementById('overlay').style.display = 'block';
 
-            // Hide unwanted elements and modify the DOM as needed (e.g., hide buttons, convert dashboard name input to title, etc.)
-            // Make sure all charts are visible and laid out as you want them in the final PDF.
+            const { jsPDF } = window.jspdf;
 
-            // Get all chart wrappers
-            const chartWrappers = document.querySelectorAll('.chart-wrapper');
+            // Use onclone to modify the cloned document before html2canvas renders it
+            const canvas = await html2canvas(document.body, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                onclone: (clonedDoc) => {
+                    // Hide overlay and other unwanted elements from the cloned document
+                    const overlay = clonedDoc.getElementById('overlay');
+                    if (overlay) overlay.style.display = 'none';
 
-            // Record the positions of each chart so we know safe break points
-            const chartPositions = [];
-            chartWrappers.forEach(wrapper => {
-                const rect = wrapper.getBoundingClientRect();
-                // Store the positions relative to the document, adjust if needed
-                chartPositions.push({
-                    top: rect.top + window.scrollY,
-                    bottom: rect.bottom + window.scrollY
-                });
+                    const exportCsvButton = clonedDoc.getElementById('exportCsvButton');
+                    if (exportCsvButton) exportCsvButton.style.display = 'none';
+
+                    const loadExampleButton = clonedDoc.getElementById('loadExampleButton');
+                    if (loadExampleButton) loadExampleButton.style.display = 'none';
+
+                    const addChartButton = clonedDoc.getElementById('addChartButton');
+                    if (addChartButton) addChartButton.style.display = 'none';
+
+                    const dropArea = clonedDoc.getElementById('dropArea');
+                    if (dropArea) dropArea.style.display = 'none';
+
+                    const searchInput = clonedDoc.getElementById('searchInput');
+                    if (searchInput) searchInput.style.display = 'none';
+
+                    const dataGrid = clonedDoc.getElementById('dataGrid');
+                    if (dataGrid) dataGrid.style.display = 'none';
+
+                    const dataPage = clonedDoc.getElementById('dataPage');
+                    if (dataPage) dataPage.style.display = 'none';
+
+                    const dateViewSelector = clonedDoc.querySelector('.date-view-selector');
+                    if (dateViewSelector) dateViewSelector.style.display = 'none';
+
+                    const tooltipContainer = clonedDoc.querySelector('.tooltip-container');
+                    if (tooltipContainer) tooltipContainer.style.display = 'none';
+
+                    // Replace the dashboard name input with a title
+                    const clonedNavigator = clonedDoc.querySelector('.navigator');
+                    const clonedDashboardNameInput = clonedDoc.getElementById('dashboardNameInput');
+                    const dashboardNameValue = clonedDashboardNameInput.value || 'Dashboard';
+
+                    const dashboardTitle = clonedDoc.createElement('h1');
+                    dashboardTitle.textContent = dashboardNameValue;
+                    dashboardTitle.style.fontSize = '18px';
+                    dashboardTitle.style.margin = '0';
+                    dashboardTitle.style.color = '#131d20d1';
+                    dashboardTitle.style.marginTop = '8px';
+
+                    clonedNavigator.replaceChild(dashboardTitle, clonedDashboardNameInput);
+                }
             });
 
-            // Scroll to top just to ensure a consistent screenshot
-            window.scrollTo(0, 0);
+            // After capturing, you can now show the overlay again if you want 
+            // to indicate that the PDF is being generated
+            // document.getElementById('overlay').style.display = 'block'; 
 
-            // Capture the entire page once
-            const canvas = await html2canvas(document.body, { scale: 2, useCORS: true, allowTaint: true });
             const imgData = canvas.toDataURL('image/png');
-            const { jsPDF } = window.jspdf;
             const pdf = new jsPDF('p', 'mm', 'a4');
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
 
-            // Image is captured at device pixels. We must know how many device pixels equal one mm.
-            // We'll calculate a ratio to convert from image pixels to PDF mm coordinates.
-            const pageHeightInPx = (canvas.height * (pdfWidth / canvas.width));
-
-            // We'll iterate through charts and figure out how to split the image into pages.
-            // We'll track a "currentY" in image pixels for where the current page starts.
-            // We'll also track how high we can go before we exceed a page (in pixels), and only break between charts.
-
-            let currentY = 0; // in the image's pixel space
-            let pageCount = 0;
-
-            for (let i = 0; i < chartPositions.length; i++) {
-                const chartBottom = chartPositions[i].bottom;
-                
-                // Convert chartBottom from page coordinates to the scaled coordinates that match the final image
-                // Since we captured the entire body, the chartPositions are relative to document top:
-                // The canvas height corresponds to the entire document height in pixels, so no further scale needed for position checks.
-                // The main scale difference is when adding image to PDF: we scale by (pdfWidth / canvas.width).
-
-                // Determine how tall the current page is in image pixels: 
-                // pageHeightInPx is how tall one PDF page is in image pixels.
-                // currentY is where we started for this page, so the allowed height from currentY is (currentY + pageHeightInPx).
-                let currentPageMaxY = currentY + pageHeightInPx;
-
-                if (chartBottom > currentPageMaxY) {
-                    // This chart won't fit on the current page, so we finalize the current page up to the previous chart.
-                    // Add the current page image
-                    addPageFromCanvas(pdf, imgData, pdfWidth, canvas.width, canvas.height, currentY, pageHeightInPx);
-                    pageCount++;
-                    
-                    // Start a new page from this chart
-                    currentY = (chartPositions[i-1] ? chartPositions[i-1].bottom : 0);
-                }
-
-                // If we're at the last chart, add the final page
-                if (i === chartPositions.length - 1) {
-                    // Add last page from currentY to end of document (or just enough to include this last chart)
-                    // We only want to include up to the last chart bottom
-                    const finalPageHeightInPx = (chartBottom - currentY);
-                    addPageFromCanvas(pdf, imgData, pdfWidth, canvas.width, canvas.height, currentY, finalPageHeightInPx);
-                }
-            }
-
+            // Just a single page for demonstration
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
             pdf.save(`${dashboardName}.pdf`);
+
+            // Hide the overlay once done
             document.getElementById('overlay').style.display = 'none';
         }
+
         function exportToCSV() {
             const dashboardName = document.getElementById('dashboardNameInput').value.trim() || 'Dataset';
             // Show the overlay and loading icon
