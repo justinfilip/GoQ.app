@@ -1138,6 +1138,45 @@
                 undoButton.classList.remove('visible');
             }
         }
+
+
+        /**
+         * Add a segment of the canvas image to the PDF.
+         * @param {jsPDF} pdf 
+         * @param {string} imgData - Data URL of the entire canvas image
+         * @param {number} pdfWidth
+         * @param {number} canvasWidth
+         * @param {number} canvasHeight
+         * @param {number} startY - The y-offset in canvas pixels where this segment starts
+         * @param {number} segmentHeight - The height in canvas pixels of this segment
+         */
+        function addCanvasSegmentToPDF(pdf, imgData, pdfWidth, canvasWidth, canvasHeight, startY, segmentHeight) {
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            const scale = pdfWidth / canvasWidth;
+            const segmentPDFHeight = segmentHeight * scale; // how tall the segment is on PDF page
+
+            // sx, sy, sWidth, sHeight define the sub-rectangle of source image
+            // to draw into the PDF page
+            const sx = 0;
+            const sy = startY;
+            const sWidth = canvasWidth;
+            const sHeight = segmentHeight;
+
+            // We draw at PDF coords (0,0)
+            // The target size in PDF must maintain aspect ratio
+            pdf.addImage(
+                imgData,
+                'PNG',
+                0,
+                0,
+                pdfWidth,
+                segmentPDFHeight,
+                sx,
+                sy,
+                sWidth,
+                sHeight
+            );
+        }
         function exportToPDF() {
             const dashboardName = document.getElementById('dashboardNameInput').value.trim() || 'Dashboard';
             // Show the overlay and loading icon
@@ -1148,7 +1187,7 @@
                 useCORS: true,
                 allowTaint: true,
                 onclone: (clonedDoc) => {
-                    // Hide unwanted elements (already present code)
+                    // Hide unwanted elements
                     clonedDoc.getElementById('exportPdfButton').style.display = 'none';
                     clonedDoc.getElementById('fileInput').style.display = 'none';
                     if (clonedDoc.getElementById('exportCsvButton')) clonedDoc.getElementById('exportCsvButton').style.display = 'none';
@@ -1161,18 +1200,12 @@
                     if (clonedDoc.getElementById('dataGrid')) clonedDoc.getElementById('dataGrid').style.display = 'none';
                     if (clonedDoc.getElementById('dataPage')) clonedDoc.getElementById('dataPage').style.display = 'none';
                     if (clonedDoc.getElementById('overlay')) clonedDoc.getElementById('overlay').style.display = 'none';
-                    clonedDoc.documentElement.style.height = 'auto';
-                    clonedDoc.documentElement.style.overflow = 'visible';
-                    clonedDoc.body.style.height = 'auto';
-                    clonedDoc.body.style.overflow = 'visible';
 
                     // Remove the Google Tag Manager noscript block and iframe
                     const gtmNoScript = clonedDoc.querySelector('noscript');
                     if (gtmNoScript) {
                         gtmNoScript.remove();
                     }
-
-                    // If for some reason the GTM iframe is not in noscript (just in case)
                     const gtmIframe = clonedDoc.querySelector('iframe[src*="googletagmanager.com"]');
                     if (gtmIframe) {
                         gtmIframe.remove();
@@ -1192,17 +1225,76 @@
 
                     clonedNavigator.replaceChild(dashboardTitle, clonedDashboardNameInput);
                 }
-
             }).then((canvas) => {
                 const imgData = canvas.toDataURL('image/png');
                 const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
-                const imgProps = pdf.getImageProperties(imgData);
+
                 const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+
+                // Calculate scale based on canvas width
+                const scale = pdfWidth / canvas.width;
+                const pageHeightInCanvasPx = pdfHeight / scale;
+
+                // Get chart boundaries from the original document (not the cloned one, after render)
+                const chartElements = document.querySelectorAll('.chart-wrapper');
+                let chartPositions = [];
+                chartElements.forEach(chart => {
+                    const rect = chart.getBoundingClientRect();
+                    // Convert rect.top, bottom to canvas coordinates if needed
+                    // Since html2canvas took the entire screen, top should align well.
+                    // We assume no scrolling offset. If there's scrolling, adjust by window.scrollY.
+                    const chartTop = rect.top + window.scrollY;
+                    const chartBottom = chartTop + rect.height;
+                    chartPositions.push({top: chartTop, bottom: chartBottom});
+                });
+
+                // Sort chart positions by top just in case
+                chartPositions.sort((a,b) => a.top - b.top);
+
+                // Start from top=0 of the canvas
+                let currentPageY = 0;
+                let currentPDFY = 0; // Track what portion of canvas is currently on the page
+                pdf.addPage(); // start with one page (jsPDF starts with one by default, but we ensure)
+                pdf.deletePage(1); // Remove the first empty page added by default
+                pdf.addPage(); // Add our first real page
+
+                // We'll go chart by chart, and add them page by page
+                let lastCutY = 0; // last vertical cut in canvas px
+
+                for (let i = 0; i < chartPositions.length; i++) {
+                    const chartBottom = chartPositions[i].bottom;
+                    const chartHeight = chartBottom - lastCutY;
+
+                    // Check if adding this chart fits into the current page
+                    if ((chartBottom - currentPageY) > pageHeightInCanvasPx) {
+                        // Need a new page before adding this chart
+                        // Add the previous portion of canvas to PDF
+                        const segmentHeight = (chartPositions[i-1]?.bottom || lastCutY) - lastCutY;
+                        if (segmentHeight > 0) {
+                            addCanvasSegmentToPDF(pdf, imgData, pdfWidth, canvas.width, canvas.height, lastCutY, segmentHeight);
+                        }
+
+                        // start a new page
+                        pdf.addPage();
+                        currentPageY = chartPositions[i-1]?.bottom || 0;
+                        lastCutY = currentPageY;
+                    }
+
+                    // If it's the last chart or next chart won't fit, we handle that after loop
+                }
+
+                // Add the last segment after the loop
+                const lastChartBottom = chartPositions.length > 0 ? chartPositions[chartPositions.length - 1].bottom : canvas.height;
+                const remainingHeight = lastChartBottom - lastCutY;
+                if (remainingHeight > 0) {
+                    addCanvasSegmentToPDF(pdf, imgData, pdfWidth, canvas.width, canvas.height, lastCutY, remainingHeight);
+                }
+
                 pdf.save(`${dashboardName}.pdf`);
                 // Hide the overlay and loading icon after saving
                 document.getElementById('overlay').style.display = 'none';
+
             }).catch((error) => {
                 console.error('Error generating PDF:', error);
                 alert('An error occurred while generating the PDF.');
