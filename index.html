@@ -1142,16 +1142,15 @@
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF('p', 'mm', 'a4');
 
-            // Retrieve logo image from the DOM (for example, an <img id="logo"...> element)
+            // Retrieve logo image from the DOM (for example, the .goq-logo element)
             const logoImg = document.querySelector('.goq-logo');
             let logoDataURL = null;
             if (logoImg) {
                 // Convert the logo <img> to a Base64 data URL
-                // To ensure cross-origin images work, you might need the correct server setup or a local image.
                 const logoCanvas = document.createElement('canvas');
                 const ctx = logoCanvas.getContext('2d');
-                logoCanvas.width = 250;
-                logoCanvas.height = 250;
+                logoCanvas.width = logoImg.width;
+                logoCanvas.height = logoImg.height;
                 ctx.drawImage(logoImg, 0, 0, logoImg.width, logoImg.height);
                 logoDataURL = logoCanvas.toDataURL('image/png');
             }
@@ -1160,37 +1159,36 @@
             const dashboardName = document.getElementById('dashboardNameInput').value.trim() || 'Dashboard';
 
             // Add logo (if available) and dashboard title at the top of the PDF
-            // Adjust coordinates and sizes as needed.
             const pageWidth = pdf.internal.pageSize.getWidth();
             if (logoDataURL) {
-                // Add logo at top-left corner, 10mm from top and left
+                // Add the logo at the top-left corner
                 pdf.addImage(logoDataURL, 'PNG', 8, 8, 30, 30); 
             }
+
             // Add dashboard title next to logo
-            // Move text a bit to the right if logo is present
-            const titleX = logoDataURL ? 15 : 11;
-            pdf.setFontSize(8);
+            const titleX = logoDataURL ? 45 : 15; // Shift title to right if logo is present
+            pdf.setFontSize(14);
             pdf.setTextColor(19, 29, 32);
-            pdf.text(dashboardName, titleX, 11);
+            pdf.text(dashboardName, titleX, 20); // Position title below or beside the logo
 
-            // Start adding charts below the title
-            let yOffset = 15; // vertical offset to start placing charts
+            let yOffset = 30; // vertical offset to start placing charts below title/logo
 
-            // Get all chart wrappers and export each chart
+            // Get all chart wrappers and export each as an image including borders
             const chartWrappers = document.querySelectorAll('.chart-wrapper');
             for (let i = 0; i < chartWrappers.length; i++) {
                 const chartWrapper = chartWrappers[i];
-                const index = parseInt(chartWrapper.dataset.index, 10);
-                const chartState = charts[index];
-                if (!chartState || !chartState.chartInstance) continue;
 
-                // Convert chart to image
-                const chartImage = chartState.chartInstance.toBase64Image();
+                // Use html2canvas to capture the entire wrapper including the border
+                const chartCanvas = await html2canvas(chartWrapper, {
+                    scale: 2,
+                    useCORS: true
+                });
+                const chartImage = chartCanvas.toDataURL('image/png');
 
-                // Determine width and height for the chart image on the PDF
-                // For example, fit the chart to full page width (minus margins)
-                const chartWidthMm = pageWidth - 20; // 10mm margin on each side
-                const chartHeightMm = (chartWidthMm * 0.5); // adjust aspect ratio as needed
+                const pdfPageWidth = pageWidth - 20; // 10mm margin on each side
+                // Maintain aspect ratio of the captured image
+                const aspectRatio = chartCanvas.width / chartCanvas.height;
+                const chartHeightMm = pdfPageWidth / aspectRatio;
 
                 // Check if we need a new page if chart won't fit on the remaining space
                 if (yOffset + chartHeightMm > pdf.internal.pageSize.getHeight() - 20) {
@@ -1198,15 +1196,13 @@
                     yOffset = 20; // reset offset on new page
                 }
 
-                // Add chart image
-                pdf.addImage(chartImage, 'PNG', 10, yOffset, chartWidthMm, chartHeightMm);
-                yOffset += chartHeightMm + 10; // Add some spacing after the chart
+                pdf.addImage(chartImage, 'PNG', 10, yOffset, pdfPageWidth, chartHeightMm);
+                yOffset += chartHeightMm + 10; // add spacing after the chart
             }
 
             // Finally, save the PDF
             pdf.save(`${dashboardName}.pdf`);
         }
-
 
         function exportToCSV() {
             const dashboardName = document.getElementById('dashboardNameInput').value.trim() || 'Dataset';
