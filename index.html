@@ -1164,13 +1164,13 @@
             const pageWidth = pdf.internal.pageSize.getWidth();
             if (logoDataURL) {
                 // Add logo at top-left corner, 10mm from top and left
-                pdf.addImage(logoDataURL, 'PNG', 8, 8, 55, 55); 
+                pdf.addImage(logoDataURL, 'PNG', 8, 8, 35, 35); 
             }
             // Add dashboard title next to logo
             // Move text a bit to the right if logo is present
             const titleX = logoDataURL ? 15 : 5;
             pdf.setFontSize(10);
-            pdf.text(dashboardName, titleX, 20);
+            pdf.text(dashboardName, titleX, 5);
 
             // Start adding charts below the title
             let yOffset = 10; // vertical offset to start placing charts
