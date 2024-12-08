@@ -1146,88 +1146,60 @@
             const logoImg = document.querySelector('.goq-logo');
             let logoDataURL = null;
             if (logoImg) {
-                // Convert the logo <img> to a Base64 data URL
                 const logoCanvas = document.createElement('canvas');
                 const ctx = logoCanvas.getContext('2d');
-                logoCanvas.width = 250;
-                logoCanvas.height = 250;
+                logoCanvas.width = logoImg.width;
+                logoCanvas.height = logoImg.height;
                 ctx.drawImage(logoImg, 0, 0, logoImg.width, logoImg.height);
                 logoDataURL = logoCanvas.toDataURL('image/png');
             }
 
-            // Dashboard title from input
             const dashboardName = document.getElementById('dashboardNameInput').value.trim() || 'Dashboard';
 
-            // Temporarily remove 'active' classes and hide selectors
+            // Remove "active" class and hide selectors before capturing
             const chartWrappers = document.querySelectorAll('.chart-wrapper');
-            const prevActiveWrappers = [];
             chartWrappers.forEach(wrapper => {
-                if (wrapper.classList.contains('active')) {
-                    prevActiveWrappers.push(wrapper);
-                    wrapper.classList.remove('active');
-                }
+                wrapper.classList.remove('active');
                 const chartTypeContainer = wrapper.querySelector('.chart-type-container');
                 if (chartTypeContainer) {
                     chartTypeContainer.style.display = 'none';
                 }
             });
 
-            // Use onclone to modify the cloned document before html2canvas renders it
-            const canvas = await html2canvas(document.body, {
-                scale: 2,
-                useCORS: true,
-                allowTaint: true,
-                onclone: (clonedDoc) => {
-                    // Hide overlay and other unwanted elements from the cloned document
-                    const overlay = clonedDoc.getElementById('overlay');
-                    if (overlay) overlay.style.display = 'none';
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            if (logoDataURL) {
+                pdf.addImage(logoDataURL, 'PNG', 8, 8, 30, 30); 
+            }
+            const titleX = logoDataURL ? 45 : 15;
+            pdf.setFontSize(14);
+            pdf.setTextColor(19, 29, 32);
+            pdf.text(dashboardName, titleX, 20);
 
-                    const exportCsvButton = clonedDoc.getElementById('exportCsvButton');
-                    if (exportCsvButton) exportCsvButton.style.display = 'none';
+            let yOffset = 30; // vertical offset after the title/logo
 
-                    const loadExampleButton = clonedDoc.getElementById('loadExampleButton');
-                    if (loadExampleButton) loadExampleButton.style.display = 'none';
+            // Capture each chart wrapper with html2canvas
+            for (let i = 0; i < chartWrappers.length; i++) {
+                const chartWrapper = chartWrappers[i];
 
-                    const addChartButton = clonedDoc.getElementById('addChartButton');
-                    if (addChartButton) addChartButton.style.display = 'none';
+                const chartCanvas = await html2canvas(chartWrapper, {
+                    scale: 2,
+                    useCORS: true
+                });
+                const chartImage = chartCanvas.toDataURL('image/png');
 
-                    const dropArea = clonedDoc.getElementById('dropArea');
-                    if (dropArea) dropArea.style.display = 'none';
+                const pdfPageWidth = pageWidth - 20; 
+                const aspectRatio = chartCanvas.width / chartCanvas.height;
+                const chartHeightMm = pdfPageWidth / aspectRatio;
 
-                    const searchInput = clonedDoc.getElementById('searchInput');
-                    if (searchInput) searchInput.style.display = 'none';
-
-                    const dataGrid = clonedDoc.getElementById('dataGrid');
-                    if (dataGrid) dataGrid.style.display = 'none';
-
-                    const dataPage = clonedDoc.getElementById('dataPage');
-                    if (dataPage) dataPage.style.display = 'none';
-
-                    const dateViewSelector = clonedDoc.querySelector('.date-view-selector');
-                    if (dateViewSelector) dateViewSelector.style.display = 'none';
-
-                    const tooltipContainer = clonedDoc.querySelector('.tooltip-container');
-                    if (tooltipContainer) tooltipContainer.style.display = 'none';
+                if (yOffset + chartHeightMm > pdf.internal.pageSize.getHeight() - 20) {
+                    pdf.addPage();
+                    yOffset = 20; 
                 }
-            });
 
-            // After capturing, restore the state if needed
-            // (If you don't need to restore after export, you can skip this)
-            prevActiveWrappers.forEach(wrapper => wrapper.classList.add('active'));
-            chartWrappers.forEach(wrapper => {
-                const chartTypeContainer = wrapper.querySelector('.chart-type-container');
-                if (chartTypeContainer) {
-                    // Show again only if it should be visible when not exporting
-                    // If you don't want them to re-appear after export, remove this line.
-                    chartTypeContainer.style.display = ''; 
-                }
-            });
+                pdf.addImage(chartImage, 'PNG', 10, yOffset, pdfPageWidth, chartHeightMm);
+                yOffset += chartHeightMm + 10;
+            }
 
-            const imgData = canvas.toDataURL('image/png');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight();
-
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
             pdf.save(`${dashboardName}.pdf`);
         }
 
