@@ -1164,13 +1164,13 @@
                 // Add the logo at the top-left corner
                 pdf.addImage(logoDataURL, 'PNG', 8, 8, 30, 30); 
             }
-
             // Add dashboard title next to logo
-            const titleX = logoDataURL ? 15 : 11; // Shift title to right if logo is present
-            pdf.setFontSize(12);
+            // Move text a bit to the right if logo is present
+            const titleX = logoDataURL ? 15 : 11;
+            pdf.setFontSize(8);
             pdf.setTextColor(19, 29, 32);
-            pdf.text(dashboardName, titleX, 20); // Position title below or beside the logo
-
+            pdf.text(dashboardName, titleX, 11);
+            
             let yOffset = 30; // vertical offset to start placing charts below title/logo
 
             // Get all chart wrappers and export each as an image including borders
