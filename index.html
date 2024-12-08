@@ -1802,13 +1802,20 @@
 
             tableHeaders.forEach((th) => {
                 const index = parseInt(th.dataset.index, 10);
+
+                // Store the original header text if not already stored
+                if (!th.dataset.originalHeader) {
+                    th.dataset.originalHeader = th.textContent.trim();
+                }
+
+                // Reset header text to the original before adding indicators
+                th.textContent = th.dataset.originalHeader;
                 th.classList.remove('selected', 'axis-selected');
-                th.textContent = th.textContent.replace(/\\x|\\y/g, '').trim();
 
                 // X-Axis handling
                 if (xAxisColumns.has(index)) {
                     th.classList.add('axis-selected');
-                    th.innerHTML = `${th.textContent} <span class="axis-indicator" style="background-color: #000000; color: #ffffff;">x</span>`;
+                    th.innerHTML = `${th.dataset.originalHeader} <span class="axis-indicator" style="background-color: #000000; color: #ffffff;">x</span>`;
                 } 
                 // Y-Axis handling
                 else if (yAxisColumns.has(index)) {
@@ -1818,7 +1825,7 @@
                     }
                     const color = chartState.columnColorMap[index];
                     th.classList.add('axis-selected');
-                    th.innerHTML = `${th.textContent} <span class="axis-indicator" style="background-color: ${color}; color: #ffffff;">y</span>`;
+                    th.innerHTML = `${th.dataset.originalHeader} <span class="axis-indicator" style="background-color: ${color}; color: #ffffff;">y</span>`;
                 }
 
                 // Highlight selected columns for search
@@ -1830,6 +1837,7 @@
                 }
             });
         }
+
 
         function runSearch() {
             const data = window.csvData || window.xmlData;
