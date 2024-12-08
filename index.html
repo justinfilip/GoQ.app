@@ -1171,11 +1171,11 @@
                 pdf.addImage(logoDataURL, 'PNG', 8, 8, 30, 30);  
             }
             const titleX = logoDataURL ? 15 : 11;
-            pdf.setFontSize(7);
+            pdf.setFontSize(7.5);
             pdf.setTextColor(19, 29, 32);
             pdf.text(dashboardName, titleX, 11);
 
-            let yOffset = 30; // vertical offset after the title/logo
+            let yOffset = 15; // vertical offset after the title/logo
 
             // Capture each chart wrapper with html2canvas
             for (let i = 0; i < chartWrappers.length; i++) {
