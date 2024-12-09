@@ -381,7 +381,6 @@
             color: #131d20d1;
             margin-top: 5px;
             margin-bottom: 10px;
-            transition: .1s;
         }
         .drop-area.hover {
             border: 0.1px solid #00000045;
@@ -448,7 +447,6 @@
             border-radius: 3.33px;
             border: 0.1px solid #00000045;
             padding-bottom: 20px;
-            transition: background-color 0.2s ease, border-color 0.2s ease;
         }
         .no-select {
             user-select: none;
@@ -521,7 +519,7 @@
             opacity: 0;
             transition: opacity 0.3s;
             font-size: 12px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0px 4px 8px rgb(0, 0, 0);
         }
         .tooltip:hover .tooltiptext {
             visibility: visible;
@@ -644,7 +642,6 @@
             gap: 20px;
             justify-content: flex-start;
             align-items: flex-start;
-            transition: background-color 0.2s ease, border-color 0.2s ease;
         }
         .chart-type-container {
             display: flex; /* Hidden by default */
@@ -672,7 +669,6 @@
             padding-bottom: 10px;
             resize: both;
             border: 3px solid #00000019;
-            transition: background-color 0.2s ease, border-color 0.2s ease;
         }
         .chart-wrapper.active {
             border: 3px solid #0095ff;
@@ -1863,6 +1859,7 @@
 
             updateHeaderColors();
             checkForDateColumn();
+            updateAxisTitles();
             generateChart();
         }
         function toggleYAxisSelection(index, thElement, skipSave = false) {
@@ -1882,6 +1879,7 @@
             }
             updateHeaderColors();
             checkForDateColumn();
+            updateAxisTitles();
             generateChart();
         }
 
@@ -2274,6 +2272,21 @@
             }
             requestId = requestAnimationFrame(() => generateChartInternal(charts[activeChartIndex]));
         }
+        function updateAxisTitles() {
+            const chartState = charts[activeChartIndex];
+            const headers = getCurrentHeaders();
+            const xSelectedColumns = Array.from(chartState.xAxisColumns).map(i => headers[i]);
+            const ySelectedColumns = Array.from(chartState.yAxisColumns).map(i => headers[i]);
+
+            const xAxisTitle = xSelectedColumns.length > 0 ? xSelectedColumns.join(', ') : 'Category';
+            const yAxisTitle = ySelectedColumns.length > 0 ? ySelectedColumns.join(', ') : 'Value';
+
+            if (chartState.chartInstance && chartState.chartInstance.options && chartState.chartInstance.options.scales) {
+                chartState.chartInstance.options.scales.x.title.text = xAxisTitle;
+                chartState.chartInstance.options.scales.y.title.text = yAxisTitle;
+                chartState.chartInstance.update();
+            }
+        }
         function generateChartInternal(chartState) {
             const data = window.csvData || window.xmlData;
             if (!data || data.length === 0) return;
@@ -2293,7 +2306,7 @@
                 parsedDates = xAxisData.map(value => ({
                     original: value,
                     date: parseDate(value)
-                })).filter(item => !isNaN(item.date.getTime())); // Keep only valid dates
+                })).filter(item => !isNaN(item.date.getTime()));
 
                 isDateAggregation = parsedDates.length > 0 && chartState.dateView !== 'Day';
             }
@@ -2303,7 +2316,6 @@
                 datasets = Array.from(chartState.yAxisColumns).map(colIndex => {
                     const columnData = data.map(row => parseFloat(Object.values(row)[colIndex]) || 0);
 
-                    // Assign unique color for each Y-axis column
                     if (!chartState.columnColorMap[colIndex]) {
                         chartState.columnColorMap[colIndex] = getRandomColor(Object.values(chartState.columnColorMap));
                     }
@@ -2311,7 +2323,7 @@
                     return {
                         label: Object.keys(data[0])[colIndex],
                         data: columnData,
-                        fill: chartState.chartType === 'line' ? false : undefined, // Set fill to false for line charts
+                        fill: chartState.chartType === 'line' ? false : undefined,
                         backgroundColor: chartState.columnColorMap[colIndex],
                         borderColor: chartState.columnColorMap[colIndex],
                         borderWidth: 1
@@ -2319,7 +2331,7 @@
                 });
             }
 
-            // Apply aggregation based on date view or categories
+            // Apply aggregation
             if (isDateAggregation) {
                 const { aggregatedLabels, aggregatedDatasets } = aggregateDataByDateView(
                     parsedDates,
@@ -2335,12 +2347,11 @@
                 datasets = aggregated.datasets;
             }
 
-            // Destroy previous chart instance
+            // Destroy previous instance if exists
             if (chartState.chartInstance) {
                 chartState.chartInstance.destroy();
             }
 
-            // Create new chart instance
             const ctx = document.getElementById(chartState.elementId).getContext('2d');
             chartState.chartInstance = new Chart(ctx, {
                 type: chartState.chartType,
@@ -2353,7 +2364,7 @@
                     animation: false,
                     elements: {
                         line: {
-                            tension: 0 // Straight lines instead of curved
+                            tension: 0
                         }
                     },
                     scales: {
@@ -2362,6 +2373,10 @@
                             title: {
                                 display: true,
                                 text: 'Category'
+                            },
+                            grid: {
+                                color: 'rgba(0,0,0,0.2)',
+                                lineWidth: 1,
                             }
                         },
                         y: {
@@ -2369,12 +2384,42 @@
                             title: {
                                 display: true,
                                 text: 'Value'
+                            },
+                            grid: {
+                                color: 'rgba(0,0,0,0.2)',
+                                lineWidth: 1,
                             }
                         }
                     }
                 }
             });
+
+            // If dark mode is active, update the line colors to light grey
+            const isDarkMode = document.documentElement.classList.contains('dark-mode');
+            if (isDarkMode) {
+                // Update line elements to a light grey color
+                chartState.chartInstance.options.elements.line.borderColor = '#cfcfcf';
+                chartState.chartInstance.options.elements.line.backgroundColor = '#cfcfcf';
+
+                // Also update the grid lines if needed
+                chartState.chartInstance.options.scales.x.grid.color = 'rgba(207,207,207,0.2)';
+                chartState.chartInstance.options.scales.y.grid.color = 'rgba(207,207,207,0.2)';
+
+                // Update the datasets if they are line charts
+                if (chartState.chartType === 'line') {
+                    chartState.chartInstance.data.datasets.forEach(dataset => {
+                        dataset.borderColor = '#cfcfcf';
+                    });
+                }
+            } else {
+                // If not dark mode, revert to default (or do nothing if defaults are fine)
+            }
+
+            // Update axis titles based on currently selected columns
+            updateAxisTitles();
+            chartState.chartInstance.update();
         }
+
         function aggregateDataByCategory(xAxisData, datasets) {
             const categoryMap = {};
             xAxisData.forEach((category, i) => {
@@ -2676,7 +2721,12 @@
                 htmlElement.classList.add('dark-mode');
                 toggleButton.textContent = "Dark";
             }
+
+            // After changing dark mode, regenerate the charts
+            // This ensures the line colors update immediately.
+            generateAllCharts();
         }
+
     </script>
 </body>
 </html>
