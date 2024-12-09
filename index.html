@@ -5,7 +5,7 @@
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl';f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-W3G69JXM');</script>
     <!-- End Google Tag Manager -->
     <meta charset="UTF-8">
@@ -28,23 +28,115 @@
         body {
             font-family: Helvetica, Arial, sans-serif;
             font-size: 12px;
-            margin: 20px;
+            margin: 10px;
+            margin-top: 0px;
         }
-        h3 {
-            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-            font-size: xx-large;
-            color: #131d20d1;
+        /* Dark mode styles */
+        html.dark-mode {
+            background-color: #0b0b0b;
         }
-        p {
-            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-            font-size: 12px;
-            color: #131d20d1;
+        html.dark-mode body {
+            background-color: #0b0b0b;
+            color: #f0f0f0;
         }
-        input {
-            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-            font-size: 12px;
-            color: #131d20d1;
+
+        html.dark-mode h3,
+        html.dark-mode p,
+        html.dark-mode input,
+        html.dark-mode th,
+        html.dark-mode td,
+        html.dark-mode .button-text,
+        html.dark-mode .chart-type-dd,
+        html.dark-mode .date-view-button,
+        html.dark-mode .cancel-search-button,
+        html.dark-mode .dashboard-name-input,
+        html.dark-mode .search-input {
+            color: #f0f0f0;
         }
+
+        html.dark-mode .search-input {
+            background-color: #0b0b0b;
+            border-color: #2f2f2f;
+            color: #f0f0f0;
+        }
+
+        html.dark-mode th.sortable-header::after {
+            color: #f0f0f0;
+        }
+
+        html.dark-mode th:hover, 
+        html.dark-mode td:hover {
+            background-color: #444444;
+            color: #ffffff;
+        }
+
+        html.dark-mode th.selected {
+            background-color: #555555;
+            color: #ffffff;
+        }
+
+        html.dark-mode th.axis-selected {
+            background-color: #2c2c2c;
+            color: #ffffff;
+        }
+
+        html.dark-mode th.selected.axis-selected {
+            background-color: #666666;
+            color: #ffffff;
+        }
+
+        html.dark-mode tr.selected-row {
+            background-color: #333333 !important;
+        }
+
+        html.dark-mode .drop-area {
+            border: 0.1px solid #ffffff45;
+            color: #f0f0f0;
+        }
+        html.dark-mode .drop-area.hover {
+            border: 0.1px solid #ffffff45;
+            background-color: #333333;
+            color: #f0f0f0;
+        }
+
+        html.dark-mode .tile {
+            border: 1px solid #555;
+        }
+
+        html.dark-mode table {
+            border-color: #ffffff45;
+        }
+        html.dark-mode th, 
+        html.dark-mode td {
+            border-right: 0.1px solid #ffffff45;
+        }
+
+        /* Remove changes to undo, redo, cancel filter, and delete rows buttons in dark mode so they remain constant */
+        /* html.dark-mode .undo-button,
+        html.dark-mode .redo-button,
+        html.dark-mode .delete-rows-button,
+        html.dark-mode .cancel-search-button {
+            background-color: #212121;
+            border-color: #2f2f2f;
+        } */
+
+        html.dark-mode .chart-type-dd,
+        html.dark-mode .date-view-button,
+        html.dark-mode .cancel-search-button,
+        html.dark-mode .dashboard-name-input {
+            background-color: #212121;
+            border-color: #2f2f2f;
+        }
+
+        html.dark-mode .highlighted {
+            background-color: #444444;
+        }
+
+        html.dark-mode .overlay {
+            background-color: rgba(0,0,0,0.7);
+        }
+
+        /* Rest of the existing styles */
         .small-spacer {
             width: 100%;
             height: 15px;
@@ -110,10 +202,10 @@
             background-color: #0095ff31 !important;
         }
         td:first-child, th:first-child {
-            text-align: center; /* Center-align the checkbox column */
-            width: 30px; /* Adjust the width to make the column narrower */
-            padding: 0; /* Remove padding to minimize the column width */
-            margin: 0; /* Remove margin to minimize the column width */
+            text-align: center; 
+            width: 30px; 
+            padding: 0; 
+            margin: 0; 
         }
         .axis-indicator {
             position: absolute;
@@ -145,25 +237,20 @@
             user-select: none;
         }
         .navigator {
-            display: inline-block;
             flex-grow: 1;
             height: 35px;
-            border-radius: 7px;
             user-select: none;
-            overflow-x: visible;
-            scrollbar-width: thin;
-        }
-        .navigator:hover {
-            border-radius: 7px;
+            scrollbar-width: none;
         }
         .button-text {
+            font-size: x-small;
             position: relative;
             text-align: center;
             font-size: 12px;
             color: #131d20d1;
             border: 0.1px solid #00000045;
             padding: 10px;
-            border-radius: 7px;
+            border-radius: 3.33px;
             margin-right: -15px;
         }
         .dashboards-button {
@@ -177,6 +264,7 @@
             user-select: none;
         }
         .dashboards-button:hover .button-text {
+            font-size: x-small;
             color: #0095ff;
         }
         .queries-button,
@@ -190,16 +278,17 @@
         .queries-button:hover .button-text,
         .data-button:hover .button-text,
         .settings-button:hover .button-text {
+            font-size: x-small;
             color: #0095ff;
         }
         .delete-rows-button {
-            background-color: #ff4c4c;
+            font-size: x-small;
+            background-color: #ff4c4c7d;
             display: inline-block;
-            color: white;
-            border-radius: 5px;
+            color: black;
+            border-radius: 3.33px;
             border: 0.1px solid #00000045;
             cursor: pointer;
-            margin-bottom: 10px;
             margin-top: -10px;
             height: 50px;
             width: 69px;
@@ -212,13 +301,13 @@
             pointer-events: none;
         }
         .undo-button {
-            background-color: #ffcc00;
+            font-size: x-small;
+            background-color: #ffcc0078;
             display: inline-block;
             color: black;
-            border-radius: 5px;
+            border-radius: 3.33px;
             border: 0.1px solid #00000045;
             cursor: pointer;
-            margin-bottom: 10px;
             margin-top: -10px;
             height: 50px;
             width: 69px;
@@ -231,13 +320,13 @@
             pointer-events: none;
         }
         .redo-button {
-            background-color: #4CAF50;
+            font-size: x-small;
+            background-color: #4caf4f7e;
             display: inline-block;
-            color: white;
-            border-radius: 5px;
+            color: black;
+            border-radius: 3.33px;
             border: 0.1px solid #00000045;
             cursor: pointer;
-            margin-bottom: 10px;
             margin-top: -10px;
             height: 50px;
             width: 69px;
@@ -253,7 +342,7 @@
             display: none;
             color: #131d20d1;
             padding: 10px;
-            border-radius: 7px;
+            border-radius: 3.33px;
             cursor: pointer;
             position: relative;
             user-select: none;
@@ -267,7 +356,7 @@
             box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
             z-index: 1;
             width: 100%;
-            border-radius: 5px;
+            border-radius: 3.33px;
         }
         .dropdown-content a {
             color: #131d20d1;
@@ -283,13 +372,15 @@
             display: block;
         }
         .drop-area {
+            font-size: x-small;
+            padding: 15px;
             border: 0.1px solid #00000045;
-            border-radius: 7px;
+            border-radius: 3.33px;
             text-align: center;
             font-size: 12px;
             color: #131d20d1;
-            margin-top: 20px;
-            margin-bottom: 20px;
+            margin-top: 5px;
+            margin-bottom: 10px;
             transition: .1s;
         }
         .drop-area.hover {
@@ -307,7 +398,7 @@
             width: 200px;
             height: 150px;
             border: 1px solid #ccc;
-            border-radius: 5px;
+            border-radius: 3.33px;
             overflow: hidden;
             cursor: pointer;
             position: relative;
@@ -330,7 +421,7 @@
             background-color: #0095ff2a;
             color: #131d20d1;
             border: none;
-            border-radius: 5px;
+            border-radius: 3.33px;
             cursor: pointer;
         }
         .tile button:hover {
@@ -354,9 +445,10 @@
             margin: 20px auto;
             position: relative;
             padding-top: 20px;
-            border-radius: 7px;
+            border-radius: 3.33px;
             border: 0.1px solid #00000045;
             padding-bottom: 20px;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
         }
         .no-select {
             user-select: none;
@@ -365,25 +457,24 @@
             -webkit-user-select: none;
         }
         .chart-type-dd {
+            font-size: x-small;
             background-color: #ffffff00;
             display: inline-block;
             color: #131d20d1;
-            border-radius: 5px;
+            border-radius: 3.33px;
             border: 0.1px solid #00000045;
             cursor: pointer;
-            margin-bottom: 10px;
-            margin-top: 10px;
+            margin: 2.5px;
             height: 25px;
-            width: 100px;
+            width: 85px;
         }
         .date-view-button {
+            font-size: x-small;
             background-color: #ffffff00;
-            display: inline-block;
             color: #131d20d1;
-            border-radius: 5px;
+            border-radius: 3.33px;
             border: 0.1px solid #00000045;
             cursor: pointer;
-            margin-bottom: 10px;
             margin-top: -10px;
             height: 50px;
             width: 69px;
@@ -397,8 +488,6 @@
             color: rgba(0, 0, 0, 0.3);
             cursor: not-allowed;
             border: solid 0.1px rgba(0, 0, 0, 0.3);
-            background-color: rgba(0, 0, 0, 0.1);
-            pointer-events: none;
         }
         .highlighted {
             background-color: #0095ff22;
@@ -417,12 +506,13 @@
             cursor: pointer;
         }
         .tooltip .tooltiptext {
+            font-size: x-small;
             visibility: hidden;
             width: 300px;
             background-color: #0095ff;
             color: #fff;
             text-align: left;
-            border-radius: 5px;
+            border-radius: 3.33px;
             padding: 10px;
             position: absolute;
             right: 0;
@@ -456,13 +546,13 @@
             100% { transform: rotate(360deg); }
         }
         .cancel-search-button {
-            background-color: #ff4c4c;
+            font-size: x-small;
+            background-color: #ff4c4c7d;
             display: inline-block;
-            color: white;
-            border-radius: 5px;
+            color: black;
+            border-radius: 3.33px;
             border: 0.1px solid #00000045;
             cursor: pointer;
-            margin-bottom: 10px;
             margin-top: -10px;
             height: 50px;
             width: 69px;
@@ -472,6 +562,7 @@
         }
         .cancel-search-button.disabled {
             opacity: 0.5;
+            background-color: #ff4c4c7d;
             pointer-events: none;
         }
         .search-input {
@@ -480,7 +571,7 @@
             max-width: 100%;
             padding: 5px;
             border: 0.1px solid #00000045;
-            border-radius: 5px;
+            border-radius: 3.33px;
             margin-bottom: 15px;
             margin-top: 10px;
         }
@@ -491,7 +582,7 @@
             background-color: #333;
             color: #fff;
             text-align: center;
-            border-radius: 5px;
+            border-radius: 3.33px;
             padding: 16px;
             position: fixed;
             z-index: 1;
@@ -553,6 +644,7 @@
             gap: 20px;
             justify-content: flex-start;
             align-items: flex-start;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
         }
         .chart-type-container {
             display: flex; /* Hidden by default */
@@ -576,11 +668,11 @@
             margin: 10px auto;
             margin-bottom: 0px;
             padding-top: 10px;
-            border-radius: 7px;
-            /* border: 0.1px solid #00000045; */
+            border-radius: 3.33px;
             padding-bottom: 10px;
             resize: both;
             border: 3px solid #00000019;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
         }
         .chart-wrapper.active {
             border: 3px solid #0095ff;
@@ -595,8 +687,8 @@
             font-size: 12px;
             color: #131d20d1;
             border: 0.1px solid #00000045;
-            border-radius: 7px;
-            margin-right: 10px;
+            border-radius: 3.33px;
+            margin-right: 3.33px;
             padding-left: 10px;
             box-sizing: border-box;
         }
@@ -606,9 +698,9 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(255, 255, 255, 0.402); /* Semi-transparent black */
-            display: none; /* Hidden by default */
-            z-index: 1000; /* Ensure it covers all other content */
+            background-color: rgba(255, 255, 255, 0.402); 
+            display: none; 
+            z-index: 1000; 
         }
         .loading-icon-overlay {
             position: absolute;
@@ -624,36 +716,19 @@
         }
         @media (max-width: 1045px) {
             .navigator {
-                justify-content: center; /* Center the items on smaller screens */
-            }
-            .drop-area {
-                order: 3; /* Move the drop area below other elements */
-                width: 100%; /* Make the drop area full width */
-                margin-top: 10px; /* Add some top margin for spacing */
-            }
-            .drop-area {
-                border: 0.1px solid #00000045;
-                border-radius: 7px;
-                text-align: center;
-                font-size: 12px;
-                color: #131d20d1;
-                margin-top: 60px;
-                margin-bottom: 10px;
-                transition: .1s;
-            }
-            .drop-area.hover {
-                border: 0.1px solid #00000045;
-                background-color: #0095ff2a;
-                color: #131d20d1;
+                flex-grow: 1;
+                height: 35px;
+                user-select: none;
+                scrollbar-width: none;
             }
             .button-text {
-                display: none;
+                font-size: x-small;
+                opacity: 0;
             }
             .tooltip-container {
-                display: none;
+                opacity: 0;
             }
         }
-        
     </style>
 </head>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-TVRZYXSS4C"></script>
@@ -670,28 +745,34 @@
     <!-- End Google Tag Manager (noscript) -->
     <div class="top-panel">
         <img class="goq-logo" src="250x250_goq.png" draggable="false">
+        <input type="text" id="dashboardNameInput" placeholder="Enter Dashboard Name" class="dashboard-name-input" />
         <div class="navigator">
-            <input type="text" id="dashboardNameInput" placeholder="Enter Dashboard Name" class="dashboard-name-input" />
-            <button id="loadExampleButton" class="date-view-button visible" style="width: 165px; height: 100%; margin-top: 0px;" onclick="loadExampleDataset()">Load Example Dataset</button>
-            <button id="addChartButton" onclick="addNewChart()" class="date-view-button visible" style="width: 165px; height: 100%; margin-top: 0px;">Add Chart</button>
-            <button id="exportCsvButton" onclick="exportToCSV()" class="date-view-button visible" style="width: 165px; height: 100%; margin-top: 0px;">Export CSV</button>
-            <button id="exportPdfButton" onclick="exportToPDF()" class="date-view-button visible" style="width: 165px; height: 100%; margin-top: 0px;">Export PDF</button>
-            <div class="tooltip-container">
-                <div class="tooltip">
-                    <p class="button-text">Hotkeys</p>
-                    <div class="tooltiptext">
-                        <strong>Shift + T:</strong> Cycle Date View<br><br>
-                        <strong>Shift + A:</strong> Cycle Aggregation Type<br><br>
-                        <strong>Shift + C:</strong> Cycle Chart Type<br><br>
-                        <strong>Shift + Cmd/Ctrl + Click:</strong> Select Column for X Axis<br><br>
-                        <strong>Shift + Click:</strong> Select Column for Y Axis
-                    </div>
+            <button id="loadExampleButton" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;" onclick="loadExampleDataset()">Example Data</button>
+            <button id="addChartButton" onclick="addNewChart()" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;">Add Chart</button>
+            <button id="exportCsvButton" onclick="exportToCSV()" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;">Export CSV</button>
+            <button id="exportPdfButton" onclick="exportToPDF()" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;">Export PDF</button>
+            
+            <!-- Dark mode toggle button -->
+            <button id="darkModeToggle" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;" onclick="toggleDarkMode()">Light</button>
+
+        </div>
+        <div class="tooltip-container">
+            <div class="tooltip">
+                <p class="button-text" style="font-size: x-small;">Hotkeys</p>
+                <div class="tooltiptext">
+                    <strong>Shift + T:</strong> Cycle Date View<br><br>
+                    <strong>Shift + A:</strong> Cycle Aggregation Type<br><br>
+                    <strong>Shift + C:</strong> Cycle Chart Type<br><br>
+                    <strong>Shift + Z:</strong> Undo<br><br>
+                    <strong>Shift + R:</strong> Redo<br><br>
+                    <strong>Shift + Cmd/Ctrl + Click:</strong> Select Column for X Axis<br><br>
+                    <strong>Shift + Click:</strong> Select Column for Y Axis
                 </div>
             </div>
         </div>
     </div>
-    <div class="drop-area" id="dropArea" onclick="document.getElementById('fileInput').click()">
-        <p>Click or drag and drop a file here (.xml, .csv)</p>
+    <div class="drop-area" id="dropArea" style="font-size: x-small;" onclick="document.getElementById('fileInput').click()">
+        Click or drag and drop a file here (.xml, .csv)
     </div>
     <center>
         <div id="chartsContainer"></div>
@@ -699,9 +780,9 @@
             <button id="selectXAxisButton" class="date-view-button disabled" onclick="startXAxisSelection()">Add/Rem X Axis</button>
             <button id="selectYAxisButton" class="date-view-button disabled" onclick="startYAxisSelection()">Add/Rem Y Axis</button>
             <button id="selectColumnsButton" class="date-view-button disabled" onclick="startColumnSelection()">Select Columns (Filter)</button>
+            <button id="cancelSearchButton" class="cancel-search-button disabled" onclick="clearSearch()">Cancel Filter</button>
             <button id="undoButton" class="undo-button disabled" onclick="undoAction()">Undo</button>
             <button id="redoButton" class="redo-button disabled" onclick="redoAction()">Redo</button>
-            <button id="cancelSearchButton" class="cancel-search-button disabled" onclick="clearSearch()">Cancel Filter</button>
             <button id="deleteRowsButton" class="delete-rows-button disabled" onclick="deleteSelectedRows()">Delete Rows</button>
         </div>
         <input type="text" id="searchInput" placeholder="Filter text or regular expression" class="search-input" />
@@ -1444,7 +1525,7 @@
 
         const visibleRowsCount = 100;
         document.addEventListener('keydown', (event) => {
-            if (event.target.matches('input, textarea') || event.target.isContentEditable) {
+            if (event.key !== 'Enter' && event.target.matches('input, textarea') || event.target.isContentEditable) {
                 // Do not handle hotkeys when typing in input or contentEditable elements
                 return;
             }
@@ -1456,6 +1537,12 @@
             }
             if (event.shiftKey && event.key.toUpperCase() === 'C') {
                 cycleChartTypeSelector();
+            }
+            if (event.shiftKey && event.key.toUpperCase() === 'Z') {
+                undoAction();
+            }
+            if (event.shiftKey && event.key.toUpperCase() === 'R') {
+                redoAction();
             }
             if (event.key === 'Control' || event.key === 'Meta') {
                 isCtrlOrCmdPressed = true;
@@ -1898,6 +1985,15 @@
                 generateChart();
             }, 100);
         }
+        searchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent any default form submission behavior
+                event.target.blur();    // Remove focus to 'lock in' change
+
+                // Call runSearch() immediately when Enter is pressed
+                runSearch();
+            }
+        });
         document.addEventListener('DOMContentLoaded', () => {
             addNewChart();
             const chartContainer = document.getElementById('chartsContainer');
@@ -1979,7 +2075,7 @@
             const cancelSearchButton = document.getElementById('cancelSearchButton');
             if (cancelSearchButton.classList.contains('disabled')) return;
 
-            cancelSearchButton.textContent = 'Reset Filter';
+            cancelSearchButton.textContent = 'Cancel Filter';
             cancelSearch();
         }
         function resetSelectionMode() {
@@ -2255,6 +2351,11 @@
                 options: {
                     responsive: true,
                     animation: false,
+                    elements: {
+                        line: {
+                            tension: 0 // Straight lines instead of curved
+                        }
+                    },
                     scales: {
                         x: {
                             beginAtZero: true,
@@ -2564,6 +2665,17 @@
             yAxisButton.classList.remove('highlighted');
             columnsButton.classList.remove('highlighted');
             document.getElementById(buttonId).classList.add('highlighted');
+        }
+        function toggleDarkMode() {
+            const htmlElement = document.querySelector('html');
+            const toggleButton = document.getElementById('darkModeToggle');
+            if (htmlElement.classList.contains('dark-mode')) {
+                htmlElement.classList.remove('dark-mode');
+                toggleButton.textContent = "Light";
+            } else {
+                htmlElement.classList.add('dark-mode');
+                toggleButton.textContent = "Dark";
+            }
         }
     </script>
 </body>
