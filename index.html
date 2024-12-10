@@ -34,6 +34,9 @@
             margin: 10px;
             margin-top: 0px;
         }
+        button {
+            -webkit-tap-highlight-color: rgba(0,0,0,0);
+        }
         /* Dark mode styles */
         html.dark-mode {
             background-color: #0b0b0b;
@@ -221,6 +224,7 @@
             cursor: pointer;
             padding: 0;
             margin-right: 15px;
+            -webkit-tap-highlight-color: rgba(0,0,0,0);
         }
         .hamburger div {
             width: 20px;
@@ -235,9 +239,11 @@
             top: 50px;
             right: 10px;
             background: #ffffff;
-            border: 1px solid #00000045;
+            border: .7px solid #0000002c;
             border-radius: 5px;
-            z-index: 9999;
+            z-index: 999;
+            padding: 10px;
+            opacity: 0.9;
         }
         .mobile-menu button {
             display: block;
@@ -856,14 +862,58 @@
             transform: translate(-50%, -50%);
             width: 70px;
             height: 70px;
-            border: 2px solid #0095ff;
+            border: 2px solid #0095ff8a;
             border-top: 2px solid #0095ff00;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
         @media (max-width: 1045px) {
+            button {
+                -webkit-tap-highlight-color: rgba(0,0,0,0);
+                font-size: xx-small;
+            }
+            .chart-wrapper {
+                width: 100%;
+                max-width: 100%;
+                min-width: 200px;
+                height: auto;
+                max-height: fit-content;
+                overflow: auto;
+                position: relative;
+                margin: 10px auto;
+                margin-bottom: 0px;
+                padding-top: 10px;
+                border-radius: 3.33px;
+                padding-bottom: 10px;
+                border: 3px solid #00000019;
+                /* Remove resizing handles for mobile, if desired */
+                resize: none;
+            }
+
+            /* Make the chart canvas fill the container and set a fixed height for better readability */
+            .chart-wrapper canvas {
+                width: 100% !important;
+                height: 300px !important; /* Adjust as necessary */
+            }
+
+            /* Increase the font size slightly on mobile for better readability */
+            body {
+                font-size: 14px;
+            }
+            .loading-icon-overlay {
+                position: absolute;
+                top: 25%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 20px;
+                height: 20px;
+                border: 2px solid #0095ff8a;
+                border-top: 2px solid #0095ff00;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
             .delete-rows-button {
-                font-size: x-small;
+                font-size: xx-small;
                 background-color: #ff4c4c7d;
                 display: inline-block;
                 color: black;
@@ -876,7 +926,7 @@
                 width: 69px;
             }
             .delete-rows-button:focus {
-                font-size: x-small;
+                font-size: xx-small;
                 background-color: #ff4c4c7d;
                 display: inline-block;
                 color: black;
@@ -891,7 +941,7 @@
                 outline: 1.2px solid #0095ff;
             }
             .redo-button {
-                font-size: x-small;
+                font-size: xx-small;
                 background-color: #4caf4f7e;
                 display: inline-block;
                 color: black;
@@ -905,7 +955,7 @@
                 padding: 10px;
             }
             .redo-button:focus {
-                font-size: x-small;
+                font-size: xx-small;
                 background-color: #4caf4f7e;
                 display: inline-block;
                 color: black;
@@ -920,7 +970,7 @@
                 outline: 1.2px solid #0095ff;
             }
             .undo-button {
-                font-size: x-small;
+                font-size: xx-small;
                 background-color: #ffcc0078;
                 display: inline-block;
                 color: black;
@@ -934,7 +984,7 @@
                 padding: 10px;
             }
             .undo-button:focus {
-                font-size: x-small;
+                font-size: xx-small;
                 background-color: #ffcc0078;
                 display: inline-block;
                 color: black;
@@ -949,7 +999,7 @@
                 outline: 1.2px solid #0095ff;
             }
             .cancel-search-button {
-                font-size: x-small;
+                font-size: xx-small;
                 background-color: #ff4c4c7d;
                 display: inline-block;
                 color: black;
@@ -962,7 +1012,7 @@
                 width: 69px;
             }
             .cancel-search-button:focus {
-                font-size: x-small;
+                font-size: xx-small;
                 background-color: #ff4c4c7d;
                 display: inline-block;
                 color: black;
@@ -976,7 +1026,7 @@
                 outline: 1.2px solid #0095ff;
             }
             .date-view-button {
-                font-size: x-small;
+                font-size: xx-small;
                 background-color: #e0e0e0;
                 color: #131d20d1;
                 border-radius: 3.33px;
@@ -988,7 +1038,7 @@
                 width: 50px;
             }
             .date-view-button:focus {
-                font-size: x-small;
+                font-size: xx-small;
                 background-color: #e0e0e0;
                 border-radius: 3.33px;
                 border: 0px solid #00000045;
@@ -1075,13 +1125,13 @@
         <img class="goq-logo" src="250x250_goq.png" draggable="false">
         <input type="text" id="dashboardNameInput" placeholder="Enter Dashboard Name" class="dashboard-name-input" style="background-color: #ffffff00;"/>
         <div class="navigator">
-            <button id="loadExampleButton" class="date-view-button visible" style="width: 80px; height: 100%;" onclick="loadExampleDataset()">Example Data</button>
-            <button id="addChartButton" onclick="addNewChart()" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;">Add Chart</button>
-            <button id="exportCsvButton" onclick="exportToCSV()" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;">Export CSV</button>
-            <button id="exportPdfButton" onclick="exportToPDF()" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;">Export PDF</button>
+            <button id="loadExampleButton" class="date-view-button visible" style="width: 80px; height: 100%;" onclick="loadExampleDataset(); closeMobileMenu()">Example Data</button>
+            <button id="addChartButton" onclick="addNewChart(); closeMobileMenu()" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;">Add Chart</button>
+            <button id="exportCsvButton" onclick="exportToCSV(); closeMobileMenu()" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;">Export CSV</button>
+            <button id="exportPdfButton" onclick="exportToPDF(); closeMobileMenu()" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;">Export PDF</button>
             
             <!-- Dark mode toggle button -->
-            <button id="darkModeToggle" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;" onclick="toggleDarkMode()">Light</button>
+            <button id="darkModeToggle" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;" onclick="toggleDarkMode(); closeMobileMenu()">Light</button>
 
         </div>
 
@@ -1267,14 +1317,45 @@
             2021-04-09,419,361,58
             2021-04-10,241,188,53`;
 
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobileMenu');
-            if (menu.style.display === 'block') {
-                menu.style.display = 'none';
-            } else {
-                menu.style.display = 'block';
+            const mobileMenu = document.getElementById('mobileMenu');
+            const hamburgerButton = document.querySelector('.hamburger');
+            let isMenuOpen = false;
+            let outsideClickHandler = null;
+
+            function toggleMobileMenu() {
+                if (isMenuOpen) {
+                    closeMobileMenu();
+                } else {
+                    mobileMenu.style.display = 'block';
+                    isMenuOpen = true;
+                    addClickOutsideListener();
+                }
             }
-        }
+
+            function closeMobileMenu() {
+                mobileMenu.style.display = 'none';
+                isMenuOpen = false;
+                removeClickOutsideListener();
+            }
+
+            function addClickOutsideListener() {
+                if (outsideClickHandler) return;
+
+                outsideClickHandler = function(event) {
+                    // Close the menu if click is outside the mobile menu and not on the hamburger
+                    if (isMenuOpen && !mobileMenu.contains(event.target) && !hamburgerButton.contains(event.target)) {
+                        closeMobileMenu();
+                    }
+                };
+                document.addEventListener('click', outsideClickHandler);
+            }
+
+            function removeClickOutsideListener() {
+                if (outsideClickHandler) {
+                    document.removeEventListener('click', outsideClickHandler);
+                    outsideClickHandler = null;
+                }
+            }
 
         function updateUndoRedoButtonVisibility() {
             const undoButton = document.getElementById('undoButton');
@@ -1715,6 +1796,7 @@
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false, // Add this line
                     scales: {
                         x: {
                             beginAtZero: true,
@@ -2381,6 +2463,7 @@
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false, // Add this line
                     scales: {
                         x: {
                             beginAtZero: true,
@@ -2721,6 +2804,7 @@
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false, // Add this line
                     animation: false,
                     elements: {
                         line: {
