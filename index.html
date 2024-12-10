@@ -614,7 +614,11 @@
         }
         .highlighted {
             background-color: #0095ff22;
+            border: 1.2px solid #0095ff !important;
+            outline: 1.2px solid #0095ff !important;
+            border-radius: 3.33px;
         }
+
         .tooltip-container {
             position: relative;
             float: right;
@@ -3188,6 +3192,7 @@
             columnsButton.classList.remove('highlighted');
             document.getElementById(buttonId).classList.add('highlighted');
         }
+
         function toggleDarkMode() {
             const htmlElement = document.querySelector('html');
             const toggleButton = document.getElementById('darkModeToggle');
