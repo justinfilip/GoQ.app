@@ -240,6 +240,7 @@
         }
         .navigator {
             /* flex-grow: 1; */
+            margin-top: 1px;
             height: 35px;
             user-select: none;
             scrollbar-width: none;
@@ -267,6 +268,21 @@
             margin-top: -10px;
             height: 50px;
             width: 69px;
+            padding: 10px;
+        }
+        .delete-rows-button:focus {
+            font-size: x-small;
+            background-color: #ff4c4c7d;
+            display: inline-block;
+            color: black;
+            border-radius: 3.33px;
+            border: 0px solid #00000045;
+            cursor: pointer;
+            margin-top: -10px;
+            height: 50px;
+            width: 69px;
+            border: 1.2px solid #0095ff;
+            outline: 1.2px solid #0095ff;
         }
         .delete-rows-button.visible {
             visibility: visible;
@@ -286,6 +302,21 @@
             margin-top: -10px;
             height: 50px;
             width: 69px;
+            padding: 10px;
+        }
+        .undo-button:focus {
+            font-size: x-small;
+            background-color: #ffcc0078;
+            display: inline-block;
+            color: black;
+            border-radius: 3.33px;
+            border: 0px solid #00000045;
+            cursor: pointer;
+            margin-top: -10px;
+            height: 50px;
+            width: 69px;
+            border: 1.2px solid #0095ff;
+            outline: 1.2px solid #0095ff;
         }
         .undo-button.visible {
             visibility: visible;
@@ -305,6 +336,21 @@
             margin-top: -10px;
             height: 50px;
             width: 69px;
+            padding: 10px;
+        }
+        .redo-button:focus {
+            font-size: x-small;
+            background-color: #4caf4f7e;
+            display: inline-block;
+            color: black;
+            border-radius: 3.33px;
+            border: 0px solid #00000045;
+            cursor: pointer;
+            margin-top: -10px;
+            height: 50px;
+            width: 69px;
+            border: 1.2px solid #0095ff;
+            outline: 1.2px solid #0095ff;
         }
         .redo-button.visible {
             visibility: visible;
@@ -441,6 +487,20 @@
             height: 25px;
             width: 85px;
         }
+        .chart-type-dd:focus {
+            font-size: x-small;
+            background-color: #ffffff00;
+            display: inline-block;
+            color: #131d20d1;
+            border-radius: 3.33px;
+            border: 0.1px solid #00000045;
+            cursor: pointer;
+            margin: 2.5px;
+            height: 25px;
+            width: 85px;
+            border: 1.2px solid #0095ff;
+            outline: 1.2px solid #0095ff;
+        }
         .date-view-button {
             font-size: x-small;
             background-color: #e0e0e0;
@@ -452,6 +512,18 @@
             height: 50px;
             width: 69px;
         }
+        .date-view-button:focus {
+            font-size: x-small;
+            background-color: #e0e0e0;
+            border-radius: 3.33px;
+            border: 0px solid #00000045;
+            cursor: pointer;
+            margin-top: -10px;
+            height: 50px;
+            width: 69px;
+            border: 1.2px solid #0095ff;
+            outline: 1.2px solid #0095ff;
+        }
         .date-view-button.visible {
             visibility: visible;
             opacity: 1;
@@ -460,7 +532,22 @@
         .date-view-button.disabled {
             color: rgba(0, 0, 0, 0.3);
             cursor: not-allowed;
-            border: solid 0px rgba(0, 0, 0, 0.3);
+            /* border: solid 0px rgba(0, 0, 0, 0.3); */
+        }
+        .date-view-button.disabled:focus {
+            color: rgba(0, 0, 0, 0.3);
+            cursor: not-allowed;
+            /* border: solid 0px rgba(0, 0, 0, 0.3); */
+            border: 1.2px solid #0095ff81;
+            outline: 1.2px solid #0095ff81;
+        }
+        .date-view-selector {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
         }
         .highlighted {
             background-color: #0095ff22;
@@ -524,11 +611,25 @@
             display: inline-block;
             color: black;
             border-radius: 3.33px;
-            border: 0px solid #00000045;
+            /* border: 0px solid #00000045; */
             cursor: pointer;
             margin-top: -10px;
             height: 50px;
             width: 69px;
+            padding: 10px;
+        }
+        .cancel-search-button:focus {
+            font-size: x-small;
+            background-color: #ff4c4c7d;
+            display: inline-block;
+            color: black;
+            border-radius: 3.33px;
+            cursor: pointer;
+            margin-top: -10px;
+            height: 50px;
+            width: 69px;
+            border: 1.2px solid #0095ff;
+            outline: 1.2px solid #0095ff;
         }
         .cancel-search-button.visible {
             visibility: visible;
@@ -537,6 +638,15 @@
             opacity: 0.5;
             background-color: #ff4c4c7d;
             pointer-events: none;
+            border: 1.2px solid #0095ff00;
+            outline: 1.2px solid #0095ff00;
+        }
+        .cancel-search-button.disabled:focus {
+            opacity: 0.5;
+            background-color: #ff4c4c7d;
+            pointer-events: none;
+            border: 1.2px solid #0095ff;
+            outline: 1.2px solid #0095ff;
         }
         .search-input {
             display: none;
@@ -653,6 +763,9 @@
             height: auto !important;
         }
         .dashboard-name-input {
+            position: absolute;
+            top: 10px;
+            left: 51px;
             width: 200px;
             height: 35px;
             font-size: 12px;
@@ -663,6 +776,25 @@
             margin-right: 3.33px;
             padding-left: 10px;
             box-sizing: border-box;
+            border: 1.2px solid #0095ff00;
+            outline: 1.2px solid #0095ff00;
+        }
+        .dashboard-name-input:focus {
+            position: absolute;
+            top: 10px;
+            left: 51px;
+            width: 200px;
+            height: 35px;
+            font-size: 12px;
+            color: #131d20d1;
+            background-color: #ffffff00;
+            border: 0px solid #00000045;
+            border-radius: 3.33px;
+            margin-right: 3.33px;
+            padding-left: 10px;
+            box-sizing: border-box;
+            border: 1.2px solid #0095ff;
+            outline: 1.2px solid #0095ff;
         }
         .overlay {
             position: fixed;
@@ -687,11 +819,26 @@
             animation: spin 1s linear infinite;
         }
         @media (max-width: 1045px) {
+            .dashboard-name-input {
+                width: 200px;
+                height: 35px;
+                font-size: 12px;
+                color: #131d20d1;
+                background-color: #ffffff00;
+                border: 0px solid #00000045;
+                border-radius: 3.33px;
+                margin-right: 3.33px;
+                padding-left: 10px;
+                margin-left: 0%;
+                box-sizing: border-box;
+            }
             .navigator {
                 flex-grow: 1;
                 height: 35px;
                 user-select: none;
                 scrollbar-width: none;
+                padding-left: 200px;
+                margin-top: 1px;
             }
             .button-text {
                 font-size: x-small;
@@ -755,7 +902,7 @@
     </div>
     <center>
         <div id="chartsContainer"></div>
-        <div class="date-view-selector" style="display: flex; justify-content: center; width: 100%; align-items: center; gap: 10px; margin-top: 30px;">
+        <div class="date-view-selector">
             <button id="selectXAxisButton" class="date-view-button disabled" onclick="startXAxisSelection()">Add/Rem X Axis</button>
             <button id="selectYAxisButton" class="date-view-button disabled" onclick="startYAxisSelection()">Add/Rem Y Axis</button>
             <button id="selectColumnsButton" class="date-view-button disabled" onclick="startColumnSelection()">Select Columns (Filter)</button>
