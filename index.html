@@ -1144,13 +1144,13 @@
         <img class="goq-logo" src="250x250_goq.png" draggable="false">
         <input type="text" id="dashboardNameInput" placeholder="Enter Dashboard Name" class="dashboard-name-input" style="background-color: #ffffff00;"/>
         <div class="navigator">
-            <button id="loadExampleButton" class="date-view-button visible" style="width: 80px; height: 100%;" onclick="loadExampleDataset(); closeMobileMenu()">Example Data</button>
-            <button id="addChartButton" onclick="addNewChart(); closeMobileMenu()" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;">Add Chart</button>
-            <button id="exportCsvButton" onclick="exportToCSV(); closeMobileMenu()" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;">Export CSV</button>
-            <button id="exportPdfButton" onclick="exportToPDF(); closeMobileMenu()" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;">Export PDF</button>
+            <button id="loadExampleButton" class="date-view-button visible" style="width: 80px; height: 100%;" onclick="loadExampleDataset();">Example Data</button>
+            <button id="addChartButton" onclick="addNewChart();" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;">Add Chart</button>
+            <button id="exportCsvButton" onclick="exportToCSV();" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;">Export CSV</button>
+            <button id="exportPdfButton" onclick="exportToPDF();" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;">Export PDF</button>
             
             <!-- Dark mode toggle button -->
-            <button id="darkModeToggle" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;" onclick="toggleDarkMode(); closeMobileMenu()">Light</button>
+            <button id="darkModeToggle" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;" onclick="toggleDarkMode();">Light</button>
 
         </div>
 
@@ -1161,11 +1161,11 @@
         </button>
         <!-- Mobile menu (hidden by default) -->
         <div class="mobile-menu" id="mobileMenu">
-            <button onclick="loadExampleDataset()">Example Data</button><hr style="opacity: 30%;"></hr>
-            <button onclick="addNewChart()">Add Chart</button><hr style="opacity: 30%;"></hr>
-            <button onclick="exportToCSV()">Export CSV</button><hr style="opacity: 30%;"></hr>
-            <button onclick="exportToPDF()">Export PDF</button><hr style="opacity: 30%;"></hr>
-            <button id="mobileDarkModeToggle" onclick="toggleDarkMode()">Light</button>
+            <button onclick="loadExampleDataset(); closeMobileMenu()">Example Data</button><hr style="opacity: 30%;"></hr>
+            <button onclick="addNewChart(); closeMobileMenu()">Add Chart</button><hr style="opacity: 30%;"></hr>
+            <button onclick="exportToCSV(); closeMobileMenu()">Export CSV</button><hr style="opacity: 30%;"></hr>
+            <button onclick="exportToPDF(); closeMobileMenu()">Export PDF</button><hr style="opacity: 30%;"></hr>
+            <button id="mobileDarkModeToggle" onclick="toggleDarkMode(); closeMobileMenu()">Light</button>
         </div>
 
         <div class="tooltip-container">
