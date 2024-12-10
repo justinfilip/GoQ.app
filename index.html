@@ -210,6 +210,48 @@
             padding: 0; 
             margin: 0; 
         }
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            justify-content: space-around;
+            width: 20px;
+            height: 20px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            margin-right: 15px;
+        }
+        .hamburger div {
+            width: 20px;
+            height: 1px;
+            background: #999999;
+            border-radius: 3px;
+        }
+
+        .mobile-menu {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            background: #ffffff;
+            border: 1px solid #00000045;
+            border-radius: 5px;
+            z-index: 9999;
+        }
+        .mobile-menu button {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .mobile-menu button:hover {
+            background-color: #0095ff31;
+        }
         .axis-indicator {
             position: absolute;
             top: -44px;
@@ -820,6 +862,161 @@
             animation: spin 1s linear infinite;
         }
         @media (max-width: 1045px) {
+            .delete-rows-button {
+                font-size: x-small;
+                background-color: #ff4c4c7d;
+                display: inline-block;
+                color: black;
+                border-radius: 3.33px;
+                border: 0px solid #00000045;
+                cursor: pointer;
+                margin: -3px;
+                margin-top: -10px;
+                height: 50px;
+                width: 69px;
+            }
+            .delete-rows-button:focus {
+                font-size: x-small;
+                background-color: #ff4c4c7d;
+                display: inline-block;
+                color: black;
+                border-radius: 3.33px;
+                border: 0px solid #00000045;
+                cursor: pointer;
+                margin: -3px;
+                margin-top: -10px;
+                height: 50px;
+                width: 69px;
+                border: 1.2px solid #0095ff;
+                outline: 1.2px solid #0095ff;
+            }
+            .redo-button {
+                font-size: x-small;
+                background-color: #4caf4f7e;
+                display: inline-block;
+                color: black;
+                border-radius: 3.33px;
+                border: 0px solid #00000045;
+                cursor: pointer;
+                margin: -3px;
+                margin-top: -10px;
+                height: 50px;
+                width: 69px;
+                padding: 10px;
+            }
+            .redo-button:focus {
+                font-size: x-small;
+                background-color: #4caf4f7e;
+                display: inline-block;
+                color: black;
+                border-radius: 3.33px;
+                border: 0px solid #00000045;
+                cursor: pointer;
+                margin: -3px;
+                margin-top: -10px;
+                height: 50px;
+                width: 69px;
+                border: 1.2px solid #0095ff;
+                outline: 1.2px solid #0095ff;
+            }
+            .undo-button {
+                font-size: x-small;
+                background-color: #ffcc0078;
+                display: inline-block;
+                color: black;
+                border-radius: 3.33px;
+                border: 0px solid #00000045;
+                cursor: pointer;
+                margin: -3px;
+                margin-top: -10px;
+                height: 50px;
+                width: 69px;
+                padding: 10px;
+            }
+            .undo-button:focus {
+                font-size: x-small;
+                background-color: #ffcc0078;
+                display: inline-block;
+                color: black;
+                border-radius: 3.33px;
+                border: 0px solid #00000045;
+                cursor: pointer;
+                margin: -3px;
+                margin-top: -10px;
+                height: 50px;
+                width: 69px;
+                border: 1.2px solid #0095ff;
+                outline: 1.2px solid #0095ff;
+            }
+            .cancel-search-button {
+                font-size: x-small;
+                background-color: #ff4c4c7d;
+                display: inline-block;
+                color: black;
+                border-radius: 3.33px;
+                /* border: 0px solid #00000045; */
+                cursor: pointer;
+                margin: -3px;
+                margin-top: -10px;
+                height: 50px;
+                width: 69px;
+            }
+            .cancel-search-button:focus {
+                font-size: x-small;
+                background-color: #ff4c4c7d;
+                display: inline-block;
+                color: black;
+                border-radius: 3.33px;
+                cursor: pointer;
+                margin: -3px;
+                margin-top: -10px;
+                height: 50px;
+                width: 69px;
+                border: 1.2px solid #0095ff;
+                outline: 1.2px solid #0095ff;
+            }
+            .date-view-button {
+                font-size: x-small;
+                background-color: #e0e0e0;
+                color: #131d20d1;
+                border-radius: 3.33px;
+                border: 0px solid #00000045;
+                cursor: pointer;
+                margin: -3px;
+                margin-top: -10px;
+                height: 50px;
+                width: 50px;
+            }
+            .date-view-button:focus {
+                font-size: x-small;
+                background-color: #e0e0e0;
+                border-radius: 3.33px;
+                border: 0px solid #00000045;
+                cursor: pointer;
+                margin: -3px;
+                margin-top: -10px;
+                height: 50px;
+                width: 50px;
+                border: 1.2px solid #0095ff;
+                outline: 1.2px solid #0095ff;
+            }
+            .chart-wrapper {
+                width: 100%;
+                max-width: 100%;
+                min-width: 200px;
+                min-height: fit-content;
+                height: auto;
+                max-height:fit-content;
+                overflow: auto;
+                position: relative;
+                margin: 10px auto;
+                margin-bottom: 0px;
+                padding-top: 10px;
+                border-radius: 3.33px;
+                padding-bottom: 10px;
+                resize: both;
+                border: 3px solid #00000019;
+            }
             .dashboard-name-input {
                 width: 200px;
                 height: 35px;
@@ -834,12 +1031,16 @@
                 box-sizing: border-box;
             }
             .navigator {
-                flex-grow: 1;
+                /* flex-grow: 1;
                 height: 35px;
                 user-select: none;
                 scrollbar-width: none;
                 padding-left: 200px;
-                margin-top: 1px;
+                margin-top: 1px; */
+                display: none;
+            }
+            .hamburger {
+                display: flex;
             }
             .button-text {
                 font-size: x-small;
@@ -883,6 +1084,21 @@
             <button id="darkModeToggle" class="date-view-button visible" style="width: 80px; height: 100%; margin-top: 0px;" onclick="toggleDarkMode()">Light</button>
 
         </div>
+
+        <button class="hamburger" onclick="toggleMobileMenu()">
+            <div></div>
+            <div></div>
+            <div></div>
+        </button>
+        <!-- Mobile menu (hidden by default) -->
+        <div class="mobile-menu" id="mobileMenu">
+            <button onclick="loadExampleDataset()">Example Data</button>
+            <button onclick="addNewChart()">Add Chart</button>
+            <button onclick="exportToCSV()">Export CSV</button>
+            <button onclick="exportToPDF()">Export PDF</button>
+            <button id="mobileDarkModeToggle" onclick="toggleDarkMode()">Light</button>
+        </div>
+
         <div class="tooltip-container">
             <div class="tooltip">
                 <p class="button-text" style="font-size: x-small;">Hotkeys</p>
@@ -1050,6 +1266,15 @@
             2021-04-08,489,402,87
             2021-04-09,419,361,58
             2021-04-10,241,188,53`;
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            if (menu.style.display === 'block') {
+                menu.style.display = 'none';
+            } else {
+                menu.style.display = 'block';
+            }
+        }
 
         function updateUndoRedoButtonVisibility() {
             const undoButton = document.getElementById('undoButton');
@@ -2849,16 +3074,16 @@
         function toggleDarkMode() {
             const htmlElement = document.querySelector('html');
             const toggleButton = document.getElementById('darkModeToggle');
+            const mobileToggleButton = document.getElementById('mobileDarkModeToggle');
             if (htmlElement.classList.contains('dark-mode')) {
                 htmlElement.classList.remove('dark-mode');
-                toggleButton.textContent = "Light";
+                if (toggleButton) toggleButton.textContent = "Light";
+                if (mobileToggleButton) mobileToggleButton.textContent = "Light";
             } else {
                 htmlElement.classList.add('dark-mode');
-                toggleButton.textContent = "Dark";
+                if (toggleButton) toggleButton.textContent = "Dark";
+                if (mobileToggleButton) mobileToggleButton.textContent = "Dark";
             }
-
-            // After changing dark mode, regenerate the charts
-            // This ensures the line colors update immediately.
             generateAllCharts();
         }
 
