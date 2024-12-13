@@ -802,10 +802,11 @@
         }
         #chartsContainer {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: wrap; /* prevent charts from wrapping to next line */
             gap: 20px;
             justify-content: flex-start;
             align-items: flex-start;
+            overflow-x: auto; /* allow horizontal scrolling if needed */
         }
         .chart-type-container {
             display: flex; /* Hidden by default */
@@ -818,21 +819,50 @@
         }
 
         .chart-wrapper {
+            position: relative;
             width: 100%;
             max-width: 100%;
             min-width: 420px;
             min-height: fit-content;
             height: auto;
-            max-height:fit-content;
-            overflow: auto;
+            max-height: fit-content;
+            overflow: visible;
             position: relative;
             margin: 10px auto;
             margin-bottom: 0px;
             padding-top: 10px;
             border-radius: 3.33px;
             padding-bottom: 10px;
-            resize: both;
+            resize: none;
             border: 3px solid #00000019;
+        }
+        .resize-handle {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 40px;
+            height: 40px;
+            /* background: #0095ff; */
+            border-radius: 0px;
+            border: solid #000000 3px 3px 3px 3px;
+            cursor: nwse-resize;
+            z-index: 10;
+        }
+        .resize-ghost {
+            min-width: 414px;
+            height: 100%;
+            min-height: 100%;
+            max-height: 100%;
+            position: absolute;
+            border: 2px dashed #0095ff;
+            border-top: none;
+            border-bottom: none;
+            border-left: none;
+            border-radius: 3.33px;
+            pointer-events: none;
+            display: none;
+            z-index: 999;
+            background: rgba(0,0,0,0);
         }
         .chart-wrapper.active {
             border: 3px solid #0095ff;
@@ -1951,6 +1981,7 @@
 
             initializeChart(newChartState);
             selectChart(activeChartIndex);
+            initializeResizeHandles();
         }
         function loadExampleDataset() {
             resetCharts();
@@ -2473,6 +2504,7 @@
         });
         document.addEventListener('DOMContentLoaded', () => {
             addNewChart();
+            initializeResizeHandles();
             const chartContainer = document.getElementById('chartsContainer');
             const resizeObserver = new ResizeObserver(() => {
                 if (chartInstance) {
@@ -2490,6 +2522,147 @@
                 }
             }, 5000);
         });
+        document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+            const handle = document.createElement('div');
+            handle.classList.add('resize-handle');
+            wrapper.appendChild(handle);
+
+            const ghost = document.createElement('div');
+            ghost.classList.add('resize-ghost');
+            wrapper.appendChild(ghost);
+
+            let startX, startY, startWidth, startHeight, isResizing = false;
+
+            handle.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                startX = e.clientX;
+                startY = e.clientY;
+                const rect = wrapper.getBoundingClientRect();
+                startWidth = rect.width;
+                startHeight = rect.height;
+                isResizing = true;
+                ghost.style.display = 'block';
+                ghost.style.width = startWidth + 'px';
+                ghost.style.height = startHeight + 'px';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+
+                // Show ghost size, but do not change the wrapper yet
+                const newWidth = startWidth + dx;
+                const newHeight = startHeight + dy;
+
+                ghost.style.width = Math.max(newWidth, 50) + 'px'; // Minimum size if desired
+                ghost.style.height = Math.max(newHeight, 50) + 'px';
+            });
+
+            document.addEventListener('mouseup', (e) => {
+                if (!isResizing) return;
+                isResizing = false;
+                ghost.style.display = 'none';
+
+                const finalWidth = parseFloat(ghost.style.width);
+                const finalHeight = parseFloat(ghost.style.height);
+                const widthChange = Math.abs(finalWidth - startWidth);
+                const heightChange = Math.abs(finalHeight - startHeight);
+
+                // Apply threshold
+                const THRESHOLD = 20;
+                if (widthChange > THRESHOLD || heightChange > THRESHOLD) {
+                    // Apply the new size if threshold exceeded
+                    wrapper.style.width = finalWidth + 'px';
+                    wrapper.style.height = finalHeight + 'px';
+                } else {
+                    // Revert if below threshold
+                    wrapper.style.width = startWidth + 'px';
+                    wrapper.style.height = startHeight + 'px';
+                }
+
+                // Regenerate charts if needed
+                generateChart();
+            });
+        });
+
+        
+        function initializeResizeHandles() {
+            // For each chart wrapper, check if it already has a resize handle
+            document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
+                if (!wrapper.querySelector('.resize-handle')) {
+                    const handle = document.createElement('div');
+                    handle.classList.add('resize-handle');
+                    wrapper.appendChild(handle);
+
+                    const ghost = document.createElement('div');
+                    ghost.classList.add('resize-ghost');
+                    wrapper.appendChild(ghost);
+
+                    attachResizeEvents(wrapper, handle, ghost);
+                }
+            });
+        }
+
+        function attachResizeEvents(wrapper, handle, ghost) {
+            let startX, startY, startWidth, startHeight, isResizing = false;
+
+            handle.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                startX = e.clientX;
+                startY = e.clientY;
+                const rect = wrapper.getBoundingClientRect();
+                startWidth = rect.width;
+                startHeight = rect.height;
+                isResizing = true;
+
+                // Show the ghost outline with initial dimensions
+                ghost.style.display = 'block';
+                ghost.style.width = startWidth + 'px';
+                ghost.style.height = startHeight + 'px';
+                ghost.style.left = '0';
+                ghost.style.top = '0';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+
+                const newWidth = Math.max(startWidth + dx, 100);  // Set a min width if desired
+                const newHeight = Math.max(startHeight + dy, 100); // Set a min height if desired
+
+                ghost.style.width = newWidth + 'px';
+                ghost.style.height = newHeight + 'px';
+            });
+
+            document.addEventListener('mouseup', (e) => {
+                if (!isResizing) return;
+                isResizing = false;
+                ghost.style.display = 'none';
+
+                const finalWidth = parseFloat(ghost.style.width);
+                const finalHeight = parseFloat(ghost.style.height);
+                const widthChange = Math.abs(finalWidth - startWidth);
+                const heightChange = Math.abs(finalHeight - startHeight);
+
+                const THRESHOLD = 20; // Only apply if resize beyond 20px
+
+                if (widthChange > THRESHOLD || heightChange > THRESHOLD) {
+                    // Apply the new size if threshold exceeded
+                    wrapper.style.width = finalWidth + 'px';
+                    wrapper.style.height = finalHeight + 'px';
+
+                    // Regenerate or update chart if needed
+                    // generateChart(); // only if you need to re-render after resize
+                } else {
+                    // If under the threshold, revert
+                    wrapper.style.width = startWidth + 'px';
+                    wrapper.style.height = startHeight + 'px';
+                }
+            });
+        }
+
         function initializeDefaultChart() {
             const ctx = document.getElementById('myChart').getContext('2d');
             chartInstance = new Chart(ctx, {
