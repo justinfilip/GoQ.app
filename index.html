@@ -932,22 +932,23 @@
                 -webkit-tap-highlight-color: rgba(0,0,0,0);
                 font-size: 7px;
             }
+
             .chart-wrapper {
+                position: relative;
                 width: 100%;
                 max-width: 100%;
                 min-width: 200px;
                 height: auto;
                 max-height: fit-content;
-                overflow: auto;
+                overflow: visible;
                 position: relative;
                 margin: 10px auto;
                 margin-bottom: 0px;
                 padding-top: 10px;
                 border-radius: 3.33px;
                 padding-bottom: 10px;
-                border: 3px solid #00000019;
-                /* Remove resizing handles for mobile, if desired */
                 resize: none;
+                border: 3px solid #00000019;
             }
 
             /* Make the chart canvas fill the container and set a fixed height for better readability */
