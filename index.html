@@ -839,7 +839,6 @@
             min-height: fit-content;
             height: auto;
             max-height: fit-content;
-            overflow: visible;
             position: relative;
             margin-top: 10px;
             margin-bottom: 10px;
@@ -851,12 +850,17 @@
             justify-content: center;
             align-items: center;
             padding-bottom: 0px;
+            scrollbar-width: none;
+            overflow: visible;
         }
         .chart-wrapper.active {
             border: 3px solid #0095ff;
             justify-content: center;
             align-items: center;
             padding-bottom: 0px;
+            resize: none;
+            scrollbar-width: none;
+            overflow: visible;
         }
         .chart-wrapper canvas {
             width: 100% !important;
@@ -950,31 +954,6 @@
             button {
                 -webkit-tap-highlight-color: rgba(0,0,0,0);
                 font-size: 7px;
-            }
-
-            .chart-wrapper {
-                position: relative;
-                width: 100%;
-                max-width: 100%;
-                min-width: 200px;
-                height: auto;
-                max-height: fit-content;
-                overflow: visible;
-                position: relative;
-                margin: 10px auto;
-                margin-bottom: 0px;
-                padding-top: 10px;
-                border-radius: 3.33px;
-                padding-bottom: 10px;
-                resize: none;
-                border: 3px solid #00000019;
-            }
-
-            /* Make the chart canvas fill the container and set a fixed height for better readability */
-            .chart-wrapper canvas {
-                width: 100% !important;
-                /* height: 300px !important; Adjust as necessary */
-                object-fit: contain;
             }
 
             /* Increase the font size slightly on mobile for better readability */
