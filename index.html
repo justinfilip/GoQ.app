@@ -1758,14 +1758,15 @@
 
             const dashboardName = document.getElementById('dashboardNameInput').value.trim() || 'Dashboard';
 
-            // Remove "active" class and hide selectors before capturing
+            // Remove "active" class but do NOT hide the chart-type-container
             const chartWrappers = document.querySelectorAll('.chart-wrapper');
             chartWrappers.forEach(wrapper => {
                 wrapper.classList.remove('active');
-                const chartTypeContainer = wrapper.querySelector('.chart-type-container');
-                if (chartTypeContainer) {
-                    chartTypeContainer.style.display = 'none';
-                }
+                // Commenting out or removing code that hides chart-type-container:
+                // const chartTypeContainer = wrapper.querySelector('.chart-type-container');
+                // if (chartTypeContainer) {
+                //     chartTypeContainer.style.display = 'none';
+                // }
             });
 
             const pageWidth = pdf.internal.pageSize.getWidth();
