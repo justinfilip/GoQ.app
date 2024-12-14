@@ -971,18 +971,19 @@
             animation: spin 1s linear infinite;
         }
         @media (max-width: 1045px) {
+
+            ::-webkit-scrollbar {
+                display: none;
+            }
+
             button {
                 -webkit-tap-highlight-color: rgba(0,0,0,0);
                 font-size: 7px;
             }
 
             /* Increase the font size slightly on mobile for better readability */
-            html {
-                scrollbar-width: none;
-            }
             body {
                 font-size: 14px;
-                scrollbar-width: none;
             }
             .loading-icon-overlay {
                 position: absolute;
