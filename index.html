@@ -1128,21 +1128,35 @@
                 outline: 1.2px solid #0095ff;
             }
             .chart-wrapper {
+                position: relative;
                 width: 100%;
                 max-width: 100%;
-                min-width: 200px;
+                min-width: 0px;
                 min-height: fit-content;
                 height: auto;
-                max-height:fit-content;
-                overflow: auto;
+                max-height: fit-content;
                 position: relative;
-                margin: 10px auto;
-                margin-bottom: 0px;
+                margin-top: 10px;
+                margin-bottom: 10px;
                 padding-top: 10px;
                 border-radius: 3.33px;
-                padding-bottom: 10px;
-                resize: both;
+                padding-bottom: 35px;
+                resize: none;
                 border: 3px solid #00000019;
+                justify-content: center;
+                align-items: center;
+                padding-bottom: 0px;
+                scrollbar-width: none;
+                overflow: visible;
+            }
+            .chart-wrapper.active {
+                border: 3px solid #0095ff;
+                justify-content: center;
+                align-items: center;
+                padding-bottom: 0px;
+                resize: none;
+                scrollbar-width: none;
+                overflow: visible;
             }
             .dashboard-name-input {
                 width: 200px;
