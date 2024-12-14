@@ -823,9 +823,7 @@
             justify-content: center;
             align-items: center;
             margin-top: 10px;
-        }
-        .chart-wrapper.active .chart-type-container {
-            display: flex; /* Show when chart is active */
+            margin-bottom: 10px;
         }
         .chart-wrapper {
             position: relative;
@@ -837,13 +835,26 @@
             max-height: fit-content;
             overflow: visible;
             position: relative;
-            margin: 10px auto;
-            margin-bottom: 0px;
+            margin-top: 10px;
+            margin-bottom: 10px;
             padding-top: 10px;
             border-radius: 3.33px;
-            padding-bottom: 10px;
+            padding-bottom: 35px;
             resize: none;
             border: 3px solid #00000019;
+            justify-content: center;
+            align-items: center;
+            padding-bottom: 0px;
+        }
+        .chart-wrapper.active {
+            border: 3px solid #0095ff;
+            justify-content: center;
+            align-items: center;
+            padding-bottom: 0px;
+        }
+        .chart-wrapper canvas {
+            width: 100% !important;
+            height: 300px !important; /* Set a fixed height here */
         }
         .resize-handle {
             position: absolute;
@@ -872,13 +883,6 @@
             display: none;
             z-index: 999;
             background: rgba(0,0,0,0);
-        }
-        .chart-wrapper.active {
-            border: 3px solid #0095ff;
-        }
-        .chart-wrapper canvas {
-            width: 100% !important;
-            height: 300px !important; /* Set a fixed height here */
         }
         .dashboard-name-input {
             position: absolute;
@@ -1842,7 +1846,7 @@
                 // Hide the selectors
                 const chartTypeContainer = wrapper.querySelector('.chart-type-container');
                 if (chartTypeContainer) {
-                    chartTypeContainer.style.display = 'none';
+                    chartTypeContainer.style.display = 'hidden';
                 }
             });
             const selectedWrapper = document.querySelector(`.chart-wrapper[data-index="${index}"]`);
