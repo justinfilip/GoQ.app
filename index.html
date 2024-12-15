@@ -1780,11 +1780,6 @@
             const chartWrappers = document.querySelectorAll('.chart-wrapper');
             chartWrappers.forEach(wrapper => {
                 wrapper.classList.remove('active');
-                // Commenting out or removing code that hides chart-type-container:
-                // const chartTypeContainer = wrapper.querySelector('.chart-type-container');
-                // if (chartTypeContainer) {
-                //     chartTypeContainer.style.display = 'none';
-                // }
             });
 
             const pageWidth = pdf.internal.pageSize.getWidth();
@@ -1821,7 +1816,26 @@
                 yOffset += chartHeightMm + 10;
             }
 
-            pdf.save(`${dashboardName}.pdf`);
+            const pdfBlob = pdf.output('blob');
+
+            // Check if running in iOS wkwebview
+            if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.downloadFile) {
+                const reader = new FileReader();
+                reader.onloadend = function() {
+                    const base64data = reader.result.split(',')[1];
+                    window.webkit.messageHandlers.downloadFile.postMessage({
+                        filename: `${dashboardName}.pdf`,
+                        base64: base64data
+                    });
+                };
+                reader.readAsDataURL(pdfBlob);
+            } else {
+                // For desktop browsers
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(pdfBlob);
+                link.download = `${dashboardName}.pdf`;
+                link.click();
+            }
 
             // Hide the overlay after the PDF has been saved
             document.getElementById('overlay').style.display = 'none';
@@ -1842,22 +1856,39 @@
 
                 const csv = Papa.unparse(data);
                 const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                if (link.download !== undefined) {
-                    const url = URL.createObjectURL(blob);
-                    link.setAttribute('href', url);
-                    link.setAttribute('download', `${dashboardName}.csv`);
-                    link.style.visibility = 'hidden';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+
+                // Check if running in iOS wkwebview
+                if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.downloadFile) {
+                    const reader = new FileReader();
+                    reader.onloadend = function() {
+                        const base64data = reader.result.split(',')[1];
+                        window.webkit.messageHandlers.downloadFile.postMessage({
+                            filename: `${dashboardName}.csv`,
+                            base64: base64data
+                        });
+                    };
+                    reader.readAsDataURL(blob);
                 } else {
-                    alert('Your browser does not support exporting files.');
+                    // For desktop browsers
+                    const link = document.createElement('a');
+                    if (link.download !== undefined) {
+                        const url = URL.createObjectURL(blob);
+                        link.setAttribute('href', url);
+                        link.setAttribute('download', `${dashboardName}.csv`);
+                        link.style.visibility = 'hidden';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    } else {
+                        alert('Your browser does not support exporting files.');
+                    }
                 }
+
                 // Hide the overlay and loading icon after exporting
                 document.getElementById('overlay').style.display = 'none';
             }, 500); // Simulate loading delay
         }
+
         function selectChart(index) {
             activeChartIndex = index;
             document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
