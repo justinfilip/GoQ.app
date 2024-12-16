@@ -234,7 +234,7 @@
             padding: 0; 
             margin: 0; 
         }
-        #initialOverlay {
+        .initial-loading {
             position: fixed;
             top: 0;
             left: 0;
@@ -242,6 +242,19 @@
             height: 100%;
             background: #ffffff;
             z-index: 999999; /* large enough to cover everything */
+            opacity: 100%;
+            transition: .3s;
+        }
+        .fade-out {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            z-index: 999999; /* large enough to cover everything */
+            opacity: 0%;
+            transition: .3s;
         }
         .hamburger {
             align-items: center;
@@ -1229,7 +1242,7 @@
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W3G69JXM"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
-    <div id="initialOverlay"></div>
+    <div id="initialOverlay" class="initial-loading"></div>
     <div class="top-panel">
         <img class="goq-logo" src="GoQ_icon_250.png" draggable="false">
         <input type="text" id="dashboardNameInput" placeholder="Enter Dashboard Name" class="dashboard-name-input" style="background-color: #ffffff00;"/>
@@ -2597,10 +2610,17 @@
             }, 5000);
             setTimeout(() => {
             const overlay = document.getElementById('initialOverlay');
-            if (overlay) {
-                overlay.remove();
-            }
-        }, 0); // instantly remove loading overlay
+                if (overlay) {
+                    overlay.className = 'fade-out';
+
+                    setTimeout(() => {
+                    const overlay = document.getElementById('initialOverlay');
+                        if (overlay) {
+                            overlay.remove();
+                        }
+                    }, 300); // instantly remove loading overlay
+                }
+            }, 0); // instantly remove loading overlay
         });
         document.querySelectorAll('.chart-wrapper').forEach(wrapper => {
             const handle = document.createElement('div');
