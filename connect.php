@@ -9,6 +9,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo json_encode(['success' => false, 'message' => 'Only POST is allowed']);
+    exit;
+}
+
 $data = json_decode(file_get_contents('php://input'), true);
 $host = $data['host'];
 $user = $data['user'];

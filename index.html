@@ -3629,22 +3629,22 @@
         }
 
         function connectToDatabase() {
+            const dbType = document.getElementById('dbType').value;
             const host = document.getElementById('dbHost').value;
             const user = document.getElementById('dbUser').value;
-            const pw = document.getElementById('dbPassword').value;
+            const password = document.getElementById('dbPassword').value;
             const dbName = document.getElementById('dbName').value;
-            const dbType = document.getElementById('dbType').value;
-            const cert = document.getElementById('dbCert').value;
+            const sslCert = document.getElementById('dbCert').value;
             fetch('connect.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    host: host,
-                    user: user,
-                    password: pw,
-                    dbName: dbName,
-                    dbType: dbType,
-                    sslCert: cert
+                    host,
+                    user,
+                    password,
+                    dbName,
+                    dbType,
+                    sslCert
                 })
             })
             .then(response => response.json())
@@ -3657,9 +3657,10 @@
                 } else {
                     alert('Failed to connect to database: ' + data.message);
                 }
+                console.log(data);
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error(error);
                 alert('Error connecting to database');
             });
         }
