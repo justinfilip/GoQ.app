@@ -4,6 +4,11 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
 $data = json_decode(file_get_contents('php://input'), true);
 $host = $data['host'];
 $user = $data['user'];
@@ -19,6 +24,11 @@ try {
             break;
         case 'pgsql':
             $dsn = "pgsql:host=$host;dbname=$dbName";
+            if (!empty($sslCert)) {
+                $tempCertFile = sys_get_temp_dir() . '/db_cert_' . uniqid() . '.pem';
+                file_put_contents($tempCertFile, $sslCert);
+                $dsn .= ";sslmode=require;sslrootcert=$tempCertFile";
+            }
             break;
         case 'sqlite':
             $dsn = "sqlite:$dbName";
