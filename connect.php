@@ -10,6 +10,7 @@ $user = $data['user'];
 $password = $data['password'];
 $dbName = $data['dbName'];
 $dbType = $data['dbType'];
+$sslCert = isset($data['sslCert']) ? $data['sslCert'] : '';
 
 try {
     switch ($dbType) {
@@ -29,8 +30,22 @@ try {
             throw new Exception('Unsupported database type');
     }
 
-    $pdo = new PDO($dsn, $user, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $options = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION];
+
+    if (!empty($sslCert)) {
+        switch ($dbType) {
+            case 'mysql':
+                $tempCertFile = sys_get_temp_dir() . '/db_cert_' . uniqid() . '.pem';
+                file_put_contents($tempCertFile, $sslCert);
+                $options[PDO::MYSQL_ATTR_SSL_CA] = $tempCertFile;
+                break;
+            case 'pgsql':
+                // Additional PG SSL parameters may need DSN changes or pdo_pgsql > 1.4
+                break;
+        }
+    }
+
+    $pdo = new PDO($dsn, $user, $password, $options);
 
     $tables = [];
     $query = $pdo->query("SHOW TABLES");
