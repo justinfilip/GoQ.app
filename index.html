@@ -1228,33 +1228,6 @@
                 padding-bottom: 8.5px;
             }
         }
-        .db-connection-container {
-            font-size: x-small;
-            padding: 15px;
-            border: 0.1px solid #00000045;
-            border-radius: 3.33px;
-            text-align: center;
-            font-size: 12px;
-            color: #131d20d1;
-            margin-top: 5px;
-            margin-bottom: 10px;
-            margin-left: 10px;
-            margin-right: 10px;
-        }
-        .db-connection-container input,
-        .db-connection-container select {
-            margin: 5px;
-            padding: 5px;
-            border: 0.1px solid #00000045;
-            border-radius: 3.33px;
-        }
-        .db-connection-container button {
-            margin: 5px;
-            padding: 5px;
-            border: 0.1px solid #00000045;
-            border-radius: 3.33px;
-            cursor: pointer;
-        }
     </style>
 </head>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-TVRZYXSS4C"></script>
@@ -1315,17 +1288,6 @@
     </div>
     <div class="drop-area" id="dropArea" style="font-size: x-small;" onclick="document.getElementById('fileInput').click()">
         Click or drag and drop a file here (.xml, .csv)
-    </div>
-    <div class="db-connection-container">
-        <input type="text" id="dbHost" placeholder="Host" />
-        <input type="text" id="dbPort" placeholder="Port" />
-        <input type="text" id="dbUser" placeholder="User" />
-        <input type="password" id="dbPassword" placeholder="Password" />
-        <input type="text" id="dbName" placeholder="Database Name" />
-        <button onclick="connectToDatabase()">Connect</button>
-        <select id="dbTables" style="display:none;" onchange="loadTableData()">
-            <option value="">Select Table</option>
-        </select>
     </div>
     <center>
         <div id="chartsContainer"></div>
@@ -3505,74 +3467,6 @@
                 if (mobileToggleButton) mobileToggleButton.textContent = "Dark";
             }
             generateAllCharts();
-        }
-
-        function connectToDatabase() {
-            const host = document.getElementById('dbHost').value;
-            const port = document.getElementById('dbPort').value;
-            const user = document.getElementById('dbUser').value;
-            const password = document.getElementById('dbPassword').value;
-            const dbName = document.getElementById('dbName').value;
-
-            fetch('connect.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ host, port, user, password, dbName })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const tablesSelect = document.getElementById('dbTables');
-                    tablesSelect.style.display = 'block';
-                    tablesSelect.innerHTML = '<option value="">Select Table</option>';
-                    data.tables.forEach(table => {
-                        const option = document.createElement('option');
-                        option.value = table;
-                        option.textContent = table;
-                        tablesSelect.appendChild(option);
-                    });
-                } else {
-                    alert('Connection failed: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Connection failed: ' + error.message);
-            });
-        }
-
-        function loadTableData() {
-            const tableName = document.getElementById('dbTables').value;
-            if (!tableName) return;
-
-            fetch('load_table.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ tableName })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.csvData = data.data;
-                    originalData = window.csvData.slice();
-                    displayData(window.csvData, () => {
-                        const chartState = getChartState();
-                    });
-                    charts.forEach((chartState, index) => {
-                        generateChartInternal(chartState);
-                    });
-                } else {
-                    alert('Failed to load table data: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to load table data: ' + error.message);
-            });
         }
 
     </script>
