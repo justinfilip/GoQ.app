@@ -1423,16 +1423,16 @@
     <div class="overlay" id="overlay"></div>
     <div class="popup" id="databasePopup">
         <div class="db-connect-text">Connect to Database</div>
-        <input class="popup-dd" type="text" id="dbHost" placeholder="Host" style="text-align: left; padding-left: 5px;">
-        <input class="popup-dd" type="text" id="dbUser" placeholder="User" style="text-align: left; padding-left: 5px;">
-        <input class="popup-dd" type="password" id="dbPassword" placeholder="Password" style="text-align: left; padding-left: 5px;">
-        <input class="popup-dd" type="text" id="dbName" placeholder="Database Name" style="text-align: left; padding-left: 5px;">
         <select class="popup-dd" id="dbType">
             <option value="mysql">MySQL</option>
             <option value="pgsql">PostgreSQL</option>
             <option value="sqlite">SQLite</option>
             <option value="sqlsrv">SQL Server</option>
         </select>
+        <input class="popup-dd" type="text" id="dbHost" placeholder="Host" style="text-align: left; padding-left: 5px;">
+        <input class="popup-dd" type="text" id="dbUser" placeholder="User" style="text-align: left; padding-left: 5px;">
+        <input class="popup-dd" type="password" id="dbPassword" placeholder="Password" style="text-align: left; padding-left: 5px;">
+        <input class="popup-dd" type="text" id="dbName" placeholder="Database Name" style="text-align: left; padding-left: 5px;">
         <input class="popup-dd" type="text" id="dbCert" placeholder="Paste Certificate (optional)" style="text-align: left; padding-left: 5px;">
         <button class="popup-dd" style="margin-top: 10px;" onclick="connectToDatabase()" style="text-align: center;">Connect</button>
         <button class="popup-dd" onclick="closeDatabasePopup()" style="text-align: center;">Cancel</button>
