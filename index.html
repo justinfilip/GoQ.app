@@ -2540,30 +2540,17 @@
             setTimeout(() => {
                 let regex;
                 let isRegex = false;
-                if (searchTerm.startsWith('/') && searchTerm.lastIndexOf('/') > 0) {
-                    const lastSlashIndex = searchTerm.lastIndexOf('/');
-                    const pattern = searchTerm.slice(1, lastSlashIndex);
-                    const flags = searchTerm.slice(lastSlashIndex + 1);
-                    try {
-                        regex = new RegExp(pattern, flags);
-                        isRegex = true;
-                    } catch (e) {
-                        alert('Invalid regular expression');
-                        loadingIcon.style.display = 'none';
-                        return;
-                    }
+                try {
+                    regex = new RegExp(searchTerm, 'i');
+                    isRegex = true;
+                } catch (e) {
+                    // If regex creation fails, treat searchTerm as a plain string
+                    regex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
                 }
                 const filteredData = data.filter(row => {
                     return searchColumns.some(index => {
                         const cellValue = Object.values(row)[index];
-                        if (cellValue === undefined || cellValue === null) return false;
-                        if (searchTerm.startsWith('"') && searchTerm.endsWith('"')) {
-                            return cellValue === searchTerm.slice(1, -1);
-                        }
-                        if (isRegex) {
-                            return regex.test(cellValue.toString());
-                        }
-                        return cellValue.toString().toLowerCase().includes(searchTerm.toLowerCase());
+                        return isRegex ? regex.test(cellValue) : cellValue.toString().toLowerCase().includes(searchTerm.toLowerCase());
                     });
                 });
                 window.csvData = filteredData;
