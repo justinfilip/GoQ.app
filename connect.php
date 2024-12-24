@@ -2,31 +2,41 @@
 header('Content-Type: application/json');
 
 $data = json_decode(file_get_contents('php://input'), true);
-
 $host = $data['host'];
-$port = $data['port'];
 $user = $data['user'];
 $password = $data['password'];
 $dbName = $data['dbName'];
+$dbType = $data['dbType'];
 
-$conn = pg_connect("host=$host port=$port dbname=$dbName user=$user password=$password");
+try {
+    switch ($dbType) {
+        case 'mysql':
+            $dsn = "mysql:host=$host;dbname=$dbName";
+            break;
+        case 'pgsql':
+            $dsn = "pgsql:host=$host;dbname=$dbName";
+            break;
+        case 'sqlite':
+            $dsn = "sqlite:$dbName";
+            break;
+        case 'sqlsrv':
+            $dsn = "sqlsrv:Server=$host;Database=$dbName";
+            break;
+        default:
+            throw new Exception('Unsupported database type');
+    }
 
-if (!$conn) {
-    echo json_encode(['success' => false, 'message' => 'Connection failed']);
-    exit;
+    $pdo = new PDO($dsn, $user, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    $tables = [];
+    $query = $pdo->query("SHOW TABLES");
+    while ($row = $query->fetch(PDO::FETCH_NUM)) {
+        $tables[] = $row[0];
+    }
+
+    echo json_encode(['success' => true, 'tables' => $tables]);
+} catch (Exception $e) {
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
-
-$result = pg_query($conn, "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
-if (!$result) {
-    echo json_encode(['success' => false, 'message' => 'Failed to retrieve tables']);
-    exit;
-}
-
-$tables = [];
-while ($row = pg_fetch_assoc($result)) {
-    $tables[] = $row['table_name'];
-}
-
-echo json_encode(['success' => true, 'tables' => $tables]);
-pg_close($conn);
 ?>

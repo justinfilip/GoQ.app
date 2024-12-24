@@ -45,8 +45,8 @@
             color: #000000;
             border-radius: 3.33px;
             -webkit-tap-highlight-color: rgba(0,0,0,0);
-            border: 2px solid #0095ff;
-            outline: 2px solid #0095ff;
+            border: 1.2px solid #0095ff;
+            outline: 1.2px solid #0095ff;
         }
         /* Dark mode styles */
         html.dark-mode {
@@ -163,6 +163,39 @@
             background-color: rgba(0,0,0,0.7);
         }
 
+        html.dark-mode .drop-area-button {
+            background-color: #212121;
+            color: #f0f0f0;
+            border-color: #2f2f2f;
+        }
+        html.dark-mode .drop-area-button:focus {
+            background-color: #212121;
+            color: #f0f0f0;
+            border-color: #0095ff;
+            outline: 1.2px solid #0095ff;
+        }
+        html.dark-mode .popup {
+            background-color: #212121;
+            color: #f0f0f0;
+            border-color: #2f2f2f;
+        }
+        html.dark-mode .popup input,
+        html.dark-mode .popup select,
+        html.dark-mode .popup button {
+            background-color: #212121;
+            color: #f0f0f0;
+            border-color: #2f2f2f;
+        }
+        html.dark-mode .popup input:focus,
+        html.dark-mode .popup select:focus,
+        html.dark-mode .popup button:focus {
+            border-color: #0095ff;
+            outline: 1.2px solid #0095ff;
+        }
+        html.dark-mode .db-connect-text {
+            color: #f0f0f0;
+        }
+
         /* Rest of the existing styles */
         .small-spacer {
             width: 100%;
@@ -193,9 +226,6 @@
             right: -5px;
             top: -20px;
             font-size: 1em;
-            color: #131d20d1;
-            width: 20px;
-            height: 20px;
             justify-content: center;
             align-items: center;
         }
@@ -487,8 +517,9 @@
             display: block;
         }
         .drop-area {
+            height: auto;
             font-size: x-small;
-            padding: 15px;
+            padding: 5px;
             border: 0.1px solid #00000045;
             border-radius: 3.33px;
             text-align: center;
@@ -500,9 +531,7 @@
             margin-right: 10px;
         }
         .drop-area.hover {
-            border: 0.1px solid #00000045;
-            background-color: #0095ff2a;
-            color: #131d20d1;
+            border: 0.1px dashed #00000045;
         }
         .tile-container {
             display: flex;
@@ -1228,6 +1257,111 @@
                 padding-bottom: 8.5px;
             }
         }
+        .db-connect-text {
+            margin-bottom:
+            10px; font-size: 12px;
+            color: #131d20d1;
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 30px;
+            border: 1px solid #ccccccab;
+            border-radius: 6.66px;
+            z-index: 1001;
+            width: 100%;
+            max-width: 300px;
+        }
+        .popup.active {
+            display: block;
+        }
+        .popup-dd {
+            font-size: x-small;
+            background-color: #ffffff00;
+            display: block;
+            color: #131d20d1;
+            border-radius: 3.33px;
+            border: 0.1px solid #00000045;
+            cursor: pointer;
+            margin: 2.5px;
+            height: 25px; /* Set height to 25px */
+            width: 100%;
+            text-align: center;
+            text-align-last: center; /* Helps center text in selects */
+            line-height: 25px; /* Match line-height to the height for vertical centering */
+        }
+
+        .popup-dd option {
+            text-align: center; /* Ensures the option text is also centered */
+            line-height: 25px; /* Match the same line-height for consistency */
+        }
+        .popup-dd:focus {
+            /*  */
+
+            font-size: x-small;
+            background-color: #ffffff00;
+            display: block;
+            color: #131d20d1;
+            border-radius: 3.33px;
+            border: 0.1px solid #00000045;
+            cursor: pointer;
+            margin: 2.5px;
+            width: 100%;
+            height: 25px; /* Set height to 25px */
+            text-align: center;
+            text-align-last: center; /* Helps center text in selects */
+            line-height: 25px; /* Match line-height to the height for vertical centering */
+            border: 1.2px solid #0095ff;
+            outline: 1.2px solid #0095ff;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.402); 
+            z-index: 1000;
+        }
+        .overlay.active {
+            display: block;
+        }
+        .drop-area-button {
+            display: inline-block;
+            font-size: x-small;
+            background-color: #e0e0e0;
+            color: #131d20d1;
+            border-radius: 3.33px;
+            border: 0px solid #00000045;
+            cursor: pointer;
+            height: 35px;
+            width: 69px;
+            pointer-events: auto;
+            vertical-align: top;
+        }
+        .drop-area-button:focus {
+            display: inline-block;
+            font-size: x-small;
+            background-color: #e0e0e0;
+            color: #131d20d1;
+            border-radius: 3.33px;
+            border: 0px solid #00000045;
+            cursor: pointer;
+            height: 35px;
+            width: 69px;
+            pointer-events: auto;
+            vertical-align: top;
+            border: 1.2px solid #0095ff;
+            outline: 1.2px solid #0095ff;
+        }
+
+        
+
     </style>
 </head>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-TVRZYXSS4C"></script>
@@ -1286,8 +1420,25 @@
             </div>
         </div>
     </div>
-    <div class="drop-area" id="dropArea" style="font-size: x-small;" onclick="document.getElementById('fileInput').click()">
-        Click or drag and drop a file here (.xml, .csv)
+    <div class="drop-area" id="dropArea" style="font-size: x-small;">
+        <button class="drop-area-button" onclick="document.getElementById('fileInput').click()">Upload File</button>
+        <button class="drop-area-button" onclick="showDatabasePopup()">Connect to Database</button>
+    </div>
+    <div class="overlay" id="overlay"></div>
+    <div class="popup" id="databasePopup">
+        <div class="db-connect-text">Connect to Database</div>
+        <input class="popup-dd" type="text" id="dbHost" placeholder="Host">
+        <input class="popup-dd" type="text" id="dbUser" placeholder="User">
+        <input class="popup-dd" type="password" id="dbPassword" placeholder="Password">
+        <input class="popup-dd" type="text" id="dbName" placeholder="Database Name">
+        <select class="popup-dd" id="dbType">
+            <option value="mysql">MySQL</option>
+            <option value="pgsql">PostgreSQL</option>
+            <option value="sqlite">SQLite</option>
+            <option value="sqlsrv">SQL Server</option>
+        </select>
+        <button class="popup-dd" style="margin-top: 10px;" onclick="connectToDatabase()">Connect</button>
+        <button class="popup-dd" onclick="closeDatabasePopup()">Cancel</button>
     </div>
     <center>
         <div id="chartsContainer"></div>
@@ -3063,10 +3214,11 @@
                     return {
                         label: Object.keys(data[0])[colIndex],
                         data: columnData,
-                        fill: chartState.chartType === 'line' ? false : undefined,
+                        fill: false,
                         backgroundColor: chartState.columnColorMap[colIndex],
                         borderColor: chartState.columnColorMap[colIndex],
-                        borderWidth: 1
+                        borderWidth: 1,
+                        pointRadius: 2
                     };
                 });
             }
@@ -3467,6 +3619,66 @@
                 if (mobileToggleButton) mobileToggleButton.textContent = "Dark";
             }
             generateAllCharts();
+        }
+
+        function showDatabasePopup() {
+            document.getElementById('overlay').classList.add('active');
+            document.getElementById('databasePopup').classList.add('active');
+        }
+
+        function closeDatabasePopup() {
+            document.getElementById('overlay').classList.remove('active');
+            document.getElementById('databasePopup').classList.remove('active');
+        }
+
+        function connectToDatabase() {
+            const host = document.getElementById('dbHost').value;
+            const user = document.getElementById('dbUser').value;
+            const password = document.getElementById('dbPassword').value;
+            const dbName = document.getElementById('dbName').value;
+            const dbType = document.getElementById('dbType').value;
+
+            fetch('connect.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ host, user, password, dbName, dbType })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Connected to database successfully');
+                    closeDatabasePopup();
+                    // Load table data into the application
+                    loadTableData(data.tables);
+                } else {
+                    alert('Failed to connect to database: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error connecting to database');
+            });
+        }
+
+        function loadTableData(tables) {
+            // Example logic to request and handle table data
+            fetch('connect.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'loadTableData', tables: tables })
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (!result.success) {
+                    console.error('Error loading table data:', result.message);
+                    return;
+                }
+                console.log('Loaded table data:', result.data);
+                // ... display or process table data ...
+            })
+            .catch(error => console.error('Error:', error));
         }
 
     </script>
