@@ -3635,7 +3635,7 @@
             const password = document.getElementById('dbPassword').value;
             const dbName = document.getElementById('dbName').value;
             const sslCert = document.getElementById('dbCert').value;
-            fetch('./connect.php', {
+            fetch('connect.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
